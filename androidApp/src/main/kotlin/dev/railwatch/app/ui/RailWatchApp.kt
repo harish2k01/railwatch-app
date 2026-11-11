@@ -1,5 +1,6 @@
 package dev.railwatch.app.ui
 
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -14,6 +15,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -25,24 +27,36 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import dev.railwatch.app.data.AppModel
 import dev.railwatch.app.ui.components.FloatingTabBar
-import dev.railwatch.app.ui.components.LargeTitle
 import dev.railwatch.app.ui.components.Tab
+import dev.railwatch.app.ui.screens.EditJourneySheet
+import dev.railwatch.app.ui.screens.ImportSheet
 import dev.railwatch.app.ui.screens.JourneySheet
 import dev.railwatch.app.ui.screens.JourneysScreen
 import dev.railwatch.app.ui.screens.NewJourneySheet
+import dev.railwatch.app.ui.screens.PdfPages
 import dev.railwatch.app.ui.screens.RoutineSheet
+import dev.railwatch.app.ui.screens.TicketPass
+import dev.railwatch.app.ui.screens.TicketsScreen
 import dev.railwatch.app.ui.screens.TodayScreen
 import dev.railwatch.app.ui.screens.YouScreen
 import dev.railwatch.app.ui.theme.Rw
 import dev.railwatch.shared.domain.Rule
 
 /** What the bottom sheet shows. */
-private sealed interface Sheet { data class Journey(val id: String) : Sheet; data class Edit(val id: String) : Sheet; data object New : Sheet; data class Routine(val rule: Rule?) : Sheet }
+private sealed interface Sheet {
+    data class Journey(val id: String) : Sheet
+    data class Edit(val id: String) : Sheet
+    data object New : Sheet
+    data class Routine(val rule: Rule?) : Sheet
+    data class Import(val uris: List<Uri>) : Sheet
+    data class Pass(val id: String) : Sheet
+    data class Pdf(val id: String, val file: String) : Sheet
+}
 
 /** App shell: the current tab under a large title, bottom sheets for details and forms, the floating tab bar. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RailWatchApp() {
+fun RailWatchApp(shared: List<Uri> = emptyList(), consumeShared: () -> Unit = {}) {
     val context = LocalContext.current
     val model = remember { AppModel(context.applicationContext) }
     var tab by rememberSaveable { mutableStateOf(Tab.Today) }
@@ -50,28 +64,35 @@ fun RailWatchApp() {
     var ask by remember { mutableStateOf<Pair<String, () -> Unit>?>(null) }
     var info by remember { mutableStateOf<String?>(null) }
     val confirm: (String, () -> Unit) -> Unit = { q, run -> ask = q to run }
+    // A ticket shared from another app opens the import sheet.
+    LaunchedEffect(shared) { if (shared.isNotEmpty()) { sheet = Sheet.Import(shared); consumeShared() } }
+    val openJourney: (dev.railwatch.shared.domain.Journey) -> Unit = { sheet = Sheet.Journey(it.id) }
     val top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val pad = PaddingValues(start = 16.dp, end = 16.dp, top = top, bottom = 120.dp)
     Box(Modifier.fillMaxSize().background(Rw.colors.ground)) {
         when (tab) {
-            Tab.Today -> TodayScreen(model, open = { sheet = Sheet.Journey(it.id) }, newRoutine = { sheet = Sheet.Routine(null) }, seeAll = { tab = Tab.Journeys }, contentPadding = pad)
-            Tab.Journeys -> JourneysScreen(model, open = { sheet = Sheet.Journey(it.id) }, confirm = confirm, contentPadding = pad)
-            Tab.Tickets -> androidx.compose.foundation.lazy.LazyColumn(contentPadding = pad) { item { LargeTitle("Tickets") }; item { Text("Share an IRCTC ticket PDF to RailWatch to add it (milestone 3).", color = Rw.colors.muted) } }
+            Tab.Today -> TodayScreen(model, open = openJourney, newRoutine = { sheet = Sheet.Routine(null) }, seeAll = { tab = Tab.Journeys }, contentPadding = pad)
+            Tab.Journeys -> JourneysScreen(model, open = openJourney, confirm = confirm, contentPadding = pad)
+            Tab.Tickets -> TicketsScreen(model, open = { sheet = Sheet.Pass(it.id) }, contentPadding = pad)
             Tab.You -> YouScreen(model, editRoutine = { sheet = Sheet.Routine(it) }, contentPadding = pad)
         }
         FloatingTabBar(selected = tab, onSelect = { tab = it }, onNew = { sheet = Sheet.New }, modifier = Modifier.align(Alignment.BottomCenter))
     }
     sheet?.let { s ->
-        ModalBottomSheet(onDismissRequest = { sheet = null }, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Rw.colors.surface) {
+        ModalBottomSheet(onDismissRequest = { if (s !is Sheet.Import) sheet = null }, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Rw.colors.surface) {
+            val find = { id: String -> model.planner.journeys.firstOrNull { it.id == id } }
             when (s) {
-                is Sheet.Journey -> model.planner.journeys.firstOrNull { it.id == s.id }?.let { j ->
+                is Sheet.Journey -> find(s.id)?.let { j ->
                     JourneySheet(j, model, close = { sheet = null }, confirm = confirm, edit = { sheet = Sheet.Edit(j.id) },
-                        ticket = { info = if (dev.railwatch.shared.domain.hasTicket(j)) "Opening the ticket pass arrives with ticket sharing." else "To add the ticket, open the IRCTC PDF in Gmail or Files, tap Share and choose RailWatch." },
+                        ticket = { if (dev.railwatch.shared.domain.hasTicket(j)) sheet = Sheet.Pass(j.id) else info = "To add the ticket, open the IRCTC PDF in Gmail or Files, tap Share and choose RailWatch." },
                         pnr = { info = if (j.pnr.isEmpty()) "Add the PNR with Edit first." else "PNR checks are coming in a later update." })
                 }
-                is Sheet.Edit -> model.planner.journeys.firstOrNull { it.id == s.id }?.let { dev.railwatch.app.ui.screens.EditJourneySheet(it, model) { sheet = Sheet.Journey(it.id) } }
+                is Sheet.Edit -> find(s.id)?.let { EditJourneySheet(it, model) { sheet = Sheet.Journey(it.id) } }
                 Sheet.New -> NewJourneySheet(model) { sheet = null }
                 is Sheet.Routine -> RoutineSheet(model, s.rule) { sheet = null }
+                is Sheet.Import -> ImportSheet(model, s.uris) { msg -> sheet = null; if (msg.isNotEmpty()) { info = msg; tab = Tab.Tickets } }
+                is Sheet.Pass -> find(s.id)?.let { j -> j.attachments?.firstOrNull { it.type == "application/pdf" }?.let { f -> TicketPass(j, f, model) { sheet = Sheet.Pdf(j.id, f.id) } } }
+                is Sheet.Pdf -> find(s.id)?.attachments?.firstOrNull { it.id == s.file }?.let { PdfPages(model, it) }
             }
         }
     }

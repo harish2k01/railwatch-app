@@ -64,4 +64,34 @@ class AppModel(context: Context) {
     fun saveRoutine(rule: Rule) = update { saveRule(it, rule, today) }
     fun deleteRoutine(id: String) = update { removeRule(it, id, today) }
     fun setSettings(change: (dev.railwatch.shared.domain.Settings) -> dev.railwatch.shared.domain.Settings) = update { p -> p.copy(settings = change(p.settings)) }
+
+    val ticketFiles = TicketFiles(context)
+    val reader by lazy { TicketReader(ticketFiles) }
+
+    /** Attaches imported tickets in one save: each to its chosen journey, or as a new booked journey. Unused files are deleted. */
+    fun attach(rows: List<ImportRow>): Int {
+        var attached = 0
+        update { p ->
+            var journeys = p.journeys
+            for (r in rows) {
+                val choice = r.choice
+                when {
+                    choice == null -> ticketFiles.delete(r.file.id)
+                    choice == "create" -> dev.railwatch.shared.domain.journeyFromTicket(java.util.UUID.randomUUID().toString(), r.details, r.file, p.settings, today)?.let { journeys = journeys + it; attached++ } ?: ticketFiles.delete(r.file.id)
+                    else -> journeys.firstOrNull { it.id == choice }?.let { j -> journeys = journeys.map { if (it.id == j.id) dev.railwatch.shared.domain.applyTicket(j, r.details, r.file, today) else it }; attached++ } ?: ticketFiles.delete(r.file.id)
+                }
+            }
+            p.copy(journeys = journeys)
+        }
+        return attached
+    }
+
+    /** Removes a ticket PDF from a journey (and the file). */
+    fun removeTicket(j: Journey, id: String) { ticketFiles.delete(id); saveJourney(j.copy(attachments = j.attachments?.filter { it.id != id }?.ifEmpty { null })) }
+
+    init {
+        // Ticket PDFs are kept for the retention period after a trip ends, then deleted (the journey stays).
+        val (cleaned, expired) = dev.railwatch.shared.domain.expiredTicketFiles(planner, today)
+        if (expired.isNotEmpty()) { expired.forEach(ticketFiles::delete); planner = store.update { cleaned } }
+    }
 }
