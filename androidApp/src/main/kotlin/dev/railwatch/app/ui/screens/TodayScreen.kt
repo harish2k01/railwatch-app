@@ -1,0 +1,175 @@
+package dev.railwatch.app.ui.screens
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import dev.railwatch.app.data.AppModel
+import dev.railwatch.app.ui.berthLabel
+import dev.railwatch.app.ui.components.Fact
+import dev.railwatch.app.ui.components.Grouped
+import dev.railwatch.app.ui.components.LargeTitle
+import dev.railwatch.app.ui.components.Perforation
+import dev.railwatch.app.ui.components.PrimaryButton
+import dev.railwatch.app.ui.components.RowDivider
+import dev.railwatch.app.ui.components.RwIcons
+import dev.railwatch.app.ui.components.SectionHead
+import dev.railwatch.app.ui.dayMonth
+import dev.railwatch.app.ui.longDay
+import dev.railwatch.app.ui.relative
+import dev.railwatch.app.ui.shortDay
+import dev.railwatch.app.ui.statusLabel
+import dev.railwatch.app.ui.theme.Rw
+import dev.railwatch.shared.domain.DoNext
+import dev.railwatch.shared.domain.Journey
+import dev.railwatch.shared.domain.JourneyStatus
+import dev.railwatch.shared.domain.addDays
+import dev.railwatch.shared.domain.doNext
+import dev.railwatch.shared.domain.nextTrip
+import dev.railwatch.shared.domain.tripTiming
+import dev.railwatch.shared.domain.upcoming
+
+/** Today (canvas NativeToday): large title, boarding-pass next trip, Do next cards, this week. */
+@Composable
+fun TodayScreen(model: AppModel, open: (Journey) -> Unit, newRoutine: () -> Unit, seeAll: () -> Unit, contentPadding: PaddingValues) {
+    val p = model.planner; val today = model.today
+    val next = nextTrip(p, today)
+    val cards = doNext(p, today)
+    val week = upcoming(p, today).filter { it.date <= addDays(today, 6) && it.id != next?.id }.take(4)
+    LazyColumn(contentPadding = contentPadding) {
+        item { LargeTitle("Today", eyebrow = longDay(today)) }
+        item {
+            if (next != null) BoardingPass(next, today, model.stations::name) { open(next) }
+            else EmptyStart(hasRoutines = p.rules.isNotEmpty(), newRoutine = newRoutine)
+        }
+        if (cards.isNotEmpty()) {
+            item { SectionHead("Do next", "See all", seeAll) }
+            item {
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) { items(cards, key = { it::class.simpleName + it.journey.id }) { c -> DoCard(c) { open(c.journey) } } }
+            }
+        }
+        if (week.isNotEmpty()) {
+            item { SectionHead("This week") }
+            item {
+                Grouped {
+                    week.forEachIndexed { i, j ->
+                        if (i > 0) RowDivider()
+                        dev.railwatch.app.ui.components.JourneyRow(dev.railwatch.app.ui.dayNum(j.date), dev.railwatch.app.ui.weekdayShort(j.date), "${j.from} → ${j.to}", dev.railwatch.app.ui.journeyLine(j, today), toneOf(j), statusLabel(j)) { open(j) }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** The next trip as a boarding pass; booked trips use the accent colour. */
+@Composable
+private fun BoardingPass(j: Journey, today: String, name: (String) -> String?, onClick: () -> Unit) {
+    val booked = j.status == JourneyStatus.Booked
+    val bg = if (booked) Rw.colors.brand else Rw.colors.surface
+    val ink = if (booked) Rw.colors.brandInk else Rw.colors.text
+    val timing = tripTiming(j)
+    val arrive = timing?.substringAfter(" → ")?.substringBefore(" · ")
+    val span = timing?.substringAfter(" · ", "")
+    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(24.dp)).background(bg).clickable(onClick = onClick)
+        .semantics { contentDescription = "Next trip ${j.from} to ${j.to}, ${longDay(j.date)}, ${statusLabel(j)}" }) {
+        Column(Modifier.padding(start = 20.dp, end = 20.dp, top = 18.dp, bottom = 6.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("NEXT TRIP · ${relative(today, j.date).uppercase()}", style = MaterialTheme.typography.labelSmall, color = ink.copy(alpha = .75f), modifier = Modifier.weight(1f))
+                Text(statusLabel(j), style = MaterialTheme.typography.labelMedium, color = if (booked) Rw.colors.brand else Rw.colors.text,
+                    modifier = Modifier.clip(RoundedCornerShape(99.dp)).background(if (booked) Rw.colors.brandInk else Rw.colors.surface2).padding(horizontal = 10.dp, vertical = 4.dp))
+            }
+            Row(verticalAlignment = Alignment.Bottom) {
+                Stop(j.from, name(j.from), ink, Modifier.weight(1f), Alignment.Start)
+                Text(span.orEmpty(), style = MaterialTheme.typography.labelMedium, color = ink.copy(alpha = .75f), modifier = Modifier.padding(bottom = 20.dp, start = 6.dp, end = 6.dp))
+                Stop(j.to, name(j.to), ink, Modifier.weight(1f), Alignment.End)
+            }
+            Row {
+                Text(shortDay(j.date) + if (j.departureConfirmed == true) " · ${j.departure}" else "", style = MaterialTheme.typography.titleMedium, color = ink, modifier = Modifier.weight(1f))
+                if (arrive != null) Text(arrive, style = MaterialTheme.typography.titleMedium, color = ink)
+            }
+        }
+        val facts = listOfNotNull(j.trainNumber?.takeIf { it.isNotBlank() }?.let { "Train" to it }, j.coach?.let { "Coach" to it },
+            listOfNotNull(j.seat, j.berth?.let(::berthLabel)).joinToString(" ").takeIf { it.isNotEmpty() }?.let { "Berth" to it }, j.travelClass.takeIf { it.isNotBlank() }?.let { "Class" to it })
+        if (facts.isNotEmpty()) {
+            Perforation(notch = Rw.colors.ground, line = ink.copy(alpha = .3f))
+            Row(Modifier.fillMaxWidth().padding(start = 20.dp, end = 20.dp, bottom = 16.dp), horizontalArrangement = Arrangement.SpaceBetween) { facts.forEach { (k, v) -> Fact(k, v, ink) } }
+        } else Spacer(Modifier.height(12.dp))
+    }
+}
+
+@Composable
+private fun Stop(code: String, name: String?, ink: Color, modifier: Modifier, align: Alignment.Horizontal) {
+    Column(modifier, horizontalAlignment = align) {
+        Text(code, fontSize = 40.sp, fontWeight = FontWeight.ExtraBold, color = ink, style = MaterialTheme.typography.displayLarge)
+        if (name != null) Text(name, style = MaterialTheme.typography.bodyMedium, color = ink.copy(alpha = .75f), maxLines = 1)
+    }
+}
+
+/** One Do next card. */
+@Composable
+private fun DoCard(c: DoNext, onClick: () -> Unit) {
+    val (bg, ink, icon, title, line) = when (c) {
+        is DoNext.BookNow -> Quint(Rw.colors.attentionBg, Rw.colors.attentionInk, RwIcons.Ticket, "Book now", "Booking window is open")
+        is DoNext.OpensSoon -> Quint(Rw.colors.openBg, Rw.colors.openInk, RwIcons.Clock, "Booking opens", shortDay(c.opens) + " · 08:00")
+        is DoNext.ConfirmCancel -> Quint(Rw.colors.cancelBg, Rw.colors.cancelInk, RwIcons.Close, "Confirm cancellation", "Cancelled on IRCTC?")
+        is DoNext.NeedsTicket -> Quint(Rw.colors.attentionBg, Rw.colors.attentionInk, RwIcons.Ticket, "Share the ticket", "So it’s here offline")
+    }
+    Column(Modifier.width(168.dp).heightIn(min = 136.dp).clip(RoundedCornerShape(20.dp)).background(bg).clickable(onClick = onClick).padding(14.dp),
+        verticalArrangement = Arrangement.SpaceBetween) {
+        Icon(icon, contentDescription = null, tint = ink)
+        Column {
+            Text(title, style = MaterialTheme.typography.titleMedium, color = Rw.colors.text)
+            Text(line, style = MaterialTheme.typography.bodyMedium, color = ink)
+            Text("${c.journey.from} → ${c.journey.to} · ${dayMonth(c.journey.date)}", style = MaterialTheme.typography.bodyMedium, color = ink)
+        }
+    }
+}
+
+private data class Quint(val bg: Color, val ink: Color, val icon: androidx.compose.ui.graphics.vector.ImageVector, val title: String, val line: String)
+
+/** First run / nothing planned: start with a routine. */
+@Composable
+private fun EmptyStart(hasRoutines: Boolean, newRoutine: () -> Unit) {
+    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(24.dp)).background(Rw.colors.surface).padding(22.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Icon(RwIcons.Calendar, contentDescription = null, tint = Rw.colors.brand)
+        Text(if (hasRoutines) "No trips coming up" else "Start with your regular trip", style = MaterialTheme.typography.headlineSmall, color = Rw.colors.text)
+        Text(if (hasRoutines) "Your routines have nothing planned ahead. Plan a one-off trip with +." else "Set up your weekly route once. RailWatch plans each journey and reminds you before booking opens.",
+            style = MaterialTheme.typography.bodyLarge, color = Rw.colors.muted)
+        if (!hasRoutines) PrimaryButton("Set up a routine", newRoutine)
+    }
+}
+
+/** Status dot colour for a journey. */
+fun toneOf(j: Journey) = when (j.status) {
+    JourneyStatus.Booked -> if (j.ticketStatus == "WL" || j.ticketStatus == "RAC") dev.railwatch.app.ui.components.Tone.Warn else dev.railwatch.app.ui.components.Tone.Ok
+    JourneyStatus.NeedsBooking -> dev.railwatch.app.ui.components.Tone.Info
+    JourneyStatus.CancellationNeeded -> dev.railwatch.app.ui.components.Tone.Warn
+    else -> dev.railwatch.app.ui.components.Tone.Muted
+}

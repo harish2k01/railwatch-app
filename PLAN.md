@@ -14,7 +14,7 @@ NativeJourneySheet, NativeBookingDay, NativeTicket), plus the existing mobile ar
 |---|---|---|
 | M0 Foundations | Done | Repo, Gradle 9.4.1 / AGP 9.2.1 / Kotlin 2.2.10, KMP shared module, Compose app with the web palette, Manrope, code-drawn icons, large title, floating tab bar, CI. Runs on the second test phone (Android 16, 10.10.10.7, wireless ADB). The Redmi Note 7 needs "Install via USB" enabled in MIUI Developer options before it can install. |
 | M1 Core rules and storage | Done | Models (web JSON shape), booking day / instant / Tatkal, routine generation (weekly, every N weeks, daily, monthly by date or weekday incl. last, yearly; months or count horizon; end and excluded dates), saveRule / removeRule / extendRoutines, lifecycle (complete, cancel dates, archive), transitions, trip timing. Parity: 6 fixture suites exported from the web code pass. Storage: one JSON document (decision change below). 10 tests. |
-| M2 Today, Journeys, sheet, new journey | Not started | |
+| M2 Today, Journeys, sheet, new journey | Built, device check pending | Today (boarding pass, Do next cards, this week, first-run "Set up a routine"), Journeys (Upcoming / To book / History, month headings, status dots, swipe: Booked / Skip / Cancel / Cancelled), journey bottom sheet with state actions, New journey and Routine sheets with station search over the bundled 7,006 stations and app date / 24-hour time pickers, You (routines, planning). Shared view queries (next trip, Do next, lists by month). Not yet exercised on a phone: the test phone was locked. |
 | M3 Tickets | Not started | |
 | M4 Reminders and booking day | Not started | |
 | M5 Calendar, time off, spend, settings | Not started | |
