@@ -33,7 +33,7 @@ import dev.railwatch.app.ui.theme.Rw
 
 /** The four destinations of the floating tab bar (canvas NativeToday); New journey sits in the middle. */
 enum class Tab(val label: String, val icon: ImageVector) {
-    Today("Today", RwIcons.Home), Journeys("Journeys", RwIcons.List), Calendar("Calendar", RwIcons.Calendar), You("You", RwIcons.Person)
+    Today("Today", RwIcons.Home), Journeys("Journeys", RwIcons.List), Calendar("Calendar", RwIcons.Calendar), More("More", RwIcons.More)
 }
 
 /** A large title (34 sp) with an optional eyebrow line above and actions on the right. */
@@ -65,7 +65,7 @@ fun FloatingTabBar(selected: Tab, onSelect: (Tab) -> Unit, onNew: () -> Unit, mo
                 Icon(RwIcons.Plus, contentDescription = null, tint = c.brandInk)
             }
         }
-        TabItem(Tab.Calendar, selected, onSelect); TabItem(Tab.You, selected, onSelect)
+        TabItem(Tab.Calendar, selected, onSelect); TabItem(Tab.More, selected, onSelect)
     }
 }
 

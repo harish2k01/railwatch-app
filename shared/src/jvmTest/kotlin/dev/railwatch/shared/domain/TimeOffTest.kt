@@ -36,3 +36,17 @@ class TimeOffTest {
         assertEquals(listOf(Spend("2026-12", 352.25, 1), Spend("2026-11", 452.25, 2)), spendByMonth(p))
     }
 }
+
+class LongWeekendTest {
+    @Test fun aFridayHolidayMakesALongWeekend() {
+        // 2026-12-25 is a Friday: Fri–Sun is 3 days off.
+        val p = Planner(holidays = listOf(Holiday("h", "Christmas", "2026-12-25", "company")))
+        val w = longWeekends(p, "2026-11-12").single()
+        assertEquals(LongWeekend("2026-12-25", "2026-12-27", 3, listOf("Christmas"), "2026-10-26", true), w)
+    }
+
+    @Test fun rangesJoinConsecutiveDaysOfTheSameLeave() {
+        val p = Planner(holidays = listOf(Holiday("a", "Trip", "2026-12-01", "leave"), Holiday("b", "Trip", "2026-12-02", "leave"), Holiday("c", "Diwali", "2026-12-04", "company")))
+        assertEquals(listOf(TimeOffRange("2026-12-01", "2026-12-02", "Trip", "leave", listOf("a", "b")), TimeOffRange("2026-12-04", "2026-12-04", "Diwali", "company", listOf("c"))), timeOffRanges(p, "2026-11-12"))
+    }
+}

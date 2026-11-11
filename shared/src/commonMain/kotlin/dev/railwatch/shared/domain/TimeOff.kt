@@ -81,3 +81,44 @@ fun spendByMonth(p: Planner): List<Spend> =
         .groupBy { it.date.take(7) }
         .map { (m, js) -> Spend(m, js.sumOf { it.fare!!.total - (it.fare.refund ?: 0.0) }, js.size) }
         .sortedByDescending { it.month }
+
+/** A run of days off (weekends, holidays, leave) of 3+ days with at least one named holiday: a trip idea. */
+data class LongWeekend(val start: String, val end: String, val days: Int, val names: List<String>, val planBy: String, val bookingOpen: Boolean)
+
+/** Long weekends in the next year, like the web's findBreaks. */
+fun longWeekends(p: Planner, today: String): List<LongWeekend> {
+    val byDay = p.holidays.groupBy { it.date }
+    fun off(d: String) = weekday(d) in p.settings.weekendDays || d in byDay
+    val out = mutableListOf<LongWeekend>()
+    val horizon = addDays(today, 365)
+    var d = today
+    while (d <= horizon) {
+        if (off(d)) {
+            var start = d; var n = 0
+            while (n < 14 && off(addDays(start, -1))) { start = addDays(start, -1); n++ }
+            var end = d
+            while (daysBetween(start, end) < 31 && off(addDays(end, 1))) end = addDays(end, 1)
+            val names = mutableListOf<String>(); var x = start
+            while (x <= end) { byDay[x].orEmpty().forEach { if (it.name !in names) names.add(it.name) }; x = addDays(x, 1) }
+            val days = daysBetween(start, end) + 1
+            val planBy = addDays(start, -p.settings.bookingWindowDays)
+            if (days >= 3 && names.isNotEmpty()) out.add(LongWeekend(start, end, days, names, planBy, planBy <= today))
+            d = end
+        }
+        d = addDays(d, 1)
+    }
+    return out
+}
+
+/** Upcoming time off grouped into consecutive runs of the same name and type ("2 – 6 Nov · Leave"). */
+data class TimeOffRange(val start: String, val end: String, val name: String, val type: String, val ids: List<String>)
+
+fun timeOffRanges(p: Planner, today: String): List<TimeOffRange> {
+    val out = mutableListOf<TimeOffRange>()
+    for (h in p.holidays.filter { it.date >= today }.sortedBy { it.date }) {
+        val last = out.lastOrNull()
+        if (last != null && last.name == h.name && last.type == h.type && addDays(last.end, 1) == h.date) out[out.size - 1] = last.copy(end = h.date, ids = last.ids + h.id)
+        else out.add(TimeOffRange(h.date, h.date, h.name, h.type, listOf(h.id)))
+    }
+    return out
+}

@@ -58,7 +58,7 @@ import dev.railwatch.shared.domain.spendByMonth
 import dev.railwatch.shared.domain.timeOffConflicts
 
 private enum class Page(val title: String, val icon: ImageVector) {
-    Routines("Routines", RwIcons.List), Tickets("Tickets", RwIcons.Ticket), TimeOff("Time off", RwIcons.Calendar),
+    Routines("Routines", RwIcons.List), TimeOff("Holidays & leave", RwIcons.Calendar), Tickets("Tickets", RwIcons.Ticket),
     Spend("Spend", RwIcons.Ticket), Reminders("Reminders", RwIcons.Bell), Planning("Planning", RwIcons.Clock),
 }
 
@@ -75,7 +75,7 @@ fun YouScreen(model: AppModel, editRoutine: (Rule?) -> Unit, open: (Journey) -> 
 
     val header: @Composable () -> Unit = {
         val pg = page
-        if (pg == null) LargeTitle("You")
+        if (pg == null) LargeTitle("More")
         else Row(Modifier.padding(top = 12.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(RwIcons.ChevronLeft, "Back", tint = Rw.colors.brand, modifier = Modifier.size(44.dp).clickable { page = null }.padding(8.dp))
             Text(pg.title, fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Rw.colors.text)
@@ -91,7 +91,7 @@ fun YouScreen(model: AppModel, editRoutine: (Rule?) -> Unit, open: (Journey) -> 
                 val subs = mapOf(
                     Page.Routines to (p.rules.size.let { if (it == 0) "None yet" else "$it routine${if (it == 1) "" else "s"}" }),
                     Page.Tickets to p.journeys.count { hasTicket(it) }.let { if (it == 0) "Share an IRCTC PDF to add one" else "$it saved" },
-                    Page.TimeOff to (if (conflicts > 0) "$conflicts trip${if (conflicts == 1) "" else "s"} on time off" else "${p.holidays.count { it.date >= today }} days ahead"),
+                    Page.TimeOff to (if (conflicts > 0) "$conflicts trip${if (conflicts == 1) "" else "s"} on time off" else dev.railwatch.shared.domain.longWeekends(p, today).firstOrNull()?.let { "Next long weekend ${shortDay(it.start)}" } ?: "${p.holidays.count { it.date >= today }} days off ahead"),
                     Page.Spend to (spendByMonth(p).firstOrNull()?.let { "${monthLabel(it.month, today)} · ${rupees(it.amount)}" } ?: "No fares yet"),
                     Page.Reminders to "Booking and cancellation alerts",
                     Page.Planning to "${p.settings.routineMonthsAhead} months ahead · week starts ${if (p.settings.weekStartsOn == 1) "Monday" else "Sunday"}",
@@ -171,7 +171,9 @@ private fun TimeOffPage(model: AppModel, open: (Journey) -> Unit, info: (String)
     }
     var adding by remember { mutableStateOf(false) }
     val conflicts = timeOffConflicts(p, today)
-    val ahead = p.holidays.filter { it.date >= today }
+    val ranges = dev.railwatch.shared.domain.timeOffRanges(p, today)
+    val weekends = dev.railwatch.shared.domain.longWeekends(p, today)
+    fun span(a: String, b: String) = if (a == b) shortDay(a) else "${dev.railwatch.app.ui.dayMonth(a)} – ${dev.railwatch.app.ui.dayMonth(b)}"
     Column {
         if (conflicts.isNotEmpty()) {
             Grouped {
@@ -179,6 +181,8 @@ private fun TimeOffPage(model: AppModel, open: (Journey) -> Unit, info: (String)
                 conflicts.take(5).forEach { j ->
                     Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                         Text("${shortDay(j.date)} · ${j.from} → ${j.to}", color = Rw.colors.text, modifier = Modifier.weight(1f).clickable { open(j) })
+                        Text(if (j.status == dev.railwatch.shared.domain.JourneyStatus.Booked) "Cancel" else "Skip", color = Rw.colors.danger, fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.clickable { model.setStatus(j, if (j.status == dev.railwatch.shared.domain.JourneyStatus.Booked) dev.railwatch.shared.domain.JourneyStatus.CancellationNeeded else dev.railwatch.shared.domain.JourneyStatus.Skipped) }.padding(8.dp))
                         Text("Keep", color = Rw.colors.brand, fontWeight = FontWeight.SemiBold, modifier = Modifier.clickable { model.keepOnTimeOff(j) }.padding(8.dp))
                     }
                 }
@@ -191,17 +195,30 @@ private fun TimeOffPage(model: AppModel, open: (Journey) -> Unit, info: (String)
             RowDivider()
             ListRow("Import a calendar", "An .ics file, or a CSV with date,name,type") { pick.launch(arrayOf("text/calendar", "text/csv", "text/comma-separated-values", "text/plain", "application/octet-stream")) }
         }
-        if (ahead.isNotEmpty()) {
+        if (weekends.isNotEmpty()) {
+            Text("LONG WEEKENDS", style = MaterialTheme.typography.labelSmall, color = Rw.colors.muted, modifier = Modifier.padding(start = 4.dp, top = 20.dp, bottom = 8.dp))
+            Grouped {
+                weekends.take(6).forEachIndexed { i, w ->
+                    if (i > 0) RowDivider()
+                    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp)) {
+                        Text("${span(w.start, w.end)} · ${w.days} days", color = Rw.colors.text, fontWeight = FontWeight.SemiBold)
+                        Text("${w.names.joinToString(", ")} · ${if (w.bookingOpen) "booking is open" else "book from ${shortDay(w.planBy)}"}", color = if (w.bookingOpen) Rw.colors.openInk else Rw.colors.muted, style = MaterialTheme.typography.bodyMedium)
+                    }
+                }
+            }
+        }
+        if (ranges.isNotEmpty()) {
             Text("COMING UP", style = MaterialTheme.typography.labelSmall, color = Rw.colors.muted, modifier = Modifier.padding(start = 4.dp, top = 20.dp, bottom = 8.dp))
             Grouped {
-                ahead.forEachIndexed { i, h ->
+                ranges.forEachIndexed { i, r ->
                     if (i > 0) RowDivider()
                     Row(Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(start = 16.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
-                            Text(h.name, color = Rw.colors.text)
-                            Text("${shortDay(h.date)} · ${if (h.type == "leave") "Leave" else "Holiday"}", color = Rw.colors.muted, style = MaterialTheme.typography.bodyMedium)
+                            Text(r.name, color = Rw.colors.text)
+                            val n = r.ids.size
+                            Text("${span(r.start, r.end)}${if (n > 1) " · $n days" else ""} · ${if (r.type == "leave") "Leave" else "Holiday"}", color = Rw.colors.muted, style = MaterialTheme.typography.bodyMedium)
                         }
-                        Icon(RwIcons.Close, "Remove ${h.name}", tint = Rw.colors.muted, modifier = Modifier.size(44.dp).clickable { model.removeTimeOff(h.id) }.padding(12.dp))
+                        Icon(RwIcons.Close, "Remove ${r.name}", tint = Rw.colors.muted, modifier = Modifier.size(44.dp).clickable { r.ids.forEach(model::removeTimeOff) }.padding(12.dp))
                     }
                 }
             }
