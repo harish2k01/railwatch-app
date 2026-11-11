@@ -8,6 +8,19 @@ NativeJourneySheet, NativeBookingDay, NativeTicket), plus the existing mobile ar
 
 ---
 
+## Progress
+
+| Milestone | Status | Notes |
+|---|---|---|
+| M0 Foundations | In progress | Repo, Gradle 9.4.1 / AGP 9.2.1 / Kotlin 2.2.10, shared KMP module with IST helper and JVM tests, Compose app with RailWatch palette (web tokens), Manrope, code-drawn icons, large title, floating tab bar; CI. Debug APK builds (11.2 MB unshrunk). Install on the Redmi blocked by MIUI until "Install via USB" is enabled in Developer options. |
+| M1 Core rules and storage | Not started | |
+| M2 Today, Journeys, sheet, new journey | Not started | |
+| M3 Tickets | Not started | |
+| M4 Reminders and booking day | Not started | |
+| M5 Calendar, time off, spend, settings | Not started | |
+| M6 PNR, widget, backup | Not started | |
+| M7 Polish and release | Not started | |
+
 ## 1. Decisions
 
 | Area | Choice | Why |
