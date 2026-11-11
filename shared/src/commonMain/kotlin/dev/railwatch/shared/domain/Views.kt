@@ -7,6 +7,8 @@ sealed interface DoNext {
     val journey: Journey
     /** Booking has opened and the trip isn't booked yet. */
     data class BookNow(override val journey: Journey) : DoNext
+    /** Several trips are open for booking: one card for all of them (the soonest opens the list). */
+    data class BookMany(override val journey: Journey, val count: Int) : DoNext
     /** Booking opens within the next week. */
     data class OpensSoon(override val journey: Journey, val opens: String) : DoNext
     /** Marked to cancel: confirm once it's cancelled on IRCTC. */
@@ -30,7 +32,9 @@ fun hasTicket(j: Journey) = j.attachments.orEmpty().any { it.type == "applicatio
 fun doNext(p: Planner, today: String, limit: Int = 6): List<DoNext> {
     val list = upcoming(p, today)
     val cancel = list.filter { it.status == JourneyStatus.CancellationNeeded }.map { DoNext.ConfirmCancel(it) }
-    val book = list.filter { it.status == JourneyStatus.NeedsBooking && bookingDay(it) <= today }.map { DoNext.BookNow(it) }
+    val open = list.filter { it.status == JourneyStatus.NeedsBooking && bookingDay(it) <= today }
+    // With a 60-day window most planned trips are open at once: more than two become one card.
+    val book = if (open.size > 2) listOf(DoNext.BookMany(open.first(), open.size)) else open.map { DoNext.BookNow(it) }
     val ticket = list.filter { it.status == JourneyStatus.Booked && !hasTicket(it) }.take(1).map { DoNext.NeedsTicket(it) }
     val soon = list.filter { it.status == JourneyStatus.NeedsBooking && bookingDay(it) > today && daysBetween(today, bookingDay(it)) <= 7 }
         .sortedBy { bookingDay(it) }.map { DoNext.OpensSoon(it, bookingDay(it)) }

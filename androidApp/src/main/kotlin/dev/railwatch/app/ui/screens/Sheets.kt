@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -70,15 +71,24 @@ fun JourneySheet(j: Journey, model: AppModel, close: () -> Unit, confirm: (Strin
             Text("${shortDay(j.date)}${j.leg?.let { if (it == "return") " · Return" else " · Onward" } ?: ""}", style = MaterialTheme.typography.bodyMedium, color = Rw.colors.muted)
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("${j.from} → ${j.to}", style = MaterialTheme.typography.headlineLarge, color = Rw.colors.text, modifier = Modifier.weight(1f))
-                Text(statusLabel(j), style = MaterialTheme.typography.labelMedium, color = Rw.colors.bookedInk, modifier = Modifier.clip(RoundedCornerShape(99.dp)).background(Rw.colors.bookedBg).padding(horizontal = 12.dp, vertical = 5.dp))
+                val (pillBg, pillInk) = when (toneOf(j)) {
+                    dev.railwatch.app.ui.components.Tone.Ok -> Rw.colors.bookedBg to Rw.colors.bookedInk
+                    dev.railwatch.app.ui.components.Tone.Info -> Rw.colors.openBg to Rw.colors.openInk
+                    dev.railwatch.app.ui.components.Tone.Warn -> Rw.colors.attentionBg to Rw.colors.attentionInk
+                    dev.railwatch.app.ui.components.Tone.Muted -> Rw.colors.surface2 to Rw.colors.muted
+                }
+                Text(statusLabel(j), style = MaterialTheme.typography.labelMedium, color = pillInk, modifier = Modifier.clip(RoundedCornerShape(99.dp)).background(pillBg).padding(horizontal = 12.dp, vertical = 5.dp))
             }
             Text(listOfNotNull(name(j.from), name(j.to)).joinToString(" to "), style = MaterialTheme.typography.bodyLarge, color = Rw.colors.muted)
         }
         val timing = tripTiming(j)
         Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(Rw.colors.surface2).padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-            Fact("Departs", if (j.departureConfirmed == true || j.status != JourneyStatus.NeedsBooking) j.departure else "Around ${j.departure}", Rw.colors.text, Modifier.weight(1f))
+            // Times come from the ticket; until then there is nothing to show.
+            Fact("Departs", if (j.departureConfirmed == true) j.departure else "—", Rw.colors.text, Modifier.weight(1f))
             Fact("Arrives", timing?.substringAfter(" → ")?.substringBefore(" · ") ?: "—", Rw.colors.text, Modifier.weight(1f))
-            Fact(if (j.status == JourneyStatus.NeedsBooking) "Booking opens" else "Travel", if (j.status == JourneyStatus.NeedsBooking) "${shortDay(bookingDay(j))} ${bookingClock(j)}" else relative(today, j.date), Rw.colors.text, Modifier.weight(1.3f))
+            val opens = bookingDay(j)
+            Fact(if (j.status != JourneyStatus.NeedsBooking) "Travel" else if (opens <= today) "Booking opened" else "Booking opens",
+                if (j.status == JourneyStatus.NeedsBooking) "${shortDay(opens)} ${bookingClock(j)}" else relative(today, j.date), Rw.colors.text, Modifier.weight(1.4f))
         }
         val facts = listOfNotNull(j.trainNumber?.takeIf { it.isNotBlank() }?.let { "Train" to it }, j.coach?.let { "Coach" to it },
             listOfNotNull(j.seat, j.berth?.let(::berthLabel)).joinToString(" ").takeIf { it.isNotEmpty() }?.let { "Berth" to it },
@@ -166,14 +176,14 @@ private fun PickerRow(label: String, value: String, onClick: () -> Unit) {
 @Composable
 fun NewJourneySheet(model: AppModel, close: () -> Unit) {
     var from by remember { mutableStateOf("") }; var to by remember { mutableStateOf("") }
-    var date by remember { mutableStateOf("") }; var time by remember { mutableStateOf("20:00") }
+    var date by remember { mutableStateOf("") }
+    val time = "00:00" // the real departure comes from the ticket
     val ok = from.isNotBlank() && to.isNotBlank() && from != to && date.isNotEmpty()
     Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp).padding(bottom = 28.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text("New journey", style = MaterialTheme.typography.headlineSmall, color = Rw.colors.text)
         StationField("From", from, model) { from = it }
         StationField("To", to, model) { to = it }
         DateField("Travel date", date, { date = it }, min = model.today)
-        TimeField("Departure (approx.)", time) { time = it }
         if (date.isNotEmpty()) Text("Booking opens ${shortDay(bookingDay(Journey(id = "", from = from, to = to, date = date, departure = time, windowDays = model.planner.settings.bookingWindowDays)))} at 08:00",
             style = MaterialTheme.typography.bodyMedium, color = Rw.colors.muted)
         PrimaryButton("Save journey", {
@@ -182,17 +192,18 @@ fun NewJourneySheet(model: AppModel, close: () -> Unit) {
     }
 }
 
-/** New or edited routine (bottom sheet). */
+/** New or edited routine (bottom sheet): name, stations, days, start; an optional return; optionally linked to another routine. */
 @Composable
 fun RoutineSheet(model: AppModel, existing: Rule?, close: () -> Unit) {
     var name by remember { mutableStateOf(existing?.name ?: "Weekly Office Travel") }
     var from by remember { mutableStateOf(existing?.from ?: "") }; var to by remember { mutableStateOf(existing?.to ?: "") }
     var days by remember { mutableStateOf(existing?.weekdays?.toSet() ?: setOf(2)) }
-    var departure by remember { mutableStateOf(existing?.departure ?: "20:00") }
+    var withReturn by remember { mutableStateOf(existing?.returnAfterDays != null) }
     var returnAfter by remember { mutableStateOf(existing?.returnAfterDays?.toString() ?: "2") }
-    var returnDeparture by remember { mutableStateOf(existing?.returnDeparture?.ifEmpty { null } ?: "21:00") }
     var start by remember { mutableStateOf(existing?.start ?: model.today) }
-    val ok = name.isNotBlank() && from.isNotBlank() && to.isNotBlank() && from != to && days.isNotEmpty()
+    var linked by remember { mutableStateOf(existing?.linkedRuleId) }
+    val others = model.planner.rules.filter { it.id != existing?.id }
+    val ok = name.isNotBlank() && from.isNotBlank() && to.isNotBlank() && from != to && days.isNotEmpty() && (!withReturn || returnAfter.isNotEmpty())
     Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp).padding(bottom = 28.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(if (existing == null) "New routine" else "Edit routine", style = MaterialTheme.typography.headlineSmall, color = Rw.colors.text)
         OutlinedTextField(name, { name = it }, label = { Text("Name") }, singleLine = true, modifier = Modifier.fillMaxWidth(), colors = fieldColors())
@@ -207,17 +218,39 @@ fun RoutineSheet(model: AppModel, existing: Rule?, close: () -> Unit) {
                 }
             }
         }
-        TimeField("Onward departure", departure) { departure = it }
-        OutlinedTextField(returnAfter, { returnAfter = it.filter(Char::isDigit).take(2) }, label = { Text("Return after (days, blank for none)") }, singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.fillMaxWidth(), colors = fieldColors())
-        if (returnAfter.isNotEmpty()) TimeField("Return departure", returnDeparture) { returnDeparture = it }
         DateField("Starts", start, { start = it })
+        Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Rw.colors.surface2).clickable { withReturn = !withReturn }.heightIn(min = 56.dp).padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text("Return trip", style = MaterialTheme.typography.titleMedium, color = Rw.colors.text)
+                Text("Plan the way back with each trip", style = MaterialTheme.typography.bodyMedium, color = Rw.colors.muted)
+            }
+            androidx.compose.material3.Switch(withReturn, { withReturn = it }, colors = androidx.compose.material3.SwitchDefaults.colors(checkedTrackColor = Rw.colors.brand, checkedThumbColor = Rw.colors.brandInk))
+        }
+        if (withReturn) OutlinedTextField(returnAfter, { returnAfter = it.filter(Char::isDigit).take(2) }, label = { Text("Days after (0 = same day)") }, singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.fillMaxWidth(), colors = fieldColors())
+        if (others.isNotEmpty()) {
+            Text("Linked routine", style = MaterialTheme.typography.bodyMedium, color = Rw.colors.muted)
+            Text("Link a separate return routine (for example onward Tue, back Thu) so they show together.", style = MaterialTheme.typography.bodyMedium, color = Rw.colors.muted)
+            Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                (listOf<Rule?>(null) + others).forEach { r ->
+                    val on = linked == r?.id
+                    Text(r?.name ?: "None", style = MaterialTheme.typography.titleMedium, color = if (on) Rw.colors.brandSoftInk else Rw.colors.text,
+                        modifier = Modifier.clip(RoundedCornerShape(99.dp)).background(if (on) Rw.colors.brandSoft else Rw.colors.surface2).clickable { linked = r?.id }.padding(horizontal = 14.dp, vertical = 10.dp))
+                }
+            }
+        }
         PrimaryButton("Save routine", {
-            model.saveRoutine(Rule(id = existing?.id ?: UUID.randomUUID().toString(), name = name.trim(), from = from, to = to, start = start, weekdays = days.sorted(),
-                departure = departure, returnAfterDays = returnAfter.toIntOrNull(), returnDeparture = returnDeparture, windowDays = model.planner.settings.bookingWindowDays)); close()
+            val id = existing?.id ?: UUID.randomUUID().toString()
+            model.saveRoutine(Rule(id = id, name = name.trim(), from = from, to = to, start = start, weekdays = days.sorted(), linkedRuleId = linked,
+                // Times come from the ticket; the routine keeps a placeholder departure only because the shared model needs one.
+                departure = existing?.departure ?: "00:00", returnAfterDays = if (withReturn) returnAfter.toIntOrNull() else null,
+                returnDeparture = existing?.returnDeparture?.ifEmpty { null } ?: "00:00", windowDays = model.planner.settings.bookingWindowDays))
+            // Linking is two-way: the other routine points back at this one.
+            if (linked != null) model.planner.rules.firstOrNull { it.id == linked && it.linkedRuleId != id }?.let { model.saveRoutine(it.copy(linkedRuleId = id)) }
+            close()
         }, enabled = ok)
         if (existing != null) Text("Delete routine", style = MaterialTheme.typography.titleMedium, color = Rw.colors.danger,
             modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable { model.deleteRoutine(existing.id); close() }.padding(vertical = 8.dp))
-        Row { Icon(RwIcons.Clock, null, tint = Rw.colors.muted, modifier = Modifier.padding(end = 8.dp)); Text("Booked trips and trips you changed are kept when you edit a routine.", style = MaterialTheme.typography.bodyMedium, color = Rw.colors.muted) }
+        Text("Booked trips and trips you changed are kept when you edit a routine.", style = MaterialTheme.typography.bodyMedium, color = Rw.colors.muted)
     }
 }

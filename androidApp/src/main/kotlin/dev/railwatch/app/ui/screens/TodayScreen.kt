@@ -71,7 +71,7 @@ fun TodayScreen(model: AppModel, open: (Journey) -> Unit, newRoutine: () -> Unit
         if (cards.isNotEmpty()) {
             item { SectionHead("Do next", "See all", seeAll) }
             item {
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) { items(cards, key = { it::class.simpleName + it.journey.id }) { c -> DoCard(c) { open(c.journey) } } }
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) { items(cards, key = { it::class.simpleName + it.journey.id }) { c -> DoCard(c) { if (c is DoNext.BookMany) seeAll() else open(c.journey) } } }
             }
         }
         if (week.isNotEmpty()) {
@@ -137,6 +137,7 @@ private fun Stop(code: String, name: String?, ink: Color, modifier: Modifier, al
 private fun DoCard(c: DoNext, onClick: () -> Unit) {
     val (bg, ink, icon, title, line) = when (c) {
         is DoNext.BookNow -> Quint(Rw.colors.attentionBg, Rw.colors.attentionInk, RwIcons.Ticket, "Book now", "Booking window is open")
+        is DoNext.BookMany -> Quint(Rw.colors.attentionBg, Rw.colors.attentionInk, RwIcons.Ticket, "${c.count} trips to book", "Booking is open · soonest")
         is DoNext.OpensSoon -> Quint(Rw.colors.openBg, Rw.colors.openInk, RwIcons.Clock, "Booking opens", shortDay(c.opens) + " · 08:00")
         is DoNext.ConfirmCancel -> Quint(Rw.colors.cancelBg, Rw.colors.cancelInk, RwIcons.Close, "Confirm cancellation", "Cancelled on IRCTC?")
         is DoNext.NeedsTicket -> Quint(Rw.colors.attentionBg, Rw.colors.attentionInk, RwIcons.Ticket, "Share the ticket", "So it’s here offline")
