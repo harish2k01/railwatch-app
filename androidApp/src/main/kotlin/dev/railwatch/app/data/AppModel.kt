@@ -74,6 +74,12 @@ class AppModel(context: Context) {
         if (n == 0) "Those days were already in your time off." else "Added $n day${if (n == 1) "" else "s"} of time off."
     }.getOrElse { it.message ?: "Couldn't read that file." }
     fun addTimeOff(date: String, name: String, type: String) = update { p -> dev.railwatch.shared.domain.addTimeOff(p, listOf(dev.railwatch.shared.domain.TimeOffDay(date, name, type))) { java.util.UUID.randomUUID().toString() }.first }
+    /** Replaces the given days (none when adding) with one day per date from start to end. */
+    fun setTimeOff(replace: List<String>, start: String, end: String, name: String, type: String) = update { p ->
+        val days = generateSequence(start) { dev.railwatch.shared.domain.addDays(it, 1) }.takeWhile { it <= end }.take(366)
+            .map { dev.railwatch.shared.domain.TimeOffDay(it, name, type) }.toList()
+        dev.railwatch.shared.domain.addTimeOff(p.copy(holidays = p.holidays.filter { it.id !in replace }), days) { java.util.UUID.randomUUID().toString() }.first
+    }
     fun removeTimeOff(id: String) = update { p -> p.copy(holidays = p.holidays.filter { it.id != id }) }
     fun keepOnTimeOff(j: Journey) = saveJourney(j.copy(timeOffKept = true))
 

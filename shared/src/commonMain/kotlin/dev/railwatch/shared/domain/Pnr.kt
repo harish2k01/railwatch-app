@@ -46,6 +46,15 @@ fun pnrSummary(s: PnrSnapshot): String? {
     }
 }
 
+/** Whether one passenger's current status is cancelled. */
+fun isCancelled(p: PnrPassenger) = Regex("^(CAN|CANCELLED|CANCELED)\\b", RegexOption.IGNORE_CASE).containsMatchIn(p.current.trim())
+
+/** "1 of 3 cancelled" when only some passengers are cancelled; null otherwise. */
+fun partlyCancelled(s: PnrSnapshot): String? {
+    val n = s.passengers.count(::isCancelled)
+    return if (n in 1 until s.passengers.size) "$n of ${s.passengers.size} cancelled" else null
+}
+
 /** The status to show: a live check for this PNR first, then what the ticket said. */
 fun effectiveTicketStatus(j: Journey): String? {
     j.pnrStatus?.let { return if (it.pnr == j.pnr) pnrSummary(it) else j.ticketStatus }
@@ -63,7 +72,10 @@ fun applyPnrStatus(j: Journey, s: PnrSnapshot): Journey {
     val summary = pnrSummary(s)
     val previous = if (j.pnrStatus?.pnr == j.pnr) pnrSummary(j.pnrStatus!!) else j.currentStatus ?: j.ticketStatus
     val log = if (summary != null && summary != previous) ((j.statusLog ?: emptyList()) + StatusEntry(s.checkedAt, summary)).takeLast(40) else j.statusLog
-    return j.copy(pnrStatus = s, pnrLastAttemptAt = s.checkedAt, pnrLastError = null, currentStatus = summary ?: "See passengers", statusLog = log)
+    // Passengers who are still travelling decide the summary when only some are cancelled.
+    val live = s.copy(passengers = s.passengers.filterNot(::isCancelled)).takeIf { partlyCancelled(s) != null }?.let(::pnrSummary)
+    val shown = partlyCancelled(s)?.let { p -> listOfNotNull(live, p).joinToString(" · ") } ?: summary ?: "See passengers"
+    return j.copy(pnrStatus = s, pnrLastAttemptAt = s.checkedAt, pnrLastError = null, currentStatus = shown, statusLog = log)
 }
 
 /** Suggest a check (never run one): booked, has a PNR, travels within 3 days, and is WL/RAC or not checked in 12 hours. */

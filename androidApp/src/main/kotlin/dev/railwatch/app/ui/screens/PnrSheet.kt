@@ -71,9 +71,10 @@ fun PnrSheet(j: Journey, model: AppModel, confirm: (String, () -> Unit) -> Unit,
             loading = true; error = null
             when (val r = client.finish(j.pnr, answer)) {
                 is PnrClient.Result.Ok -> {
-                    val updated = applyPnrStatus(j, r.snapshot); model.saveJourney(updated); result = r.snapshot
-                    if (pnrSummary(r.snapshot) == "CANCELLED" && j.status == JourneyStatus.Booked)
-                        confirm("Indian Railways shows this PNR as cancelled. Mark the trip as cancelled?") { model.setStatus(updated, JourneyStatus.Cancelled) }
+                    val updated = applyPnrStatus(j, r.snapshot); result = r.snapshot
+                    // Whole PNR cancelled: the trip moves to Cancelled. Some passengers cancelled: flagged here and on the trip.
+                    if (pnrSummary(r.snapshot) == "CANCELLED" && j.status != JourneyStatus.Cancelled) model.setStatus(updated, JourneyStatus.Cancelled)
+                    else model.saveJourney(updated)
                 }
                 PnrClient.Result.WrongAnswer -> { error = "That answer didn't match. Try the new picture."; round++ }
                 is PnrClient.Result.Failed -> { error = r.message; model.saveJourney(j.copy(pnrLastAttemptAt = kotlinx.datetime.Clock.System.now().toString(), pnrLastError = r.message)) }
@@ -89,14 +90,28 @@ fun PnrSheet(j: Journey, model: AppModel, confirm: (String, () -> Unit) -> Unit,
         if (r != null) {
             val summary = pnrSummary(r)
             Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(if (summary == "CNF") Rw.colors.bookedBg else Rw.colors.attentionBg).padding(18.dp)) {
-                Text(when (summary) { "CNF" -> "Confirmed"; "RAC" -> "RAC"; "WL" -> "Waitlisted"; "CANCELLED" -> "Cancelled"; else -> "See passengers" },
-                    style = MaterialTheme.typography.headlineSmall, color = if (summary == "CNF") Rw.colors.bookedInk else Rw.colors.attentionInk)
-                if (r.chartStatus.isNotEmpty()) Text(r.chartStatus, color = if (summary == "CNF") Rw.colors.bookedInk else Rw.colors.attentionInk)
+                val partly = dev.railwatch.shared.domain.partlyCancelled(r)
+                val ink = if (summary == "CNF") Rw.colors.bookedInk else Rw.colors.attentionInk
+                Text(when { partly != null -> partly.replaceFirstChar { it.uppercase() }; summary == "CNF" -> "Confirmed"; summary == "RAC" -> "RAC: a shared berth"; summary == "WL" -> "Waitlisted"; summary == "CANCELLED" -> "Cancelled"; else -> "Mixed: see passengers" },
+                    style = MaterialTheme.typography.headlineSmall, color = ink)
+                Text(when {
+                    summary == "CANCELLED" -> "Every passenger is cancelled, so the trip moved to Cancelled."
+                    partly != null -> "The other passengers are still booked."
+                    summary == "WL" -> "Not confirmed yet. Check again nearer the chart."
+                    summary == "RAC" -> "You can travel; a full berth may come when the chart is prepared."
+                    else -> r.chartStatus
+                }, color = ink)
+                if (r.chartStatus.isNotEmpty() && summary != "CANCELLED") Text(r.chartStatus, color = ink, style = MaterialTheme.typography.bodyMedium)
             }
             r.passengers.forEach { p ->
-                Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Rw.colors.surface2).padding(14.dp)) {
-                    Text("Passenger ${p.number}", color = Rw.colors.muted, modifier = Modifier.weight(1f))
-                    Text(listOf(p.current, listOf(p.coach, p.berth).filter { it.isNotEmpty() && it != "0" }.joinToString(" / ")).filter { it.isNotEmpty() }.joinToString(" · "), color = Rw.colors.text, fontWeight = FontWeight.SemiBold)
+                val gone = dev.railwatch.shared.domain.isCancelled(p)
+                Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(if (gone) Rw.colors.cancelBg else Rw.colors.surface2).padding(14.dp)) {
+                    Column(Modifier.weight(1f)) {
+                        Text("Passenger ${p.number}", color = if (gone) Rw.colors.cancelInk else Rw.colors.muted)
+                        if (p.booking.isNotEmpty()) Text("Booked ${p.booking}", color = Rw.colors.muted, style = MaterialTheme.typography.bodyMedium)
+                    }
+                    Text(if (gone) "Cancelled" else listOf(p.current, listOf(p.coach, p.berth).filter { it.isNotEmpty() && it != "0" }.joinToString(" / ")).filter { it.isNotEmpty() }.joinToString(" · "),
+                        color = if (gone) Rw.colors.cancelInk else Rw.colors.text, fontWeight = FontWeight.SemiBold)
                 }
             }
             PrimaryButton("Done", close, Modifier.fillMaxWidth())

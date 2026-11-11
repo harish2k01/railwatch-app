@@ -228,7 +228,7 @@ private fun EmptyStart(hasRoutines: Boolean, newRoutine: () -> Unit) {
 
 /** Status dot colour for a journey. */
 fun toneOf(j: Journey) = when (j.status) {
-    JourneyStatus.Booked -> if (j.ticketStatus == "WL" || j.ticketStatus == "RAC") dev.railwatch.app.ui.components.Tone.Warn else dev.railwatch.app.ui.components.Tone.Ok
+    JourneyStatus.Booked -> if (dev.railwatch.shared.domain.effectiveTicketStatus(j) in setOf("WL", "RAC") || j.pnrStatus?.let { dev.railwatch.shared.domain.partlyCancelled(it) } != null) dev.railwatch.app.ui.components.Tone.Warn else dev.railwatch.app.ui.components.Tone.Ok
     JourneyStatus.NeedsBooking -> dev.railwatch.app.ui.components.Tone.Info
     JourneyStatus.CancellationNeeded -> dev.railwatch.app.ui.components.Tone.Warn
     else -> dev.railwatch.app.ui.components.Tone.Muted

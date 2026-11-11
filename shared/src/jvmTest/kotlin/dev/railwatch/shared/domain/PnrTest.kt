@@ -39,6 +39,13 @@ class PnrTest {
         assertEquals(listOf(StatusEntry(now.toString(), "CANCELLED")), after.statusLog)
     }
 
+    @Test fun partlyCancelledShowsWhoIsStillTravelling() {
+        val j = Journey(id = "j", from = "AAA", to = "BBB", date = "2026-11-14", departure = "22:00", status = JourneyStatus.Booked, pnr = "1234567890")
+        val s = PnrSnapshot("1234567890", now.toString(), "", listOf(PnrPassenger(1, "", "CNF/S1/2", "", ""), PnrPassenger(2, "", "CAN", "", "")))
+        assertEquals("1 of 2 cancelled", partlyCancelled(s))
+        assertEquals("CNF · 1 of 2 cancelled", applyPnrStatus(j, s).currentStatus)
+    }
+
     @Test fun suggestsChecksCloseToTravel() {
         val j = Journey(id = "j", from = "AAA", to = "BBB", date = "2026-11-14", departure = "22:00", status = JourneyStatus.Booked, pnr = "1234567890", ticketStatus = "CNF")
         assertTrue(suggestPnrCheck(j, "2026-11-12", now))

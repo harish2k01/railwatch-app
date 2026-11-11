@@ -58,6 +58,8 @@ private sealed interface Sheet {
     data class Pdf(val id: String, val file: String) : Sheet
     data class Booking(val id: String) : Sheet
     data class Pnr(val id: String) : Sheet
+    data object Add : Sheet
+    data class TimeOff(val range: dev.railwatch.shared.domain.TimeOffRange?) : Sheet
 }
 
 /** App shell: the current tab under a large title, bottom sheets for details and forms, the floating tab bar. */
@@ -93,7 +95,7 @@ fun RailWatchApp(shared: List<Uri> = emptyList(), consumeShared: () -> Unit = {}
             Tab.Calendar -> dev.railwatch.app.ui.screens.CalendarScreen(model, open = openJourney, contentPadding = pad)
             Tab.More -> YouScreen(model, editRoutine = { sheet = Sheet.Routine(it) }, open = openJourney, showTicket = { sheet = Sheet.Pass(it.id) }, info = { info = it }, contentPadding = pad)
         }
-        FloatingTabBar(selected = tab, onSelect = { tab = it }, onNew = { sheet = Sheet.New }, modifier = Modifier.align(Alignment.BottomCenter))
+        FloatingTabBar(selected = tab, onSelect = { tab = it }, onNew = { sheet = Sheet.Add }, modifier = Modifier.align(Alignment.BottomCenter))
     }
     sheet?.let { s ->
         ModalBottomSheet(onDismissRequest = { if (s !is Sheet.Import) sheet = null }, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Rw.colors.surface) {
@@ -110,6 +112,11 @@ fun RailWatchApp(shared: List<Uri> = emptyList(), consumeShared: () -> Unit = {}
                 is Sheet.Import -> ImportSheet(model, s.uris) { msg -> sheet = null; if (msg.isNotEmpty()) { info = msg } }
                 is Sheet.Pass -> find(s.id)?.let { j -> j.attachments?.firstOrNull { it.type == "application/pdf" }?.let { f -> TicketPass(j, f, model) { sheet = Sheet.Pdf(j.id, f.id) } } }
                 is Sheet.Pdf -> find(s.id)?.attachments?.firstOrNull { it.id == s.file }?.let { PdfPages(model, it) }
+                Sheet.Add -> dev.railwatch.app.ui.screens.AddSheet(
+                    journey = { sheet = Sheet.New }, routine = { sheet = Sheet.Routine(null) },
+                    timeOff = { sheet = Sheet.TimeOff(null) },
+                    ticket = { uris -> sheet = if (uris.isEmpty()) null else Sheet.Import(uris) })
+                is Sheet.TimeOff -> dev.railwatch.app.ui.screens.TimeOffSheet(model, s.range) { msg -> sheet = null; info = msg }
                 is Sheet.Pnr -> find(s.id)?.let { dev.railwatch.app.ui.screens.PnrSheet(it, model, confirm) { sheet = Sheet.Journey(it.id) } }
                 is Sheet.Booking -> find(s.id)?.let { dev.railwatch.app.ui.screens.BookingDaySheet(it, model) { sheet = null } }
             }

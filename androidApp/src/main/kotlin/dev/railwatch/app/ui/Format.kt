@@ -27,7 +27,8 @@ fun relative(today: String, day: String): String = when (val n = daysBetween(tod
 /** How a trip's state reads to a person. */
 fun statusLabel(j: Journey): String = when (j.status) {
     JourneyStatus.NeedsBooking -> "Planned"
-    JourneyStatus.Booked -> when (j.ticketStatus) { "WL" -> "Waitlisted"; "RAC" -> "RAC"; else -> "Confirmed" }
+    JourneyStatus.Booked -> j.pnrStatus?.takeIf { it.pnr == j.pnr }?.let { dev.railwatch.shared.domain.partlyCancelled(it) }?.replaceFirstChar { it.uppercase() }
+        ?: when (dev.railwatch.shared.domain.effectiveTicketStatus(j)) { "WL" -> "Waitlisted"; "RAC" -> "RAC"; else -> "Confirmed" }
     JourneyStatus.CancellationNeeded -> "To cancel"
     JourneyStatus.Cancelled -> "Cancelled"
     JourneyStatus.Skipped -> "Skipped"
