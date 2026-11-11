@@ -1,0 +1,19 @@
+name: CI
+on:
+  push: { branches: [main] }
+  pull_request: {}
+permissions: { contents: read }
+concurrency: { group: ci-${{ github.ref }}, cancel-in-progress: true }
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v5
+        with: { distribution: temurin, java-version: 21 }
+      - uses: gradle/actions/setup-gradle@v5
+      - name: Shared tests, lint and debug APK
+        run: ./gradlew :shared:jvmTest :androidApp:lintDebug :androidApp:assembleDebug --console=plain
+      - uses: actions/upload-artifact@v5
+        with: { name: railwatch-debug-apk, path: androidApp/build/outputs/apk/debug/*.apk, retention-days: 14 }
