@@ -1,0 +1,3094 @@
+{
+ "source": "railwatch web src/lib/travel-planner.ts",
+ "generate": [
+  {
+   "name": "weekly Tue with return after 2 days, 6 months",
+   "rule": {
+    "id": "r1",
+    "name": "Weekly Office Travel",
+    "from": "MDU",
+    "to": "MS",
+    "train": "",
+    "travelClass": "",
+    "windowDays": 60,
+    "originOffset": 0,
+    "start": "2026-11-02",
+    "end": null,
+    "paused": false,
+    "excludedDates": [],
+    "weekdays": [
+     2
+    ],
+    "intervalWeeks": 1,
+    "departure": "23:10",
+    "returnAfterDays": 2,
+    "returnDeparture": "21:40",
+    "returnTrain": "",
+    "returnOriginOffset": 0
+   },
+   "today": "2026-11-11",
+   "settings": {
+    "cancellationTime": "09:00",
+    "cancellationEnabled": true,
+    "emailEnabled": false,
+    "telegramEnabled": false,
+    "telegramChatId": "",
+    "telegramProviderId": "",
+    "weekStartsOn": 0,
+    "routineHorizonMode": "months",
+    "routineMonthsAhead": 6,
+    "routineTicketCount": 26,
+    "whatsappEnabled": false,
+    "sidebarCollapsed": false,
+    "bookingWindowDays": 60,
+    "theme": "light",
+    "weekendDays": [
+     0,
+     6
+    ],
+    "reminderTimes": [
+     "previous_evening",
+     "morning",
+     "opening"
+    ],
+    "reminderClock": {
+     "previous_evening": "20:00",
+     "morning": "07:00",
+     "opening": "07:55"
+    },
+    "whatsappNumber": ""
+   },
+   "expected": [
+    {
+     "id": "r1:2026-11-17:outbound",
+     "date": "2026-11-17",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2026-11-17:return",
+     "date": "2026-11-19",
+     "from": "MS",
+     "to": "MDU",
+     "departure": "21:40",
+     "leg": "return",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2026-11-24:outbound",
+     "date": "2026-11-24",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2026-11-24:return",
+     "date": "2026-11-26",
+     "from": "MS",
+     "to": "MDU",
+     "departure": "21:40",
+     "leg": "return",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2026-12-01:outbound",
+     "date": "2026-12-01",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2026-12-01:return",
+     "date": "2026-12-03",
+     "from": "MS",
+     "to": "MDU",
+     "departure": "21:40",
+     "leg": "return",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2026-12-08:outbound",
+     "date": "2026-12-08",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2026-12-08:return",
+     "date": "2026-12-10",
+     "from": "MS",
+     "to": "MDU",
+     "departure": "21:40",
+     "leg": "return",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2026-12-15:outbound",
+     "date": "2026-12-15",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2026-12-15:return",
+     "date": "2026-12-17",
+     "from": "MS",
+     "to": "MDU",
+     "departure": "21:40",
+     "leg": "return",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2026-12-22:outbound",
+     "date": "2026-12-22",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2026-12-22:return",
+     "date": "2026-12-24",
+     "from": "MS",
+     "to": "MDU",
+     "departure": "21:40",
+     "leg": "return",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2026-12-29:outbound",
+     "date": "2026-12-29",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2026-12-29:return",
+     "date": "2026-12-31",
+     "from": "MS",
+     "to": "MDU",
+     "departure": "21:40",
+     "leg": "return",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-01-05:outbound",
+     "date": "2027-01-05",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-01-05:return",
+     "date": "2027-01-07",
+     "from": "MS",
+     "to": "MDU",
+     "departure": "21:40",
+     "leg": "return",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-01-12:outbound",
+     "date": "2027-01-12",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-01-12:return",
+     "date": "2027-01-14",
+     "from": "MS",
+     "to": "MDU",
+     "departure": "21:40",
+     "leg": "return",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-01-19:outbound",
+     "date": "2027-01-19",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-01-19:return",
+     "date": "2027-01-21",
+     "from": "MS",
+     "to": "MDU",
+     "departure": "21:40",
+     "leg": "return",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-01-26:outbound",
+     "date": "2027-01-26",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-01-26:return",
+     "date": "2027-01-28",
+     "from": "MS",
+     "to": "MDU",
+     "departure": "21:40",
+     "leg": "return",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-02-02:outbound",
+     "date": "2027-02-02",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-02-02:return",
+     "date": "2027-02-04",
+     "from": "MS",
+     "to": "MDU",
+     "departure": "21:40",
+     "leg": "return",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-02-09:outbound",
+     "date": "2027-02-09",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-02-09:return",
+     "date": "2027-02-11",
+     "from": "MS",
+     "to": "MDU",
+     "departure": "21:40",
+     "leg": "return",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-02-16:outbound",
+     "date": "2027-02-16",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-02-16:return",
+     "date": "2027-02-18",
+     "from": "MS",
+     "to": "MDU",
+     "departure": "21:40",
+     "leg": "return",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-02-23:outbound",
+     "date": "2027-02-23",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-02-23:return",
+     "date": "2027-02-25",
+     "from": "MS",
+     "to": "MDU",
+     "departure": "21:40",
+     "leg": "return",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-03-02:outbound",
+     "date": "2027-03-02",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-03-02:return",
+     "date": "2027-03-04",
+     "from": "MS",
+     "to": "MDU",
+     "departure": "21:40",
+     "leg": "return",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-03-09:outbound",
+     "date": "2027-03-09",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-03-09:return",
+     "date": "2027-03-11",
+     "from": "MS",
+     "to": "MDU",
+     "departure": "21:40",
+     "leg": "return",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-03-16:outbound",
+     "date": "2027-03-16",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-03-16:return",
+     "date": "2027-03-18",
+     "from": "MS",
+     "to": "MDU",
+     "departure": "21:40",
+     "leg": "return",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-03-23:outbound",
+     "date": "2027-03-23",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-03-23:return",
+     "date": "2027-03-25",
+     "from": "MS",
+     "to": "MDU",
+     "departure": "21:40",
+     "leg": "return",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-03-30:outbound",
+     "date": "2027-03-30",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-03-30:return",
+     "date": "2027-04-01",
+     "from": "MS",
+     "to": "MDU",
+     "departure": "21:40",
+     "leg": "return",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-04-06:outbound",
+     "date": "2027-04-06",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-04-06:return",
+     "date": "2027-04-08",
+     "from": "MS",
+     "to": "MDU",
+     "departure": "21:40",
+     "leg": "return",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-04-13:outbound",
+     "date": "2027-04-13",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-04-13:return",
+     "date": "2027-04-15",
+     "from": "MS",
+     "to": "MDU",
+     "departure": "21:40",
+     "leg": "return",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-04-20:outbound",
+     "date": "2027-04-20",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-04-20:return",
+     "date": "2027-04-22",
+     "from": "MS",
+     "to": "MDU",
+     "departure": "21:40",
+     "leg": "return",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-04-27:outbound",
+     "date": "2027-04-27",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-04-27:return",
+     "date": "2027-04-29",
+     "from": "MS",
+     "to": "MDU",
+     "departure": "21:40",
+     "leg": "return",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-05-04:outbound",
+     "date": "2027-05-04",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-05-04:return",
+     "date": "2027-05-06",
+     "from": "MS",
+     "to": "MDU",
+     "departure": "21:40",
+     "leg": "return",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-05-11:outbound",
+     "date": "2027-05-11",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-05-11:return",
+     "date": "2027-05-13",
+     "from": "MS",
+     "to": "MDU",
+     "departure": "21:40",
+     "leg": "return",
+     "ruleId": "r1",
+     "train": ""
+    }
+   ]
+  },
+  {
+   "name": "every 2 weeks Mon+Thu, no return",
+   "rule": {
+    "id": "r1",
+    "name": "Weekly Office Travel",
+    "from": "MDU",
+    "to": "MS",
+    "train": "",
+    "travelClass": "",
+    "windowDays": 60,
+    "originOffset": 0,
+    "start": "2026-11-02",
+    "end": null,
+    "paused": false,
+    "excludedDates": [],
+    "weekdays": [
+     1,
+     4
+    ],
+    "intervalWeeks": 2,
+    "departure": "23:10",
+    "returnAfterDays": null,
+    "returnDeparture": "21:40",
+    "returnTrain": "",
+    "returnOriginOffset": 0
+   },
+   "today": "2026-11-11",
+   "settings": {
+    "cancellationTime": "09:00",
+    "cancellationEnabled": true,
+    "emailEnabled": false,
+    "telegramEnabled": false,
+    "telegramChatId": "",
+    "telegramProviderId": "",
+    "weekStartsOn": 0,
+    "routineHorizonMode": "months",
+    "routineMonthsAhead": 2,
+    "routineTicketCount": 26,
+    "whatsappEnabled": false,
+    "sidebarCollapsed": false,
+    "bookingWindowDays": 60,
+    "theme": "light",
+    "weekendDays": [
+     0,
+     6
+    ],
+    "reminderTimes": [
+     "previous_evening",
+     "morning",
+     "opening"
+    ],
+    "reminderClock": {
+     "previous_evening": "20:00",
+     "morning": "07:00",
+     "opening": "07:55"
+    },
+    "whatsappNumber": ""
+   },
+   "expected": [
+    {
+     "id": "r1:2026-11-16:outbound",
+     "date": "2026-11-16",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2026-11-19:outbound",
+     "date": "2026-11-19",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2026-11-30:outbound",
+     "date": "2026-11-30",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2026-12-03:outbound",
+     "date": "2026-12-03",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2026-12-14:outbound",
+     "date": "2026-12-14",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2026-12-17:outbound",
+     "date": "2026-12-17",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2026-12-28:outbound",
+     "date": "2026-12-28",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2026-12-31:outbound",
+     "date": "2026-12-31",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-01-11:outbound",
+     "date": "2027-01-11",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    }
+   ]
+  },
+  {
+   "name": "count mode: 5 journeys",
+   "rule": {
+    "id": "r1",
+    "name": "Weekly Office Travel",
+    "from": "MDU",
+    "to": "MS",
+    "train": "",
+    "travelClass": "",
+    "windowDays": 60,
+    "originOffset": 0,
+    "start": "2026-11-02",
+    "end": null,
+    "paused": false,
+    "excludedDates": [],
+    "weekdays": [
+     2
+    ],
+    "intervalWeeks": 1,
+    "departure": "23:10",
+    "returnAfterDays": null,
+    "returnDeparture": "21:40",
+    "returnTrain": "",
+    "returnOriginOffset": 0
+   },
+   "today": "2026-11-11",
+   "settings": {
+    "cancellationTime": "09:00",
+    "cancellationEnabled": true,
+    "emailEnabled": false,
+    "telegramEnabled": false,
+    "telegramChatId": "",
+    "telegramProviderId": "",
+    "weekStartsOn": 0,
+    "routineHorizonMode": "count",
+    "routineMonthsAhead": 6,
+    "routineTicketCount": 5,
+    "whatsappEnabled": false,
+    "sidebarCollapsed": false,
+    "bookingWindowDays": 60,
+    "theme": "light",
+    "weekendDays": [
+     0,
+     6
+    ],
+    "reminderTimes": [
+     "previous_evening",
+     "morning",
+     "opening"
+    ],
+    "reminderClock": {
+     "previous_evening": "20:00",
+     "morning": "07:00",
+     "opening": "07:55"
+    },
+    "whatsappNumber": ""
+   },
+   "expected": [
+    {
+     "id": "r1:2026-11-17:outbound",
+     "date": "2026-11-17",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2026-11-24:outbound",
+     "date": "2026-11-24",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2026-12-01:outbound",
+     "date": "2026-12-01",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2026-12-08:outbound",
+     "date": "2026-12-08",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2026-12-15:outbound",
+     "date": "2026-12-15",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    }
+   ]
+  },
+  {
+   "name": "end date and excluded dates",
+   "rule": {
+    "id": "r1",
+    "name": "Weekly Office Travel",
+    "from": "MDU",
+    "to": "MS",
+    "train": "",
+    "travelClass": "",
+    "windowDays": 60,
+    "originOffset": 0,
+    "start": "2026-11-02",
+    "end": "2026-12-31",
+    "paused": false,
+    "excludedDates": [
+     "2026-11-17",
+     "2026-12-01"
+    ],
+    "weekdays": [
+     2
+    ],
+    "intervalWeeks": 1,
+    "departure": "23:10",
+    "returnAfterDays": 2,
+    "returnDeparture": "21:40",
+    "returnTrain": "",
+    "returnOriginOffset": 0
+   },
+   "today": "2026-11-11",
+   "settings": {
+    "cancellationTime": "09:00",
+    "cancellationEnabled": true,
+    "emailEnabled": false,
+    "telegramEnabled": false,
+    "telegramChatId": "",
+    "telegramProviderId": "",
+    "weekStartsOn": 0,
+    "routineHorizonMode": "months",
+    "routineMonthsAhead": 6,
+    "routineTicketCount": 26,
+    "whatsappEnabled": false,
+    "sidebarCollapsed": false,
+    "bookingWindowDays": 60,
+    "theme": "light",
+    "weekendDays": [
+     0,
+     6
+    ],
+    "reminderTimes": [
+     "previous_evening",
+     "morning",
+     "opening"
+    ],
+    "reminderClock": {
+     "previous_evening": "20:00",
+     "morning": "07:00",
+     "opening": "07:55"
+    },
+    "whatsappNumber": ""
+   },
+   "expected": [
+    {
+     "id": "r1:2026-11-24:outbound",
+     "date": "2026-11-24",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2026-11-24:return",
+     "date": "2026-11-26",
+     "from": "MS",
+     "to": "MDU",
+     "departure": "21:40",
+     "leg": "return",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2026-12-08:outbound",
+     "date": "2026-12-08",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2026-12-08:return",
+     "date": "2026-12-10",
+     "from": "MS",
+     "to": "MDU",
+     "departure": "21:40",
+     "leg": "return",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2026-12-15:outbound",
+     "date": "2026-12-15",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2026-12-15:return",
+     "date": "2026-12-17",
+     "from": "MS",
+     "to": "MDU",
+     "departure": "21:40",
+     "leg": "return",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2026-12-22:outbound",
+     "date": "2026-12-22",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2026-12-22:return",
+     "date": "2026-12-24",
+     "from": "MS",
+     "to": "MDU",
+     "departure": "21:40",
+     "leg": "return",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2026-12-29:outbound",
+     "date": "2026-12-29",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2026-12-29:return",
+     "date": "2026-12-31",
+     "from": "MS",
+     "to": "MDU",
+     "departure": "21:40",
+     "leg": "return",
+     "ruleId": "r1",
+     "train": ""
+    }
+   ]
+  },
+  {
+   "name": "start in the future",
+   "rule": {
+    "id": "r1",
+    "name": "Weekly Office Travel",
+    "from": "MDU",
+    "to": "MS",
+    "train": "",
+    "travelClass": "",
+    "windowDays": 60,
+    "originOffset": 0,
+    "start": "2027-01-05",
+    "end": null,
+    "paused": false,
+    "excludedDates": [],
+    "weekdays": [
+     2
+    ],
+    "intervalWeeks": 1,
+    "departure": "23:10",
+    "returnAfterDays": 2,
+    "returnDeparture": "21:40",
+    "returnTrain": "",
+    "returnOriginOffset": 0
+   },
+   "today": "2026-11-11",
+   "settings": {
+    "cancellationTime": "09:00",
+    "cancellationEnabled": true,
+    "emailEnabled": false,
+    "telegramEnabled": false,
+    "telegramChatId": "",
+    "telegramProviderId": "",
+    "weekStartsOn": 0,
+    "routineHorizonMode": "months",
+    "routineMonthsAhead": 3,
+    "routineTicketCount": 26,
+    "whatsappEnabled": false,
+    "sidebarCollapsed": false,
+    "bookingWindowDays": 60,
+    "theme": "light",
+    "weekendDays": [
+     0,
+     6
+    ],
+    "reminderTimes": [
+     "previous_evening",
+     "morning",
+     "opening"
+    ],
+    "reminderClock": {
+     "previous_evening": "20:00",
+     "morning": "07:00",
+     "opening": "07:55"
+    },
+    "whatsappNumber": ""
+   },
+   "expected": [
+    {
+     "id": "r1:2027-01-05:outbound",
+     "date": "2027-01-05",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-01-05:return",
+     "date": "2027-01-07",
+     "from": "MS",
+     "to": "MDU",
+     "departure": "21:40",
+     "leg": "return",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-01-12:outbound",
+     "date": "2027-01-12",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-01-12:return",
+     "date": "2027-01-14",
+     "from": "MS",
+     "to": "MDU",
+     "departure": "21:40",
+     "leg": "return",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-01-19:outbound",
+     "date": "2027-01-19",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-01-19:return",
+     "date": "2027-01-21",
+     "from": "MS",
+     "to": "MDU",
+     "departure": "21:40",
+     "leg": "return",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-01-26:outbound",
+     "date": "2027-01-26",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-01-26:return",
+     "date": "2027-01-28",
+     "from": "MS",
+     "to": "MDU",
+     "departure": "21:40",
+     "leg": "return",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-02-02:outbound",
+     "date": "2027-02-02",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-02-02:return",
+     "date": "2027-02-04",
+     "from": "MS",
+     "to": "MDU",
+     "departure": "21:40",
+     "leg": "return",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-02-09:outbound",
+     "date": "2027-02-09",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-02-09:return",
+     "date": "2027-02-11",
+     "from": "MS",
+     "to": "MDU",
+     "departure": "21:40",
+     "leg": "return",
+     "ruleId": "r1",
+     "train": ""
+    }
+   ]
+  },
+  {
+   "name": "paused",
+   "rule": {
+    "id": "r1",
+    "name": "Weekly Office Travel",
+    "from": "MDU",
+    "to": "MS",
+    "train": "",
+    "travelClass": "",
+    "windowDays": 60,
+    "originOffset": 0,
+    "start": "2026-11-02",
+    "end": null,
+    "paused": true,
+    "excludedDates": [],
+    "weekdays": [
+     2
+    ],
+    "intervalWeeks": 1,
+    "departure": "23:10",
+    "returnAfterDays": 2,
+    "returnDeparture": "21:40",
+    "returnTrain": "",
+    "returnOriginOffset": 0
+   },
+   "today": "2026-11-11",
+   "settings": {
+    "cancellationTime": "09:00",
+    "cancellationEnabled": true,
+    "emailEnabled": false,
+    "telegramEnabled": false,
+    "telegramChatId": "",
+    "telegramProviderId": "",
+    "weekStartsOn": 0,
+    "routineHorizonMode": "months",
+    "routineMonthsAhead": 6,
+    "routineTicketCount": 26,
+    "whatsappEnabled": false,
+    "sidebarCollapsed": false,
+    "bookingWindowDays": 60,
+    "theme": "light",
+    "weekendDays": [
+     0,
+     6
+    ],
+    "reminderTimes": [
+     "previous_evening",
+     "morning",
+     "opening"
+    ],
+    "reminderClock": {
+     "previous_evening": "20:00",
+     "morning": "07:00",
+     "opening": "07:55"
+    },
+    "whatsappNumber": ""
+   },
+   "expected": []
+  },
+  {
+   "name": "monthly on the 15th",
+   "rule": {
+    "id": "r1",
+    "name": "Weekly Office Travel",
+    "from": "MDU",
+    "to": "MS",
+    "train": "",
+    "travelClass": "",
+    "windowDays": 60,
+    "originOffset": 0,
+    "start": "2026-11-02",
+    "end": null,
+    "paused": false,
+    "excludedDates": [],
+    "weekdays": [
+     2
+    ],
+    "intervalWeeks": 1,
+    "departure": "23:10",
+    "returnAfterDays": null,
+    "returnDeparture": "21:40",
+    "returnTrain": "",
+    "returnOriginOffset": 0,
+    "recurrence": {
+     "frequency": "monthly",
+     "interval": 1,
+     "monthlyPattern": "date",
+     "dayOfMonth": 15,
+     "ordinal": 1,
+     "weekday": 1
+    }
+   },
+   "today": "2026-11-11",
+   "settings": {
+    "cancellationTime": "09:00",
+    "cancellationEnabled": true,
+    "emailEnabled": false,
+    "telegramEnabled": false,
+    "telegramChatId": "",
+    "telegramProviderId": "",
+    "weekStartsOn": 0,
+    "routineHorizonMode": "months",
+    "routineMonthsAhead": 6,
+    "routineTicketCount": 26,
+    "whatsappEnabled": false,
+    "sidebarCollapsed": false,
+    "bookingWindowDays": 60,
+    "theme": "light",
+    "weekendDays": [
+     0,
+     6
+    ],
+    "reminderTimes": [
+     "previous_evening",
+     "morning",
+     "opening"
+    ],
+    "reminderClock": {
+     "previous_evening": "20:00",
+     "morning": "07:00",
+     "opening": "07:55"
+    },
+    "whatsappNumber": ""
+   },
+   "expected": [
+    {
+     "id": "r1:2026-11-15:outbound",
+     "date": "2026-11-15",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2026-12-15:outbound",
+     "date": "2026-12-15",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-01-15:outbound",
+     "date": "2027-01-15",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-02-15:outbound",
+     "date": "2027-02-15",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-03-15:outbound",
+     "date": "2027-03-15",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-04-15:outbound",
+     "date": "2027-04-15",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    }
+   ]
+  },
+  {
+   "name": "monthly last Friday",
+   "rule": {
+    "id": "r1",
+    "name": "Weekly Office Travel",
+    "from": "MDU",
+    "to": "MS",
+    "train": "",
+    "travelClass": "",
+    "windowDays": 60,
+    "originOffset": 0,
+    "start": "2026-11-02",
+    "end": null,
+    "paused": false,
+    "excludedDates": [],
+    "weekdays": [
+     2
+    ],
+    "intervalWeeks": 1,
+    "departure": "23:10",
+    "returnAfterDays": null,
+    "returnDeparture": "21:40",
+    "returnTrain": "",
+    "returnOriginOffset": 0,
+    "recurrence": {
+     "frequency": "monthly",
+     "interval": 1,
+     "monthlyPattern": "weekday",
+     "dayOfMonth": 1,
+     "ordinal": -1,
+     "weekday": 5
+    }
+   },
+   "today": "2026-11-11",
+   "settings": {
+    "cancellationTime": "09:00",
+    "cancellationEnabled": true,
+    "emailEnabled": false,
+    "telegramEnabled": false,
+    "telegramChatId": "",
+    "telegramProviderId": "",
+    "weekStartsOn": 0,
+    "routineHorizonMode": "months",
+    "routineMonthsAhead": 6,
+    "routineTicketCount": 26,
+    "whatsappEnabled": false,
+    "sidebarCollapsed": false,
+    "bookingWindowDays": 60,
+    "theme": "light",
+    "weekendDays": [
+     0,
+     6
+    ],
+    "reminderTimes": [
+     "previous_evening",
+     "morning",
+     "opening"
+    ],
+    "reminderClock": {
+     "previous_evening": "20:00",
+     "morning": "07:00",
+     "opening": "07:55"
+    },
+    "whatsappNumber": ""
+   },
+   "expected": [
+    {
+     "id": "r1:2026-11-27:outbound",
+     "date": "2026-11-27",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2026-12-25:outbound",
+     "date": "2026-12-25",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-01-29:outbound",
+     "date": "2027-01-29",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-02-26:outbound",
+     "date": "2027-02-26",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-03-26:outbound",
+     "date": "2027-03-26",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-04-30:outbound",
+     "date": "2027-04-30",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    }
+   ]
+  },
+  {
+   "name": "daily every 3 days",
+   "rule": {
+    "id": "r1",
+    "name": "Weekly Office Travel",
+    "from": "MDU",
+    "to": "MS",
+    "train": "",
+    "travelClass": "",
+    "windowDays": 60,
+    "originOffset": 0,
+    "start": "2026-11-02",
+    "end": null,
+    "paused": false,
+    "excludedDates": [],
+    "weekdays": [
+     2
+    ],
+    "intervalWeeks": 1,
+    "departure": "23:10",
+    "returnAfterDays": null,
+    "returnDeparture": "21:40",
+    "returnTrain": "",
+    "returnOriginOffset": 0,
+    "recurrence": {
+     "frequency": "daily",
+     "interval": 3,
+     "monthlyPattern": "date",
+     "dayOfMonth": 1,
+     "ordinal": 1,
+     "weekday": 1
+    }
+   },
+   "today": "2026-11-11",
+   "settings": {
+    "cancellationTime": "09:00",
+    "cancellationEnabled": true,
+    "emailEnabled": false,
+    "telegramEnabled": false,
+    "telegramChatId": "",
+    "telegramProviderId": "",
+    "weekStartsOn": 0,
+    "routineHorizonMode": "months",
+    "routineMonthsAhead": 1,
+    "routineTicketCount": 26,
+    "whatsappEnabled": false,
+    "sidebarCollapsed": false,
+    "bookingWindowDays": 60,
+    "theme": "light",
+    "weekendDays": [
+     0,
+     6
+    ],
+    "reminderTimes": [
+     "previous_evening",
+     "morning",
+     "opening"
+    ],
+    "reminderClock": {
+     "previous_evening": "20:00",
+     "morning": "07:00",
+     "opening": "07:55"
+    },
+    "whatsappNumber": ""
+   },
+   "expected": [
+    {
+     "id": "r1:2026-11-11:outbound",
+     "date": "2026-11-11",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2026-11-14:outbound",
+     "date": "2026-11-14",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2026-11-17:outbound",
+     "date": "2026-11-17",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2026-11-20:outbound",
+     "date": "2026-11-20",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2026-11-23:outbound",
+     "date": "2026-11-23",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2026-11-26:outbound",
+     "date": "2026-11-26",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2026-11-29:outbound",
+     "date": "2026-11-29",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2026-12-02:outbound",
+     "date": "2026-12-02",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2026-12-05:outbound",
+     "date": "2026-12-05",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2026-12-08:outbound",
+     "date": "2026-12-08",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2026-12-11:outbound",
+     "date": "2026-12-11",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    }
+   ]
+  },
+  {
+   "name": "horizon at month end (31 Jan + 1 month)",
+   "rule": {
+    "id": "r1",
+    "name": "Weekly Office Travel",
+    "from": "MDU",
+    "to": "MS",
+    "train": "",
+    "travelClass": "",
+    "windowDays": 60,
+    "originOffset": 0,
+    "start": "2027-01-01",
+    "end": null,
+    "paused": false,
+    "excludedDates": [],
+    "weekdays": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6
+    ],
+    "intervalWeeks": 1,
+    "departure": "23:10",
+    "returnAfterDays": null,
+    "returnDeparture": "21:40",
+    "returnTrain": "",
+    "returnOriginOffset": 0
+   },
+   "today": "2027-01-31",
+   "settings": {
+    "cancellationTime": "09:00",
+    "cancellationEnabled": true,
+    "emailEnabled": false,
+    "telegramEnabled": false,
+    "telegramChatId": "",
+    "telegramProviderId": "",
+    "weekStartsOn": 0,
+    "routineHorizonMode": "months",
+    "routineMonthsAhead": 1,
+    "routineTicketCount": 26,
+    "whatsappEnabled": false,
+    "sidebarCollapsed": false,
+    "bookingWindowDays": 60,
+    "theme": "light",
+    "weekendDays": [
+     0,
+     6
+    ],
+    "reminderTimes": [
+     "previous_evening",
+     "morning",
+     "opening"
+    ],
+    "reminderClock": {
+     "previous_evening": "20:00",
+     "morning": "07:00",
+     "opening": "07:55"
+    },
+    "whatsappNumber": ""
+   },
+   "expected": [
+    {
+     "id": "r1:2027-01-31:outbound",
+     "date": "2027-01-31",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-02-01:outbound",
+     "date": "2027-02-01",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-02-02:outbound",
+     "date": "2027-02-02",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-02-03:outbound",
+     "date": "2027-02-03",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-02-04:outbound",
+     "date": "2027-02-04",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-02-05:outbound",
+     "date": "2027-02-05",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-02-06:outbound",
+     "date": "2027-02-06",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-02-07:outbound",
+     "date": "2027-02-07",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-02-08:outbound",
+     "date": "2027-02-08",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-02-09:outbound",
+     "date": "2027-02-09",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-02-10:outbound",
+     "date": "2027-02-10",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-02-11:outbound",
+     "date": "2027-02-11",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-02-12:outbound",
+     "date": "2027-02-12",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-02-13:outbound",
+     "date": "2027-02-13",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-02-14:outbound",
+     "date": "2027-02-14",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-02-15:outbound",
+     "date": "2027-02-15",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-02-16:outbound",
+     "date": "2027-02-16",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-02-17:outbound",
+     "date": "2027-02-17",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-02-18:outbound",
+     "date": "2027-02-18",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-02-19:outbound",
+     "date": "2027-02-19",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-02-20:outbound",
+     "date": "2027-02-20",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-02-21:outbound",
+     "date": "2027-02-21",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-02-22:outbound",
+     "date": "2027-02-22",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-02-23:outbound",
+     "date": "2027-02-23",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-02-24:outbound",
+     "date": "2027-02-24",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-02-25:outbound",
+     "date": "2027-02-25",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-02-26:outbound",
+     "date": "2027-02-26",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-02-27:outbound",
+     "date": "2027-02-27",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    },
+    {
+     "id": "r1:2027-02-28:outbound",
+     "date": "2027-02-28",
+     "from": "MDU",
+     "to": "MS",
+     "departure": "23:10",
+     "leg": "outbound",
+     "ruleId": "r1",
+     "train": ""
+    }
+   ]
+  }
+ ],
+ "booking": [
+  {
+   "journey": {
+    "id": "j",
+    "from": "MDU",
+    "to": "MS",
+    "date": "2027-01-12",
+    "departure": "23:10",
+    "train": "",
+    "travelClass": "",
+    "windowDays": 60,
+    "originOffset": 0,
+    "status": "needs_booking",
+    "pnr": "",
+    "notes": ""
+   },
+   "expected": {
+    "bookingDay": "2026-11-13",
+    "bookingInstant": "2026-11-13T02:30:00.000Z"
+   }
+  },
+  {
+   "journey": {
+    "id": "j",
+    "from": "MDU",
+    "to": "MS",
+    "date": "2027-03-01",
+    "departure": "23:10",
+    "train": "",
+    "travelClass": "",
+    "windowDays": 120,
+    "originOffset": 0,
+    "status": "needs_booking",
+    "pnr": "",
+    "notes": ""
+   },
+   "expected": {
+    "bookingDay": "2026-11-01",
+    "bookingInstant": "2026-11-01T02:30:00.000Z"
+   }
+  },
+  {
+   "journey": {
+    "id": "j",
+    "from": "MDU",
+    "to": "MS",
+    "date": "2027-01-12",
+    "departure": "23:10",
+    "train": "",
+    "travelClass": "",
+    "windowDays": 60,
+    "originOffset": 0,
+    "status": "needs_booking",
+    "pnr": "",
+    "notes": "",
+    "bookingType": "tatkal",
+    "tatkalClass": "ac",
+    "trainOriginDate": "2027-01-12"
+   },
+   "expected": {
+    "bookingDay": "2027-01-11",
+    "bookingInstant": "2027-01-11T04:30:00.000Z"
+   }
+  },
+  {
+   "journey": {
+    "id": "j",
+    "from": "MDU",
+    "to": "MS",
+    "date": "2027-01-12",
+    "departure": "23:10",
+    "train": "",
+    "travelClass": "",
+    "windowDays": 60,
+    "originOffset": 0,
+    "status": "needs_booking",
+    "pnr": "",
+    "notes": "",
+    "bookingType": "tatkal",
+    "tatkalClass": "non_ac",
+    "trainOriginDate": "2027-01-11"
+   },
+   "expected": {
+    "bookingDay": "2027-01-10",
+    "bookingInstant": "2027-01-10T05:30:00.000Z"
+   }
+  }
+ ],
+ "lifecycle": [
+  {
+   "name": "booked in the past completes the day after",
+   "journeys": [
+    {
+     "id": "j",
+     "from": "MDU",
+     "to": "MS",
+     "date": "2026-11-09",
+     "departure": "23:10",
+     "train": "",
+     "travelClass": "",
+     "windowDays": 60,
+     "originOffset": 0,
+     "status": "booked",
+     "pnr": "",
+     "notes": ""
+    }
+   ],
+   "today": "2026-11-11",
+   "expected": [
+    {
+     "id": "j",
+     "status": "completed",
+     "completedAt": "2026-11-10",
+     "cancelledAt": null,
+     "archivedAt": null
+    }
+   ]
+  },
+  {
+   "name": "cancelled keeps 7 days then archives",
+   "journeys": [
+    {
+     "id": "a",
+     "from": "MDU",
+     "to": "MS",
+     "date": "2027-01-12",
+     "departure": "23:10",
+     "train": "",
+     "travelClass": "",
+     "windowDays": 60,
+     "originOffset": 0,
+     "status": "cancelled",
+     "pnr": "",
+     "notes": "",
+     "cancelledAt": "2026-11-01"
+    },
+    {
+     "id": "b",
+     "from": "MDU",
+     "to": "MS",
+     "date": "2027-01-12",
+     "departure": "23:10",
+     "train": "",
+     "travelClass": "",
+     "windowDays": 60,
+     "originOffset": 0,
+     "status": "cancelled",
+     "pnr": "",
+     "notes": "",
+     "cancelledAt": "2026-11-08"
+    }
+   ],
+   "today": "2026-11-11",
+   "expected": [
+    {
+     "id": "a",
+     "status": "cancelled",
+     "completedAt": null,
+     "cancelledAt": "2026-11-01",
+     "archivedAt": "2026-11-11"
+    },
+    {
+     "id": "b",
+     "status": "cancelled",
+     "completedAt": null,
+     "cancelledAt": "2026-11-08",
+     "archivedAt": null
+    }
+   ]
+  },
+  {
+   "name": "skipped without a date gets today",
+   "journeys": [
+    {
+     "id": "j",
+     "from": "MDU",
+     "to": "MS",
+     "date": "2027-01-12",
+     "departure": "23:10",
+     "train": "",
+     "travelClass": "",
+     "windowDays": 60,
+     "originOffset": 0,
+     "status": "skipped",
+     "pnr": "",
+     "notes": ""
+    }
+   ],
+   "today": "2026-11-11",
+   "expected": [
+    {
+     "id": "j",
+     "status": "skipped",
+     "completedAt": null,
+     "cancelledAt": "2026-11-11",
+     "archivedAt": null
+    }
+   ]
+  },
+  {
+   "name": "custom archive period 30 days",
+   "journeys": [
+    {
+     "id": "j",
+     "from": "MDU",
+     "to": "MS",
+     "date": "2027-01-12",
+     "departure": "23:10",
+     "train": "",
+     "travelClass": "",
+     "windowDays": 60,
+     "originOffset": 0,
+     "status": "cancelled",
+     "pnr": "",
+     "notes": "",
+     "cancelledAt": "2026-10-20"
+    }
+   ],
+   "today": "2026-11-11",
+   "archiveDays": 30,
+   "expected": [
+    {
+     "id": "j",
+     "status": "cancelled",
+     "completedAt": null,
+     "cancelledAt": "2026-10-20",
+     "archivedAt": null
+    }
+   ]
+  },
+  {
+   "name": "restored journey drops its cancelled date",
+   "journeys": [
+    {
+     "id": "j",
+     "from": "MDU",
+     "to": "MS",
+     "date": "2027-01-12",
+     "departure": "23:10",
+     "train": "",
+     "travelClass": "",
+     "windowDays": 60,
+     "originOffset": 0,
+     "status": "needs_booking",
+     "pnr": "",
+     "notes": "",
+     "cancelledAt": "2026-11-01"
+    }
+   ],
+   "today": "2026-11-11",
+   "expected": [
+    {
+     "id": "j",
+     "status": "needs_booking",
+     "completedAt": null,
+     "cancelledAt": null,
+     "archivedAt": null
+    }
+   ]
+  }
+ ],
+ "saveRule": {
+  "name": "re-saving a routine keeps booked journeys and regenerates the rest",
+  "initial": {
+   "version": 1,
+   "journeys": [
+    {
+     "from": "MDU",
+     "to": "MS",
+     "train": "",
+     "trainName": "",
+     "trainNumber": "",
+     "travelClass": "",
+     "windowDays": 60,
+     "originOffset": 0,
+     "departure": "23:10",
+     "timePreference": "any",
+     "status": "needs_booking",
+     "pnr": "",
+     "notes": "",
+     "ruleId": "r1",
+     "id": "r1:2026-11-17:outbound",
+     "date": "2026-11-17",
+     "leg": "outbound"
+    },
+    {
+     "from": "MDU",
+     "to": "MS",
+     "train": "",
+     "trainName": "",
+     "trainNumber": "",
+     "travelClass": "",
+     "windowDays": 60,
+     "originOffset": 0,
+     "departure": "23:10",
+     "timePreference": "any",
+     "status": "booked",
+     "pnr": "",
+     "notes": "",
+     "ruleId": "r1",
+     "id": "r1:2026-11-24:outbound",
+     "date": "2026-11-24",
+     "leg": "outbound"
+    },
+    {
+     "from": "MDU",
+     "to": "MS",
+     "train": "",
+     "trainName": "",
+     "trainNumber": "",
+     "travelClass": "",
+     "windowDays": 60,
+     "originOffset": 0,
+     "departure": "23:10",
+     "timePreference": "any",
+     "status": "needs_booking",
+     "pnr": "",
+     "notes": "",
+     "ruleId": "r1",
+     "id": "r1:2026-12-01:outbound",
+     "date": "2026-12-01",
+     "leg": "outbound"
+    },
+    {
+     "from": "MDU",
+     "to": "MS",
+     "train": "",
+     "trainName": "",
+     "trainNumber": "",
+     "travelClass": "",
+     "windowDays": 60,
+     "originOffset": 0,
+     "departure": "23:10",
+     "timePreference": "any",
+     "status": "needs_booking",
+     "pnr": "",
+     "notes": "",
+     "ruleId": "r1",
+     "id": "r1:2026-12-08:outbound",
+     "date": "2026-12-08",
+     "leg": "outbound"
+    },
+    {
+     "from": "MDU",
+     "to": "MS",
+     "train": "",
+     "trainName": "",
+     "trainNumber": "",
+     "travelClass": "",
+     "windowDays": 60,
+     "originOffset": 0,
+     "departure": "23:10",
+     "timePreference": "any",
+     "status": "needs_booking",
+     "pnr": "",
+     "notes": "",
+     "ruleId": "r1",
+     "id": "r1:2026-12-15:outbound",
+     "date": "2026-12-15",
+     "leg": "outbound"
+    },
+    {
+     "from": "MDU",
+     "to": "MS",
+     "train": "",
+     "trainName": "",
+     "trainNumber": "",
+     "travelClass": "",
+     "windowDays": 60,
+     "originOffset": 0,
+     "departure": "23:10",
+     "timePreference": "any",
+     "status": "needs_booking",
+     "pnr": "",
+     "notes": "",
+     "ruleId": "r1",
+     "id": "r1:2026-12-22:outbound",
+     "date": "2026-12-22",
+     "leg": "outbound"
+    },
+    {
+     "from": "MDU",
+     "to": "MS",
+     "train": "",
+     "trainName": "",
+     "trainNumber": "",
+     "travelClass": "",
+     "windowDays": 60,
+     "originOffset": 0,
+     "departure": "23:10",
+     "timePreference": "any",
+     "status": "needs_booking",
+     "pnr": "",
+     "notes": "",
+     "ruleId": "r1",
+     "id": "r1:2026-12-29:outbound",
+     "date": "2026-12-29",
+     "leg": "outbound"
+    },
+    {
+     "from": "MDU",
+     "to": "MS",
+     "train": "",
+     "trainName": "",
+     "trainNumber": "",
+     "travelClass": "",
+     "windowDays": 60,
+     "originOffset": 0,
+     "departure": "23:10",
+     "timePreference": "any",
+     "status": "needs_booking",
+     "pnr": "",
+     "notes": "",
+     "ruleId": "r1",
+     "id": "r1:2027-01-05:outbound",
+     "date": "2027-01-05",
+     "leg": "outbound"
+    },
+    {
+     "from": "MDU",
+     "to": "MS",
+     "train": "",
+     "trainName": "",
+     "trainNumber": "",
+     "travelClass": "",
+     "windowDays": 60,
+     "originOffset": 0,
+     "departure": "23:10",
+     "timePreference": "any",
+     "status": "needs_booking",
+     "pnr": "",
+     "notes": "",
+     "ruleId": "r1",
+     "id": "r1:2027-01-12:outbound",
+     "date": "2027-01-12",
+     "leg": "outbound"
+    },
+    {
+     "from": "MDU",
+     "to": "MS",
+     "train": "",
+     "trainName": "",
+     "trainNumber": "",
+     "travelClass": "",
+     "windowDays": 60,
+     "originOffset": 0,
+     "departure": "23:10",
+     "timePreference": "any",
+     "status": "needs_booking",
+     "pnr": "",
+     "notes": "",
+     "ruleId": "r1",
+     "id": "r1:2027-01-19:outbound",
+     "date": "2027-01-19",
+     "leg": "outbound"
+    },
+    {
+     "from": "MDU",
+     "to": "MS",
+     "train": "",
+     "trainName": "",
+     "trainNumber": "",
+     "travelClass": "",
+     "windowDays": 60,
+     "originOffset": 0,
+     "departure": "23:10",
+     "timePreference": "any",
+     "status": "needs_booking",
+     "pnr": "",
+     "notes": "",
+     "ruleId": "r1",
+     "id": "r1:2027-01-26:outbound",
+     "date": "2027-01-26",
+     "leg": "outbound"
+    },
+    {
+     "from": "MDU",
+     "to": "MS",
+     "train": "",
+     "trainName": "",
+     "trainNumber": "",
+     "travelClass": "",
+     "windowDays": 60,
+     "originOffset": 0,
+     "departure": "23:10",
+     "timePreference": "any",
+     "status": "needs_booking",
+     "pnr": "",
+     "notes": "",
+     "ruleId": "r1",
+     "id": "r1:2027-02-02:outbound",
+     "date": "2027-02-02",
+     "leg": "outbound"
+    },
+    {
+     "from": "MDU",
+     "to": "MS",
+     "train": "",
+     "trainName": "",
+     "trainNumber": "",
+     "travelClass": "",
+     "windowDays": 60,
+     "originOffset": 0,
+     "departure": "23:10",
+     "timePreference": "any",
+     "status": "needs_booking",
+     "pnr": "",
+     "notes": "",
+     "ruleId": "r1",
+     "id": "r1:2027-02-09:outbound",
+     "date": "2027-02-09",
+     "leg": "outbound"
+    },
+    {
+     "from": "MDU",
+     "to": "MS",
+     "train": "",
+     "trainName": "",
+     "trainNumber": "",
+     "travelClass": "",
+     "windowDays": 60,
+     "originOffset": 0,
+     "departure": "23:10",
+     "timePreference": "any",
+     "status": "needs_booking",
+     "pnr": "",
+     "notes": "",
+     "ruleId": "r1",
+     "id": "r1:2027-02-16:outbound",
+     "date": "2027-02-16",
+     "leg": "outbound"
+    },
+    {
+     "from": "MDU",
+     "to": "MS",
+     "train": "",
+     "trainName": "",
+     "trainNumber": "",
+     "travelClass": "",
+     "windowDays": 60,
+     "originOffset": 0,
+     "departure": "23:10",
+     "timePreference": "any",
+     "status": "needs_booking",
+     "pnr": "",
+     "notes": "",
+     "ruleId": "r1",
+     "id": "r1:2027-02-23:outbound",
+     "date": "2027-02-23",
+     "leg": "outbound"
+    },
+    {
+     "from": "MDU",
+     "to": "MS",
+     "train": "",
+     "trainName": "",
+     "trainNumber": "",
+     "travelClass": "",
+     "windowDays": 60,
+     "originOffset": 0,
+     "departure": "23:10",
+     "timePreference": "any",
+     "status": "needs_booking",
+     "pnr": "",
+     "notes": "",
+     "ruleId": "r1",
+     "id": "r1:2027-03-02:outbound",
+     "date": "2027-03-02",
+     "leg": "outbound"
+    },
+    {
+     "from": "MDU",
+     "to": "MS",
+     "train": "",
+     "trainName": "",
+     "trainNumber": "",
+     "travelClass": "",
+     "windowDays": 60,
+     "originOffset": 0,
+     "departure": "23:10",
+     "timePreference": "any",
+     "status": "needs_booking",
+     "pnr": "",
+     "notes": "",
+     "ruleId": "r1",
+     "id": "r1:2027-03-09:outbound",
+     "date": "2027-03-09",
+     "leg": "outbound"
+    },
+    {
+     "from": "MDU",
+     "to": "MS",
+     "train": "",
+     "trainName": "",
+     "trainNumber": "",
+     "travelClass": "",
+     "windowDays": 60,
+     "originOffset": 0,
+     "departure": "23:10",
+     "timePreference": "any",
+     "status": "needs_booking",
+     "pnr": "",
+     "notes": "",
+     "ruleId": "r1",
+     "id": "r1:2027-03-16:outbound",
+     "date": "2027-03-16",
+     "leg": "outbound"
+    },
+    {
+     "from": "MDU",
+     "to": "MS",
+     "train": "",
+     "trainName": "",
+     "trainNumber": "",
+     "travelClass": "",
+     "windowDays": 60,
+     "originOffset": 0,
+     "departure": "23:10",
+     "timePreference": "any",
+     "status": "needs_booking",
+     "pnr": "",
+     "notes": "",
+     "ruleId": "r1",
+     "id": "r1:2027-03-23:outbound",
+     "date": "2027-03-23",
+     "leg": "outbound"
+    },
+    {
+     "from": "MDU",
+     "to": "MS",
+     "train": "",
+     "trainName": "",
+     "trainNumber": "",
+     "travelClass": "",
+     "windowDays": 60,
+     "originOffset": 0,
+     "departure": "23:10",
+     "timePreference": "any",
+     "status": "needs_booking",
+     "pnr": "",
+     "notes": "",
+     "ruleId": "r1",
+     "id": "r1:2027-03-30:outbound",
+     "date": "2027-03-30",
+     "leg": "outbound"
+    },
+    {
+     "from": "MDU",
+     "to": "MS",
+     "train": "",
+     "trainName": "",
+     "trainNumber": "",
+     "travelClass": "",
+     "windowDays": 60,
+     "originOffset": 0,
+     "departure": "23:10",
+     "timePreference": "any",
+     "status": "needs_booking",
+     "pnr": "",
+     "notes": "",
+     "ruleId": "r1",
+     "id": "r1:2027-04-06:outbound",
+     "date": "2027-04-06",
+     "leg": "outbound"
+    },
+    {
+     "from": "MDU",
+     "to": "MS",
+     "train": "",
+     "trainName": "",
+     "trainNumber": "",
+     "travelClass": "",
+     "windowDays": 60,
+     "originOffset": 0,
+     "departure": "23:10",
+     "timePreference": "any",
+     "status": "needs_booking",
+     "pnr": "",
+     "notes": "",
+     "ruleId": "r1",
+     "id": "r1:2027-04-13:outbound",
+     "date": "2027-04-13",
+     "leg": "outbound"
+    },
+    {
+     "from": "MDU",
+     "to": "MS",
+     "train": "",
+     "trainName": "",
+     "trainNumber": "",
+     "travelClass": "",
+     "windowDays": 60,
+     "originOffset": 0,
+     "departure": "23:10",
+     "timePreference": "any",
+     "status": "needs_booking",
+     "pnr": "",
+     "notes": "",
+     "ruleId": "r1",
+     "id": "r1:2027-04-20:outbound",
+     "date": "2027-04-20",
+     "leg": "outbound"
+    },
+    {
+     "from": "MDU",
+     "to": "MS",
+     "train": "",
+     "trainName": "",
+     "trainNumber": "",
+     "travelClass": "",
+     "windowDays": 60,
+     "originOffset": 0,
+     "departure": "23:10",
+     "timePreference": "any",
+     "status": "needs_booking",
+     "pnr": "",
+     "notes": "",
+     "ruleId": "r1",
+     "id": "r1:2027-04-27:outbound",
+     "date": "2027-04-27",
+     "leg": "outbound"
+    },
+    {
+     "from": "MDU",
+     "to": "MS",
+     "train": "",
+     "trainName": "",
+     "trainNumber": "",
+     "travelClass": "",
+     "windowDays": 60,
+     "originOffset": 0,
+     "departure": "23:10",
+     "timePreference": "any",
+     "status": "needs_booking",
+     "pnr": "",
+     "notes": "",
+     "ruleId": "r1",
+     "id": "r1:2027-05-04:outbound",
+     "date": "2027-05-04",
+     "leg": "outbound"
+    },
+    {
+     "from": "MDU",
+     "to": "MS",
+     "train": "",
+     "trainName": "",
+     "trainNumber": "",
+     "travelClass": "",
+     "windowDays": 60,
+     "originOffset": 0,
+     "departure": "23:10",
+     "timePreference": "any",
+     "status": "needs_booking",
+     "pnr": "",
+     "notes": "",
+     "ruleId": "r1",
+     "id": "r1:2027-05-11:outbound",
+     "date": "2027-05-11",
+     "leg": "outbound"
+    }
+   ],
+   "rules": [
+    {
+     "id": "r1",
+     "name": "Weekly Office Travel",
+     "from": "MDU",
+     "to": "MS",
+     "train": "",
+     "travelClass": "",
+     "windowDays": 60,
+     "originOffset": 0,
+     "start": "2026-11-02",
+     "end": null,
+     "paused": false,
+     "excludedDates": [],
+     "weekdays": [
+      2
+     ],
+     "intervalWeeks": 1,
+     "departure": "23:10",
+     "returnAfterDays": null,
+     "returnDeparture": "21:40",
+     "returnTrain": "",
+     "returnOriginOffset": 0
+    }
+   ],
+   "holidays": [],
+   "settings": {
+    "cancellationTime": "09:00",
+    "cancellationEnabled": true,
+    "emailEnabled": false,
+    "telegramEnabled": false,
+    "telegramChatId": "",
+    "telegramProviderId": "",
+    "weekStartsOn": 0,
+    "routineHorizonMode": "months",
+    "routineMonthsAhead": 6,
+    "routineTicketCount": 26,
+    "whatsappEnabled": false,
+    "sidebarCollapsed": false,
+    "bookingWindowDays": 60,
+    "theme": "light",
+    "weekendDays": [
+     0,
+     6
+    ],
+    "reminderTimes": [
+     "previous_evening",
+     "morning",
+     "opening"
+    ],
+    "reminderClock": {
+     "previous_evening": "20:00",
+     "morning": "07:00",
+     "opening": "07:55"
+    },
+    "whatsappNumber": ""
+   }
+  },
+  "rule": {
+   "id": "r1",
+   "name": "Weekly Office Travel",
+   "from": "MDU",
+   "to": "MS",
+   "train": "",
+   "travelClass": "",
+   "windowDays": 60,
+   "originOffset": 0,
+   "start": "2026-11-02",
+   "end": null,
+   "paused": false,
+   "excludedDates": [],
+   "weekdays": [
+    2
+   ],
+   "intervalWeeks": 1,
+   "departure": "22:00",
+   "returnAfterDays": null,
+   "returnDeparture": "21:40",
+   "returnTrain": "",
+   "returnOriginOffset": 0
+  },
+  "today": "2026-11-11",
+  "expected": [
+   {
+    "id": "r1:2026-11-24:outbound",
+    "status": "booked",
+    "departure": "23:10"
+   },
+   {
+    "id": "r1:2026-11-17:outbound",
+    "status": "needs_booking",
+    "departure": "22:00"
+   },
+   {
+    "id": "r1:2026-12-01:outbound",
+    "status": "needs_booking",
+    "departure": "22:00"
+   },
+   {
+    "id": "r1:2026-12-08:outbound",
+    "status": "needs_booking",
+    "departure": "22:00"
+   },
+   {
+    "id": "r1:2026-12-15:outbound",
+    "status": "needs_booking",
+    "departure": "22:00"
+   },
+   {
+    "id": "r1:2026-12-22:outbound",
+    "status": "needs_booking",
+    "departure": "22:00"
+   },
+   {
+    "id": "r1:2026-12-29:outbound",
+    "status": "needs_booking",
+    "departure": "22:00"
+   },
+   {
+    "id": "r1:2027-01-05:outbound",
+    "status": "needs_booking",
+    "departure": "22:00"
+   },
+   {
+    "id": "r1:2027-01-12:outbound",
+    "status": "needs_booking",
+    "departure": "22:00"
+   },
+   {
+    "id": "r1:2027-01-19:outbound",
+    "status": "needs_booking",
+    "departure": "22:00"
+   },
+   {
+    "id": "r1:2027-01-26:outbound",
+    "status": "needs_booking",
+    "departure": "22:00"
+   },
+   {
+    "id": "r1:2027-02-02:outbound",
+    "status": "needs_booking",
+    "departure": "22:00"
+   },
+   {
+    "id": "r1:2027-02-09:outbound",
+    "status": "needs_booking",
+    "departure": "22:00"
+   },
+   {
+    "id": "r1:2027-02-16:outbound",
+    "status": "needs_booking",
+    "departure": "22:00"
+   },
+   {
+    "id": "r1:2027-02-23:outbound",
+    "status": "needs_booking",
+    "departure": "22:00"
+   },
+   {
+    "id": "r1:2027-03-02:outbound",
+    "status": "needs_booking",
+    "departure": "22:00"
+   },
+   {
+    "id": "r1:2027-03-09:outbound",
+    "status": "needs_booking",
+    "departure": "22:00"
+   },
+   {
+    "id": "r1:2027-03-16:outbound",
+    "status": "needs_booking",
+    "departure": "22:00"
+   },
+   {
+    "id": "r1:2027-03-23:outbound",
+    "status": "needs_booking",
+    "departure": "22:00"
+   },
+   {
+    "id": "r1:2027-03-30:outbound",
+    "status": "needs_booking",
+    "departure": "22:00"
+   },
+   {
+    "id": "r1:2027-04-06:outbound",
+    "status": "needs_booking",
+    "departure": "22:00"
+   },
+   {
+    "id": "r1:2027-04-13:outbound",
+    "status": "needs_booking",
+    "departure": "22:00"
+   },
+   {
+    "id": "r1:2027-04-20:outbound",
+    "status": "needs_booking",
+    "departure": "22:00"
+   },
+   {
+    "id": "r1:2027-04-27:outbound",
+    "status": "needs_booking",
+    "departure": "22:00"
+   },
+   {
+    "id": "r1:2027-05-04:outbound",
+    "status": "needs_booking",
+    "departure": "22:00"
+   },
+   {
+    "id": "r1:2027-05-11:outbound",
+    "status": "needs_booking",
+    "departure": "22:00"
+   }
+  ]
+ },
+ "timing": [
+  {
+   "journey": {
+    "id": "j",
+    "from": "MDU",
+    "to": "MS",
+    "date": "2027-01-12",
+    "departure": "23:10",
+    "train": "",
+    "travelClass": "",
+    "windowDays": 60,
+    "originOffset": 0,
+    "status": "needs_booking",
+    "pnr": "",
+    "notes": "",
+    "departureConfirmed": true,
+    "arrival": "07:10",
+    "arrivalDate": "2027-01-13"
+   },
+   "expected": "23:10 → 07:10 +1 · 8h"
+  },
+  {
+   "journey": {
+    "id": "j",
+    "from": "MDU",
+    "to": "MS",
+    "date": "2027-01-12",
+    "departure": "06:00",
+    "train": "",
+    "travelClass": "",
+    "windowDays": 60,
+    "originOffset": 0,
+    "status": "needs_booking",
+    "pnr": "",
+    "notes": "",
+    "departureConfirmed": true,
+    "arrival": "12:30",
+    "arrivalDate": "2027-01-12"
+   },
+   "expected": "06:00 → 12:30 · 6h 30m"
+  },
+  {
+   "journey": {
+    "id": "j",
+    "from": "MDU",
+    "to": "MS",
+    "date": "2027-01-12",
+    "departure": "21:40",
+    "train": "",
+    "travelClass": "",
+    "windowDays": 60,
+    "originOffset": 0,
+    "status": "needs_booking",
+    "pnr": "",
+    "notes": "",
+    "departureConfirmed": true,
+    "arrival": "05:25"
+   },
+   "expected": "21:40 → 05:25 +1 · 7h 45m"
+  },
+  {
+   "journey": {
+    "id": "j",
+    "from": "MDU",
+    "to": "MS",
+    "date": "2027-01-12",
+    "departure": "21:40",
+    "train": "",
+    "travelClass": "",
+    "windowDays": 60,
+    "originOffset": 0,
+    "status": "needs_booking",
+    "pnr": "",
+    "notes": "",
+    "departureConfirmed": false,
+    "arrival": "05:25"
+   },
+   "expected": null
+  }
+ ]
+}

@@ -1,4 +1,4 @@
-# RailWatch app — plan (Android first, iOS-ready)
+﻿# RailWatch app â€” plan (Android first, iOS-ready)
 
 Repo: **`railwatch-app`** (new). A native, lightweight, phone-only RailWatch for one person, with no server, accounts
 or sync. The web app and the homelab deployment stay as they are and are separate.
@@ -12,8 +12,8 @@ NativeJourneySheet, NativeBookingDay, NativeTicket), plus the existing mobile ar
 
 | Milestone | Status | Notes |
 |---|---|---|
-| M0 Foundations | In progress | Repo, Gradle 9.4.1 / AGP 9.2.1 / Kotlin 2.2.10, shared KMP module with IST helper and JVM tests, Compose app with RailWatch palette (web tokens), Manrope, code-drawn icons, large title, floating tab bar; CI. Debug APK builds (11.2 MB unshrunk). Install on the Redmi blocked by MIUI until "Install via USB" is enabled in Developer options. |
-| M1 Core rules and storage | Not started | |
+| M0 Foundations | Done | Repo, Gradle 9.4.1 / AGP 9.2.1 / Kotlin 2.2.10, KMP shared module, Compose app with the web palette, Manrope, code-drawn icons, large title, floating tab bar, CI. Runs on the second test phone (Android 16, 10.10.10.7, wireless ADB). The Redmi Note 7 needs "Install via USB" enabled in MIUI Developer options before it can install. |
+| M1 Core rules and storage | Done | Models (web JSON shape), booking day / instant / Tatkal, routine generation (weekly, every N weeks, daily, monthly by date or weekday incl. last, yearly; months or count horizon; end and excluded dates), saveRule / removeRule / extendRoutines, lifecycle (complete, cancel dates, archive), transitions, trip timing. Parity: 6 fixture suites exported from the web code pass. Storage: one JSON document (decision change below). 10 tests. |
 | M2 Today, Journeys, sheet, new journey | Not started | |
 | M3 Tickets | Not started | |
 | M4 Reminders and booking day | Not started | |
@@ -27,7 +27,7 @@ NativeJourneySheet, NativeBookingDay, NativeTicket), plus the existing mobile ar
 |---|---|---|
 | Language / UI | Kotlin + **Jetpack Compose** (Material 3, custom RailWatch theme) | Native, small (target APK < 10 MB), fast start, no web view |
 | Shared code | **Kotlin Multiplatform** module `shared/` for domain rules, parsing, storage and use cases | iOS later reuses it with a SwiftUI shell; no second rewrite of the rules |
-| Storage | **SQLDelight** (SQLite) in `shared/` | Multiplatform (Room is Android-first); typed queries; migrations |
+| Storage | **One JSON document** (the web planner/backup shape), private file written atomically | Decided in M1 instead of SQLDelight: lighter (no database library), backup and restore are a file copy, a few hundred journeys load in milliseconds |
 | Dates | `kotlinx-datetime`, all booking maths in IST | Same as the web app's rules |
 | Networking | **Ktor client**, only for the PNR check | The app talks to nothing else |
 | DI | Manual constructor wiring (small app) | No framework weight |
@@ -37,7 +37,7 @@ NativeJourneySheet, NativeBookingDay, NativeTicket), plus the existing mobile ar
 | Widget | **Glance** app widget | Next trip on the home screen |
 | Min SDK / target | minSdk 26 (Android 8), target latest | Covers the Redmi Note 7 (Android 10) and newer |
 | Distribution | Signed APK first (sideload); Play Store later | No store account needed to start |
-| Parity with the web | **Shared test fixtures**: JSON cases (routines → journeys, booking dates, fares from OCR text, ticket fields) exported from the web repo and run in both test suites | Guards against the two rule copies drifting |
+| Parity with the web | **Shared test fixtures**: JSON cases (routines â†’ journeys, booking dates, fares from OCR text, ticket fields) exported from the web repo and run in both test suites | Guards against the two rule copies drifting |
 
 Repo layout:
 
@@ -56,7 +56,7 @@ railwatch-app/
 | Feature | In the app | Notes |
 |---|---|---|
 | Routines | Create, edit, pause, linked onward/return; generates journeys N months ahead | Same horizon setting (months or count) |
-| Journeys lifecycle | Planned → booking open → booked → travelled; cancellation needed → cancelled; skipped; archive after N days | Same rules and retention settings |
+| Journeys lifecycle | Planned â†’ booking open â†’ booked â†’ travelled; cancellation needed â†’ cancelled; skipped; archive after N days | Same rules and retention settings |
 | Booking rules | Normal window (default 60 days), Tatkal (day before, 10:00 AC / 11:00 non-AC), train origin date | Shared rules |
 | Time off | Leave and company holidays; ICS / CSV import from a file; conflicts with planned trips ("skip or keep?") | Import via the system file picker |
 | Today | Boarding-pass next trip, Do next cards, this week | NativeToday |
@@ -69,7 +69,7 @@ railwatch-app/
 | Ticket pass | Full-screen pass, offline, brightness up, Open PDF, Share | NativeTicket |
 | Ticket vault | All stored PDFs by month; PDFs kept N days after travel (setting) | App-private storage |
 | Spend | Month / 6 months / year, by month, where it goes (fare, fees, wallet, insurance), refunds | Shared fare rules |
-| PNR status | Check on tap: show the enquiry's CAPTCHA, you answer, app fetches from the phone; suggestions near travel; cancelled → asks first | Same honest client as the web; may stop working if the site changes |
+| PNR status | Check on tap: show the enquiry's CAPTCHA, you answer, app fetches from the phone; suggestions near travel; cancelled â†’ asks first | Same honest client as the web; may stop working if the site changes |
 | Reminders | Booking opens (configurable lead times), cancellation follow-ups, quiet hours, per-type channels | Phone notifications only |
 | Notifications centre | In-app list of reminders and changes, cleared when resolved | |
 | Widget | Next trip, booking countdown on the day | Glance |
@@ -88,46 +88,46 @@ reminders are phone notifications only (no Telegram, WhatsApp or email).
 
 Each milestone ends with a signed APK installed on the Redmi Note 7 and checked against the canvas.
 
-**M0 — Foundations**
+**M0 â€” Foundations**
 Repo, Gradle (version catalog), CI (build, unit tests, lint), signing config, theme tokens from the RailWatch palette
 and Manrope, Compose component kit (large title, floating tab bar, sheet, boarding pass, segmented control, swipe row,
 status dot, app date/time pickers). Fixture export script in the web repo.
 *Done when:* an empty app with the tab bar and theme installs; CI green.
 
-**M1 — Core rules and storage**
+**M1 â€” Core rules and storage**
 Port the domain to `shared/`: journeys, routines and generation, booking/Tatkal dates, lifecycle and retention, time off
 and conflicts, stations lookup. SQLDelight schema and migrations. Parity fixtures passing.
 *Done when:* all fixtures pass on JVM; data survives app restarts.
 
-**M2 — Today, Journeys, journey sheet, new journey**
+**M2 â€” Today, Journeys, journey sheet, new journey**
 NativeToday, NativeJourneys (with swipe actions), NativeJourneySheet, new/edit journey sheet, routines screens, first run.
 *Done when:* a routine creates journeys, they show on Today and Journeys, swipe actions work, everything persists.
 
-**M3 — Tickets**
+**M3 â€” Tickets**
 Share target for IRCTC PDFs (one or several at once) as the only way tickets come in, ML Kit text + QR, the shared
 parsing (fare reconciliation, arrival, berth), journey matching, ticket vault, ticket pass, retention.
 *Done when:* the 11 test PDFs parse to the same results as the web app (fixtures), and the pass works in airplane mode.
 
-**M4 — Reminders and booking day**
+**M4 â€” Reminders and booking day**
 Alarm scheduling for booking-open and cancellation reminders, quiet hours, notification channels, exact-alarm
 permission flow, notifications centre, NativeBookingDay.
 *Done when:* reminders fire with the app closed (checked after a reboot and in Doze), booking day flows to booked.
 
-**M5 — Calendar, time off, spend, settings**
+**M5 â€” Calendar, time off, spend, settings**
 Calendar (week/agenda/month), time off with ICS/CSV import and conflicts, Spend, settings.
 *Done when:* feature parity with the web for these screens.
 
-**M6 — PNR, widget, backup**
+**M6 â€” PNR, widget, backup**
 PNR check with the user-answered CAPTCHA, suggestions, ask-before-cancel; Glance widget; backup/restore compatible with
 the web app.
 *Done when:* a web backup restores on the phone and back.
 
-**M7 — Polish and release**
+**M7 â€” Polish and release**
 Accessibility (TalkBack labels, 48 dp targets, contrast), light theme, motion, startup and size budget, crash-free
 checks, release APK; Play Store listing optional.
 *Done when:* release APK under 10 MB, cold start under 1 s on the Redmi Note 7.
 
-**Later — iOS**
+**Later â€” iOS**
 `iosApp/` SwiftUI over `shared/` (PDFKit, Vision, UNUserNotificationCenter, a share extension for PDFs).
 
 ---

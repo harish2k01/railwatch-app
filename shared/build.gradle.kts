@@ -2,11 +2,12 @@
 plugins {
     id("org.jetbrains.kotlin.multiplatform")
     id("com.android.kotlin.multiplatform.library")
+    id("org.jetbrains.kotlin.plugin.serialization")
 }
 
 kotlin {
     compilerOptions { freeCompilerArgs.add("-Xexpect-actual-classes") }
-    androidLibrary {
+    android {
         namespace = "dev.railwatch.shared"
         compileSdk = 37
         minSdk = 26
@@ -15,7 +16,8 @@ kotlin {
     jvm { compilerOptions { jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17) } }
     sourceSets {
         commonMain.dependencies {
-            implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.2")
+            api("org.jetbrains.kotlinx:kotlinx-datetime:0.6.2")
+            api("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.1")
         }
         commonTest.dependencies {
             implementation(kotlin("test"))
