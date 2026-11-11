@@ -2,6 +2,10 @@ package dev.railwatch.app.ui
 
 import android.net.Uri
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
@@ -52,6 +56,7 @@ private sealed interface Sheet {
     data class Pass(val id: String) : Sheet
     data class Pdf(val id: String, val file: String) : Sheet
     data class Booking(val id: String) : Sheet
+    data class Pnr(val id: String) : Sheet
 }
 
 /** App shell: the current tab under a large title, bottom sheets for details and forms, the floating tab bar. */
@@ -94,7 +99,7 @@ fun RailWatchApp(shared: List<Uri> = emptyList(), consumeShared: () -> Unit = {}
                 is Sheet.Journey -> find(s.id)?.let { j ->
                     JourneySheet(j, model, close = { sheet = null }, confirm = confirm, edit = { sheet = Sheet.Edit(j.id) },
                         ticket = { if (dev.railwatch.shared.domain.hasTicket(j)) sheet = Sheet.Pass(j.id) else info = "To add the ticket, open the IRCTC PDF in Gmail or Files, tap Share and choose RailWatch." },
-                        pnr = { info = if (j.pnr.isEmpty()) "Add the PNR with Edit first." else "PNR checks are coming in a later update." })
+                        pnr = { if (j.pnr.length == 10) sheet = Sheet.Pnr(j.id) else info = "Add the 10-digit PNR with Edit first." })
                 }
                 is Sheet.Edit -> find(s.id)?.let { EditJourneySheet(it, model) { sheet = Sheet.Journey(it.id) } }
                 Sheet.New -> NewJourneySheet(model) { sheet = null }
@@ -102,12 +107,20 @@ fun RailWatchApp(shared: List<Uri> = emptyList(), consumeShared: () -> Unit = {}
                 is Sheet.Import -> ImportSheet(model, s.uris) { msg -> sheet = null; if (msg.isNotEmpty()) { info = msg } }
                 is Sheet.Pass -> find(s.id)?.let { j -> j.attachments?.firstOrNull { it.type == "application/pdf" }?.let { f -> TicketPass(j, f, model) { sheet = Sheet.Pdf(j.id, f.id) } } }
                 is Sheet.Pdf -> find(s.id)?.attachments?.firstOrNull { it.id == s.file }?.let { PdfPages(model, it) }
+                is Sheet.Pnr -> find(s.id)?.let { dev.railwatch.app.ui.screens.PnrSheet(it, model, confirm) { sheet = Sheet.Journey(it.id) } }
                 is Sheet.Booking -> find(s.id)?.let { dev.railwatch.app.ui.screens.BookingDaySheet(it, model) { sheet = null } }
             }
         }
     }
+    // Messages and errors show as an app-styled toast above the tab bar, and fade after a few seconds.
     info?.let { msg ->
-        AlertDialog(onDismissRequest = { info = null }, containerColor = Rw.colors.surface, text = { Text(msg, color = Rw.colors.text) }, confirmButton = { TextButton({ info = null }) { Text("OK") } })
+        LaunchedEffect(msg) { kotlinx.coroutines.delay(4000); if (info == msg) info = null }
+        Box(Modifier.fillMaxSize().padding(bottom = 112.dp, start = 16.dp, end = 16.dp), contentAlignment = Alignment.BottomCenter) {
+            androidx.compose.foundation.layout.Row(Modifier.fillMaxWidth().background(Rw.colors.surface2, androidx.compose.foundation.shape.RoundedCornerShape(18.dp))
+                .border(1.dp, Rw.colors.line, androidx.compose.foundation.shape.RoundedCornerShape(18.dp)).clickable { info = null }.padding(horizontal = 18.dp, vertical = 14.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text(msg, color = Rw.colors.text, modifier = Modifier.weight(1f))
+            }
+        }
     }
     ask?.let { (q, run) ->
         AlertDialog(onDismissRequest = { ask = null }, containerColor = Rw.colors.surface, text = { Text(q, color = Rw.colors.text) },

@@ -65,7 +65,13 @@ enum class JourneyStatus {
     val cancelledAt: String? = null,
     val archivedAt: String? = null,
     val attachments: List<Attachment>? = null,
+    val pnrStatus: PnrSnapshot? = null,
+    val pnrLastAttemptAt: String? = null,
+    val pnrLastError: String? = null,
 )
+
+@Serializable data class PnrPassenger(val number: Int = 1, val booking: String = "", val current: String = "", val coach: String = "", val berth: String = "")
+@Serializable data class PnrSnapshot(val pnr: String, val checkedAt: String = "", val chartStatus: String = "", val passengers: List<PnrPassenger> = emptyList())
 
 @Serializable data class Recurrence(
     val frequency: String, val interval: Int, val monthlyPattern: String = "date", val dayOfMonth: Int = 1,
