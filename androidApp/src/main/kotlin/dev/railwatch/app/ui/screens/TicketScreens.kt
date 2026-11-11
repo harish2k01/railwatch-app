@@ -77,7 +77,7 @@ fun TicketsScreen(model: AppModel, open: (Journey) -> Unit, contentPadding: Padd
         if (list.isEmpty()) item {
             Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(22.dp)).background(Rw.colors.surface).padding(20.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text("No tickets yet", style = MaterialTheme.typography.headlineSmall, color = Rw.colors.text)
-                Text("Open the IRCTC ticket PDF in Gmail or Files, tap Share and choose RailWatch. It’s read on this phone and matched to the journey.", style = MaterialTheme.typography.bodyLarge, color = Rw.colors.muted)
+                Text("Open the IRCTC ticket PDF in Gmail or Files, tap Share and choose RailWatch.", style = MaterialTheme.typography.bodyLarge, color = Rw.colors.muted)
             }
         }
         byMonth(list).forEach { (month, trips) ->
@@ -101,7 +101,6 @@ fun ImportSheet(model: AppModel, uris: List<android.net.Uri>, close: (String) ->
     }
     Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp).padding(bottom = 28.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(if (uris.size == 1) "Add ticket" else "Add ${uris.size} tickets", style = MaterialTheme.typography.headlineSmall, color = Rw.colors.text)
-        Text("Read on this phone and stored only here.", style = MaterialTheme.typography.bodyMedium, color = Rw.colors.muted)
         val list = rows
         if (list == null) Row(verticalAlignment = Alignment.CenterVertically) { CircularProgressIndicator(color = Rw.colors.brand, modifier = Modifier.padding(end = 12.dp)); Text(progress, color = Rw.colors.text) }
         else {

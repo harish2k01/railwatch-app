@@ -125,3 +125,9 @@ private fun shiftMonth(m: String, by: Int): String {
     val total = m.take(4).toInt() * 12 + m.substring(5, 7).toInt() - 1 + by
     return "%04d-%02d".format(total / 12, total % 12 + 1)
 }
+
+/** The Calendar tab. */
+@Composable
+fun CalendarScreen(model: AppModel, open: (Journey) -> Unit, contentPadding: androidx.compose.foundation.layout.PaddingValues) {
+    androidx.compose.foundation.lazy.LazyColumn(contentPadding = contentPadding) { item { dev.railwatch.app.ui.components.LargeTitle("Calendar") }; item { CalendarView(model, open) } }
+}

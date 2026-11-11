@@ -80,9 +80,9 @@ fun RailWatchApp(shared: List<Uri> = emptyList(), consumeShared: () -> Unit = {}
     val pad = PaddingValues(start = 16.dp, end = 16.dp, top = top, bottom = 120.dp)
     Box(Modifier.fillMaxSize().background(Rw.colors.ground)) {
         when (tab) {
-            Tab.Today -> TodayScreen(model, open = openJourney, newRoutine = { sheet = Sheet.Routine(null) }, seeAll = { tab = Tab.Journeys }, contentPadding = pad)
+            Tab.Today -> TodayScreen(model, open = openJourney, showTicket = { sheet = Sheet.Pass(it.id) }, newRoutine = { sheet = Sheet.Routine(null) }, seeAll = { tab = Tab.Journeys }, contentPadding = pad)
             Tab.Journeys -> JourneysScreen(model, open = openJourney, confirm = confirm, contentPadding = pad)
-            Tab.Tickets -> TicketsScreen(model, open = { sheet = Sheet.Pass(it.id) }, contentPadding = pad)
+            Tab.Calendar -> dev.railwatch.app.ui.screens.CalendarScreen(model, open = openJourney, contentPadding = pad)
             Tab.You -> YouScreen(model, editRoutine = { sheet = Sheet.Routine(it) }, open = openJourney, info = { info = it }, contentPadding = pad)
         }
         FloatingTabBar(selected = tab, onSelect = { tab = it }, onNew = { sheet = Sheet.New }, modifier = Modifier.align(Alignment.BottomCenter))
@@ -99,7 +99,7 @@ fun RailWatchApp(shared: List<Uri> = emptyList(), consumeShared: () -> Unit = {}
                 is Sheet.Edit -> find(s.id)?.let { EditJourneySheet(it, model) { sheet = Sheet.Journey(it.id) } }
                 Sheet.New -> NewJourneySheet(model) { sheet = null }
                 is Sheet.Routine -> RoutineSheet(model, s.rule) { sheet = null }
-                is Sheet.Import -> ImportSheet(model, s.uris) { msg -> sheet = null; if (msg.isNotEmpty()) { info = msg; tab = Tab.Tickets } }
+                is Sheet.Import -> ImportSheet(model, s.uris) { msg -> sheet = null; if (msg.isNotEmpty()) { info = msg } }
                 is Sheet.Pass -> find(s.id)?.let { j -> j.attachments?.firstOrNull { it.type == "application/pdf" }?.let { f -> TicketPass(j, f, model) { sheet = Sheet.Pdf(j.id, f.id) } } }
                 is Sheet.Pdf -> find(s.id)?.attachments?.firstOrNull { it.id == s.file }?.let { PdfPages(model, it) }
                 is Sheet.Booking -> find(s.id)?.let { dev.railwatch.app.ui.screens.BookingDaySheet(it, model) { sheet = null } }

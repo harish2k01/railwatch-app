@@ -160,7 +160,6 @@ fun YouScreen(model: AppModel, editRoutine: (Rule?) -> Unit, open: (Journey) -> 
                 ListRow("Week starts on", if (s.weekStartsOn == 1) "Monday" else "Sunday") { model.setSettings { it.copy(weekStartsOn = 1 - it.weekStartsOn.coerceIn(0, 1)) } }
             }
         }
-        item { Text("Stored only on this phone. No account, no server.", style = MaterialTheme.typography.bodyMedium, color = Rw.colors.muted, modifier = Modifier.padding(top = 16.dp, start = 4.dp)) }
     }
 }
 

@@ -2,6 +2,7 @@ package dev.railwatch.app.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -57,7 +58,7 @@ import dev.railwatch.shared.domain.upcoming
 
 /** Today (canvas NativeToday): large title, boarding-pass next trip, Do next cards, this week. */
 @Composable
-fun TodayScreen(model: AppModel, open: (Journey) -> Unit, newRoutine: () -> Unit, seeAll: () -> Unit, contentPadding: PaddingValues) {
+fun TodayScreen(model: AppModel, open: (Journey) -> Unit, showTicket: (Journey) -> Unit, newRoutine: () -> Unit, seeAll: () -> Unit, contentPadding: PaddingValues) {
     val p = model.planner; val today = model.today
     val next = nextTrip(p, today)
     val cards = doNext(p, today)
@@ -65,7 +66,7 @@ fun TodayScreen(model: AppModel, open: (Journey) -> Unit, newRoutine: () -> Unit
     LazyColumn(contentPadding = contentPadding) {
         item { LargeTitle("Today", eyebrow = longDay(today)) }
         item {
-            if (next != null) BoardingPass(next, today, model.stations::name) { open(next) }
+            if (next != null) BoardingPass(next, today, model.stations::name, { showTicket(next) }) { open(next) }
             else EmptyStart(hasRoutines = p.rules.isNotEmpty(), newRoutine = newRoutine)
         }
         if (cards.isNotEmpty()) {
@@ -74,9 +75,11 @@ fun TodayScreen(model: AppModel, open: (Journey) -> Unit, newRoutine: () -> Unit
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) { items(cards, key = { it::class.simpleName + it.journey.id }) { c -> DoCard(c) { if (c is DoNext.BookMany) seeAll() else open(c.journey) } } }
             }
         }
+        item { SectionHead("This week") }
+        item { WeekStrip(p, today) { d -> upcoming(p, today).firstOrNull { it.date == d }?.let(open) } }
         if (week.isNotEmpty()) {
-            item { SectionHead("This week") }
             item {
+                Spacer(Modifier.height(10.dp))
                 Grouped {
                     week.forEachIndexed { i, j ->
                         if (i > 0) RowDivider()
@@ -88,9 +91,34 @@ fun TodayScreen(model: AppModel, open: (Journey) -> Unit, newRoutine: () -> Unit
     }
 }
 
+/** The next 7 days: travel (purple dot), booking opens (blue dot), time off (shaded). */
+@Composable
+private fun WeekStrip(p: dev.railwatch.shared.domain.Planner, today: String, pick: (String) -> Unit) {
+    val c = Rw.colors
+    val live = p.journeys.filter { it.status == JourneyStatus.NeedsBooking || it.status == JourneyStatus.Booked || it.status == JourneyStatus.CancellationNeeded }
+    val off = p.holidays.map { it.date }.toSet()
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        (0 until 7).forEach { i ->
+            val d = addDays(today, i)
+            val travel = live.any { it.date == d }
+            val opens = live.any { it.status == JourneyStatus.NeedsBooking && dev.railwatch.shared.domain.bookingDay(it) == d }
+            val bg = when { i == 0 -> c.brand; d in off -> c.timeoffBg; else -> c.surface }
+            val ink = if (i == 0) c.brandInk else c.text
+            Column(Modifier.weight(1f).background(bg, androidx.compose.foundation.shape.RoundedCornerShape(14.dp)).clickable { pick(d) }.padding(vertical = 10.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(dev.railwatch.app.ui.weekdayShort(d).take(1), color = ink.copy(alpha = .7f), style = MaterialTheme.typography.labelSmall)
+                Text(dev.railwatch.app.ui.dayNum(d).trimStart('0'), color = ink, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold)
+                Row(Modifier.height(8.dp).padding(top = 3.dp), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+                    if (travel) Spacer(Modifier.size(5.dp).background(if (i == 0) ink else c.brand, androidx.compose.foundation.shape.CircleShape))
+                    if (opens) Spacer(Modifier.size(5.dp).background(if (i == 0) ink else c.open, androidx.compose.foundation.shape.CircleShape))
+                }
+            }
+        }
+    }
+}
+
 /** The next trip as a boarding pass; booked trips use the accent colour. */
 @Composable
-private fun BoardingPass(j: Journey, today: String, name: (String) -> String?, onClick: () -> Unit) {
+private fun BoardingPass(j: Journey, today: String, name: (String) -> String?, ticket: () -> Unit, onClick: () -> Unit) {
     val booked = j.status == JourneyStatus.Booked
     val bg = if (booked) Rw.colors.brand else Rw.colors.surface
     val ink = if (booked) Rw.colors.brandInk else Rw.colors.text
@@ -120,6 +148,7 @@ private fun BoardingPass(j: Journey, today: String, name: (String) -> String?, o
         if (facts.isNotEmpty()) {
             Perforation(notch = Rw.colors.ground, line = ink.copy(alpha = .3f))
             Row(Modifier.fillMaxWidth().padding(start = 20.dp, end = 20.dp, bottom = 16.dp), horizontalArrangement = Arrangement.SpaceBetween) { facts.forEach { (k, v) -> Fact(k, v, ink) } }
+            if (dev.railwatch.shared.domain.hasTicket(j)) androidx.compose.material3.Text("Show ticket", color = Rw.colors.brand, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold, textAlign = androidx.compose.ui.text.style.TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 16.dp).background(ink, androidx.compose.foundation.shape.RoundedCornerShape(14.dp)).clickable(onClick = ticket).padding(vertical = 12.dp))
         } else Spacer(Modifier.height(12.dp))
     }
 }
@@ -140,7 +169,7 @@ private fun DoCard(c: DoNext, onClick: () -> Unit) {
         is DoNext.BookMany -> Quint(Rw.colors.attentionBg, Rw.colors.attentionInk, RwIcons.Ticket, "${c.count} trips to book", "Booking is open · soonest")
         is DoNext.OpensSoon -> Quint(Rw.colors.openBg, Rw.colors.openInk, RwIcons.Clock, "Booking opens", shortDay(c.opens) + " · 08:00")
         is DoNext.ConfirmCancel -> Quint(Rw.colors.cancelBg, Rw.colors.cancelInk, RwIcons.Close, "Confirm cancellation", "Cancelled on IRCTC?")
-        is DoNext.NeedsTicket -> Quint(Rw.colors.attentionBg, Rw.colors.attentionInk, RwIcons.Ticket, "Share the ticket", "So it’s here offline")
+        is DoNext.NeedsTicket -> Quint(Rw.colors.attentionBg, Rw.colors.attentionInk, RwIcons.Ticket, "Share the ticket", "Then it’s one tap away")
     }
     Column(Modifier.width(168.dp).heightIn(min = 136.dp).clip(RoundedCornerShape(20.dp)).background(bg).clickable(onClick = onClick).padding(14.dp),
         verticalArrangement = Arrangement.SpaceBetween) {
