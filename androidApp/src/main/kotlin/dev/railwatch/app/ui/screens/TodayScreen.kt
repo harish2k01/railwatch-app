@@ -75,19 +75,41 @@ fun TodayScreen(model: AppModel, open: (Journey) -> Unit, showTicket: (Journey) 
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) { items(cards, key = { it::class.simpleName + it.journey.id }) { c -> DoCard(c) { if (c is DoNext.BookMany) seeAll() else open(c.journey) } } }
             }
         }
+        // This week: trips in the next 7 days, and the days booking opens for later trips.
+        val end = addDays(today, 6)
+        val live = p.journeys.filter { it.status == JourneyStatus.NeedsBooking || it.status == JourneyStatus.Booked || it.status == JourneyStatus.CancellationNeeded }
+        val entries = (live.filter { it.date in today..end }.map { Triple(it.date, it, false) } +
+            live.filter { it.status == JourneyStatus.NeedsBooking && dev.railwatch.shared.domain.bookingDay(it) in today..end && it.date > end }.map { Triple(dev.railwatch.shared.domain.bookingDay(it), it, true) })
+            .sortedBy { it.first }.take(6)
         item { SectionHead("This week") }
-        item { WeekStrip(p, today) { d -> upcoming(p, today).firstOrNull { it.date == d }?.let(open) } }
-        if (week.isNotEmpty()) {
-            item {
-                Spacer(Modifier.height(10.dp))
-                Grouped {
-                    week.forEachIndexed { i, j ->
-                        if (i > 0) RowDivider()
-                        dev.railwatch.app.ui.components.JourneyRow(dev.railwatch.app.ui.dayNum(j.date), dev.railwatch.app.ui.weekdayShort(j.date), "${j.from} → ${j.to}", dev.railwatch.app.ui.journeyLine(j, today), toneOf(j), statusLabel(j)) { open(j) }
-                    }
+        item {
+            if (entries.isEmpty()) Text("Nothing in the next 7 days.", color = Rw.colors.muted, modifier = Modifier.padding(start = 4.dp))
+            else Grouped {
+                entries.forEachIndexed { i, (day, j, booking) ->
+                    if (i > 0) RowDivider()
+                    WeekRow(day, j, booking, today) { open(j) }
                 }
             }
         }
+    }
+}
+
+/** One This-week row: a trip (with a Book pill while booking is open) or a booking day for a later trip. */
+@Composable
+private fun WeekRow(day: String, j: Journey, booking: Boolean, today: String, onClick: () -> Unit) {
+    val c = Rw.colors
+    Row(Modifier.fillMaxWidth().clickable(onClick = onClick).padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+        Column(Modifier.padding(end = 16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(dev.railwatch.app.ui.dayNum(day), color = c.text, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, style = MaterialTheme.typography.titleLarge)
+            Text(dev.railwatch.app.ui.weekdayShort(day), color = c.muted, style = MaterialTheme.typography.labelSmall)
+        }
+        Column(Modifier.weight(1f)) {
+            Text(if (booking) "Booking day" else "${j.from} → ${j.to}", color = c.text, style = MaterialTheme.typography.titleMedium)
+            Text(if (booking) "${dev.railwatch.shared.domain.bookingClock(j)} · ${dev.railwatch.app.ui.dayMonth(j.date)} trip" else dev.railwatch.app.ui.journeyLine(j, today), color = c.muted, style = MaterialTheme.typography.bodyMedium)
+        }
+        if (!booking && j.status == JourneyStatus.NeedsBooking && dev.railwatch.shared.domain.bookingDay(j) <= today)
+            Text("Book", color = c.attentionInk, style = MaterialTheme.typography.labelMedium, modifier = Modifier.background(c.attentionBg, androidx.compose.foundation.shape.RoundedCornerShape(99.dp)).padding(horizontal = 12.dp, vertical = 5.dp))
+        else androidx.compose.material3.Icon(RwIcons.ChevronRight, null, tint = c.muted)
     }
 }
 

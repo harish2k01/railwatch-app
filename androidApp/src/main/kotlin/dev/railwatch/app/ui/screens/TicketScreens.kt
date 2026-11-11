@@ -69,11 +69,11 @@ import kotlinx.coroutines.withContext
 
 /** Tickets: every journey with a stored PDF, newest trips first, by month. Tap opens the pass. */
 @Composable
-fun TicketsScreen(model: AppModel, open: (Journey) -> Unit, contentPadding: PaddingValues) {
+fun TicketsScreen(model: AppModel, open: (Journey) -> Unit, contentPadding: PaddingValues, header: @Composable () -> Unit = { LargeTitle("Tickets") }) {
     val today = model.today
     val list = model.planner.journeys.filter { hasTicket(it) }.sortedWith(compareByDescending<Journey> { it.date >= today }.thenBy { if (it.date >= today) it.date else "" }.thenByDescending { it.date })
     LazyColumn(contentPadding = contentPadding) {
-        item { LargeTitle("Tickets") }
+        item { header() }
         if (list.isEmpty()) item {
             Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(22.dp)).background(Rw.colors.surface).padding(20.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text("No tickets yet", style = MaterialTheme.typography.headlineSmall, color = Rw.colors.text)

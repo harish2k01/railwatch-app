@@ -40,21 +40,17 @@ import dev.railwatch.shared.domain.hasTicket
 
 /** The quick actions under a journey's title (canvas NativeJourneySheet). */
 @Composable
-fun QuickActions(j: Journey, onTicket: () -> Unit, onPnr: () -> Unit, onEdit: () -> Unit) {
+fun QuickActions(j: Journey, model: AppModel, onTicket: () -> Unit, onPnr: () -> Unit, onEdit: () -> Unit) {
     val context = LocalContext.current
-    val share = {
-        val text = buildString {
-            append("${j.from} → ${j.to} · ${shortDay(j.date)}")
-            j.trainNumber?.takeIf { it.isNotBlank() }?.let { append(" · $it") }
-            if (j.departureConfirmed == true) append(" · ${j.departure}")
-            j.coach?.let { c -> append(" · $c${j.seat?.let { "/$it" } ?: ""}") }
-        }
-        context.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, text), "Share journey"))
-    }
+    // Share sends the ticket PDF itself, so it shows only once a ticket is attached.
+    val pdf = j.attachments?.firstOrNull { it.type == "application/pdf" }
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        Quick(RwIcons.Ticket, if (hasTicket(j)) "Ticket" else "Ticket", primary = true, Modifier.weight(1f), onTicket)
+        Quick(RwIcons.Ticket, "Ticket", primary = true, Modifier.weight(1f), onTicket)
         Quick(RwIcons.Clock, "Check PNR", false, Modifier.weight(1f), onPnr)
-        Quick(RwIcons.Share, "Share", false, Modifier.weight(1f), share)
+        if (pdf != null) Quick(RwIcons.Share, "Share", false, Modifier.weight(1f)) {
+            val uri = androidx.core.content.FileProvider.getUriForFile(context, context.packageName + ".tickets", model.ticketFiles.file(pdf.id))
+            context.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).setType("application/pdf").putExtra(Intent.EXTRA_STREAM, uri).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION), "Share ticket"))
+        }
         Quick(RwIcons.Pencil, "Edit", false, Modifier.weight(1f), onEdit)
     }
 }

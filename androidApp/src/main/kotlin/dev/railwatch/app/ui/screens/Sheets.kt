@@ -81,7 +81,7 @@ fun JourneySheet(j: Journey, model: AppModel, close: () -> Unit, confirm: (Strin
             }
             Text(listOfNotNull(name(j.from), name(j.to)).joinToString(" to "), style = MaterialTheme.typography.bodyLarge, color = Rw.colors.muted)
         }
-        QuickActions(j, onTicket = ticket, onPnr = pnr, onEdit = edit)
+        QuickActions(j, model, onTicket = ticket, onPnr = pnr, onEdit = edit)
         val timing = tripTiming(j)
         Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(Rw.colors.surface2).padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             // Times come from the ticket; until then there is nothing to show.
@@ -102,8 +102,13 @@ fun JourneySheet(j: Journey, model: AppModel, close: () -> Unit, confirm: (Strin
             }
             JourneyStatus.Booked -> Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 SecondaryButton("Needs cancelling", { model.setStatus(j, JourneyStatus.CancellationNeeded); close() }, Modifier.weight(1f))
+                // Undo a mistaken "booked": back to To book.
+                SecondaryButton("Not booked", { confirm("Move this trip back to To book?") { model.setStatus(j, JourneyStatus.NeedsBooking); close() } }, Modifier.weight(1f))
             }
-            JourneyStatus.CancellationNeeded -> PrimaryButton("Cancelled on IRCTC", { model.setStatus(j, JourneyStatus.Cancelled); close() })
+            JourneyStatus.CancellationNeeded -> Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                PrimaryButton("Cancelled on IRCTC", { model.setStatus(j, JourneyStatus.Cancelled); close() }, Modifier.weight(1f))
+                SecondaryButton("Keep ticket", { model.setStatus(j, JourneyStatus.Booked); close() }, Modifier.weight(1f))
+            }
             JourneyStatus.Skipped, JourneyStatus.Cancelled -> SecondaryButton("Restore to planned", { model.setStatus(j, JourneyStatus.NeedsBooking); close() })
             JourneyStatus.Completed -> {}
         }
