@@ -42,13 +42,26 @@ fun doNext(p: Planner, today: String, limit: Int = 6): List<DoNext> {
 }
 
 /** The Journeys lists. */
-enum class JourneyList { Upcoming, ToBook, History }
+/** Upcoming: booked trips (and ones to cancel). Planned: not booked yet. Cancelled: cancelled or to cancel. History: past. */
+enum class JourneyList { Upcoming, Planned, Cancelled, History }
 
 fun journeyList(p: Planner, today: String, list: JourneyList): List<Journey> = when (list) {
-    JourneyList.Upcoming -> upcoming(p, today)
-    JourneyList.ToBook -> upcoming(p, today).filter { it.status == JourneyStatus.NeedsBooking && bookingDay(it) <= today }
-    JourneyList.History -> p.journeys.filter { it.archivedAt == null && (it.date < today || it.status == JourneyStatus.Completed || it.status == JourneyStatus.Cancelled || it.status == JourneyStatus.Skipped) }
+    JourneyList.Upcoming -> upcoming(p, today).filter { it.status == JourneyStatus.Booked || it.status == JourneyStatus.CancellationNeeded }
+    JourneyList.Planned -> upcoming(p, today).filter { it.status == JourneyStatus.NeedsBooking }.sortedWith(compareBy<Journey> { bookingDay(it) }.thenBy { it.date })
+    JourneyList.Cancelled -> p.journeys.filter { it.archivedAt == null && (it.status == JourneyStatus.Cancelled || it.status == JourneyStatus.CancellationNeeded) }
+        .sortedWith(compareByDescending<Journey> { it.date >= today }.thenBy { if (it.date >= today) it.date else "" }.thenByDescending { it.date })
+    JourneyList.History -> p.journeys.filter { it.archivedAt == null && it.status != JourneyStatus.Cancelled && (it.date < today || it.status == JourneyStatus.Completed || it.status == JourneyStatus.Skipped) }
         .sortedWith(compareByDescending<Journey> { it.date }.thenByDescending { it.departure })
+}
+
+/** Planned trips grouped by when booking opens: open now, this week, later. */
+fun plannedGroups(list: List<Journey>, today: String): List<Pair<String, List<Journey>>> {
+    val week = addDays(today, 7)
+    return listOf(
+        "Booking open now" to list.filter { bookingDay(it) <= today },
+        "Opens this week" to list.filter { bookingDay(it) in addDays(today, 1)..week },
+        "Opens later" to list.filter { bookingDay(it) > week },
+    ).filter { it.second.isNotEmpty() }
 }
 
 /** Groups a list into months ("2026-11" → trips), keeping order. */

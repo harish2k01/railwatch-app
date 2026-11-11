@@ -121,8 +121,9 @@ fun SwipeRow(actions: List<SwipeAction>, content: @Composable () -> Unit) {
     var drag by remember { mutableFloatStateOf(0f) }
     var dragging by remember { mutableFloatStateOf(0f) } // 1 while the finger is down
     val shown by animateFloatAsState(if (dragging > 0f) drag else target, label = "swipe")
-    Box(Modifier.fillMaxWidth().height(IntrinsicSize.Min)) {
-        Row(Modifier.align(Alignment.CenterEnd).fillMaxHeight()) {
+    // Measured once (no intrinsic pass) and the actions are only composed while the row is moved, so lists scroll smoothly.
+    Box(Modifier.fillMaxWidth()) {
+        if (shown < -0.5f) Row(Modifier.matchParentSize(), horizontalArrangement = Arrangement.End) {
             actions.forEach { a ->
                 Column(Modifier.width(78.dp).fillMaxHeight().background(a.background).clickable(onClickLabel = a.label) { target = 0f; a.run() },
                     horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {

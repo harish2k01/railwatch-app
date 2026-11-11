@@ -82,14 +82,19 @@ fun JourneySheet(j: Journey, model: AppModel, close: () -> Unit, confirm: (Strin
             Text(listOfNotNull(name(j.from), name(j.to)).joinToString(" to "), style = MaterialTheme.typography.bodyLarge, color = Rw.colors.muted)
         }
         QuickActions(j, model, onTicket = ticket, onPnr = pnr, onEdit = edit)
-        val timing = tripTiming(j)
+        val times = dev.railwatch.shared.domain.tripTimes(j)
+        // Departs and arrives, each with its date above the time (times come from the ticket).
         Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(Rw.colors.surface2).padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-            // Times come from the ticket; until then there is nothing to show.
-            Fact("Departs", if (j.departureConfirmed == true) j.departure else "—", Rw.colors.text, Modifier.weight(1f))
-            Fact("Arrives", timing?.substringAfter(" → ")?.substringBefore(" · ") ?: "—", Rw.colors.text, Modifier.weight(1f))
+            DateTime(times.departDate, times.depart, Rw.colors.text, Alignment.Start, Modifier.weight(1f))
+            Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(horizontal = 8.dp)) {
+                times.span?.let { Text(it, style = MaterialTheme.typography.labelMedium, color = Rw.colors.muted) }
+                Text("→", color = Rw.colors.muted)
+            }
+            DateTime(times.arriveDate ?: j.date, times.arrive, Rw.colors.text, Alignment.End, Modifier.weight(1f))
+        }
+        if (j.status == JourneyStatus.NeedsBooking) {
             val opens = bookingDay(j)
-            Fact(if (j.status != JourneyStatus.NeedsBooking) "Travel" else if (opens <= today) "Booking opened" else "Booking opens",
-                if (j.status == JourneyStatus.NeedsBooking) "${shortDay(opens)} ${bookingClock(j)}" else relative(today, j.date), Rw.colors.text, Modifier.weight(1.4f))
+            Text("${if (opens <= today) "Booking opened" else "Booking opens"} ${shortDay(opens)} at ${bookingClock(j)}", color = Rw.colors.muted)
         }
         val facts = listOfNotNull(j.trainNumber?.takeIf { it.isNotBlank() }?.let { "Train" to it }, j.coach?.let { "Coach" to it },
             listOfNotNull(j.seat, j.berth?.let(::berthLabel)).joinToString(" ").takeIf { it.isNotEmpty() }?.let { "Berth" to it },
@@ -103,7 +108,8 @@ fun JourneySheet(j: Journey, model: AppModel, close: () -> Unit, confirm: (Strin
             JourneyStatus.Booked -> Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 SecondaryButton("Needs cancelling", { model.setStatus(j, JourneyStatus.CancellationNeeded); close() }, Modifier.weight(1f))
                 // Undo a mistaken "booked": back to To book.
-                SecondaryButton("Not booked", { confirm("Move this trip back to To book?") { model.setStatus(j, JourneyStatus.NeedsBooking); close() } }, Modifier.weight(1f))
+                if (j.pnr.isEmpty() && !dev.railwatch.shared.domain.hasTicket(j))
+                    SecondaryButton("Not booked", { confirm("Move this trip back to Planned?") { model.setStatus(j, JourneyStatus.NeedsBooking); close() } }, Modifier.weight(1f))
             }
             JourneyStatus.CancellationNeeded -> Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 PrimaryButton("Cancelled on IRCTC", { model.setStatus(j, JourneyStatus.Cancelled); close() }, Modifier.weight(1f))

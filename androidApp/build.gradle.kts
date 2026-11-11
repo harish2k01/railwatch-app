@@ -32,6 +32,13 @@ android {
         proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"))
         if (hasReleaseSigning) signingConfig = signingConfigs.getByName("release")
     }
+    // Optimised like release but signed with the debug key, so it installs over a debug build on a test phone
+    // (same signature, data kept) and shows real scrolling and start-up speed.
+    buildTypes.create("preview") {
+        initWith(buildTypes.getByName("release"))
+        signingConfig = signingConfigs.getByName("debug")
+        matchingFallbacks += "release"
+    }
     buildFeatures { compose = true }
     compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
 }

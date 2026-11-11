@@ -156,8 +156,14 @@ fun TicketPass(j: Journey, file: Attachment, model: AppModel, openPdf: () -> Uni
             Column(Modifier.padding(start = 22.dp, end = 22.dp, top = 20.dp, bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Row { Text(shortDay(j.date).uppercase(), style = MaterialTheme.typography.labelSmall, color = muted, modifier = Modifier.weight(1f)); j.ticketStatus?.let { Text(it, style = MaterialTheme.typography.labelSmall, color = Color(0xFF15803D)) } }
                 Row(verticalAlignment = Alignment.Bottom) {
-                    Column(Modifier.weight(1f)) { Text(j.from, fontSize = 42.sp, fontWeight = FontWeight.ExtraBold, color = ink, style = MaterialTheme.typography.displayLarge); Text(listOfNotNull(j.departure.takeIf { j.departureConfirmed == true }, model.stations.name(j.from)).joinToString(" · "), style = MaterialTheme.typography.bodyMedium, color = muted, maxLines = 1) }
-                    Column(Modifier.weight(1f), horizontalAlignment = Alignment.End) { Text(j.to, fontSize = 42.sp, fontWeight = FontWeight.ExtraBold, color = ink, style = MaterialTheme.typography.displayLarge); Text(listOfNotNull(timing?.substringAfter(" → ")?.substringBefore(" · "), model.stations.name(j.to)).joinToString(" · "), style = MaterialTheme.typography.bodyMedium, color = muted, maxLines = 1) }
+                    Column(Modifier.weight(1f)) { Text(j.from, fontSize = 42.sp, fontWeight = FontWeight.ExtraBold, color = ink, style = MaterialTheme.typography.displayLarge); Text(model.stations.name(j.from).orEmpty(), style = MaterialTheme.typography.bodyMedium, color = muted, maxLines = 1) }
+                    Column(Modifier.weight(1f), horizontalAlignment = Alignment.End) { Text(j.to, fontSize = 42.sp, fontWeight = FontWeight.ExtraBold, color = ink, style = MaterialTheme.typography.displayLarge); Text(model.stations.name(j.to).orEmpty(), style = MaterialTheme.typography.bodyMedium, color = muted, maxLines = 1) }
+                }
+                val times = dev.railwatch.shared.domain.tripTimes(j)
+                if (times.depart != null) Row(verticalAlignment = Alignment.Bottom) {
+                    DateTime(times.departDate, times.depart, ink, Alignment.Start, Modifier.weight(1f))
+                    times.span?.let { Text(it, style = MaterialTheme.typography.labelMedium, color = muted, modifier = Modifier.padding(bottom = 4.dp)) }
+                    if (times.arrive != null) DateTime(times.arriveDate!!, times.arrive, ink, Alignment.End, Modifier.weight(1f))
                 }
             }
             if (j.coach != null || j.seat != null) Row(Modifier.padding(horizontal = 14.dp).fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(ink).padding(vertical = 16.dp)) {

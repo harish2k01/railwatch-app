@@ -138,15 +138,23 @@ private fun WeekStrip(p: dev.railwatch.shared.domain.Planner, today: String, pic
     }
 }
 
+/** A date in small type above its time (the time alone when unknown): "Wed 18 Nov" over "07:10". */
+@Composable
+fun DateTime(day: String, time: String?, ink: androidx.compose.ui.graphics.Color, align: Alignment.Horizontal, modifier: Modifier = Modifier) {
+    Column(modifier, horizontalAlignment = align) {
+        Text(shortDay(day), style = MaterialTheme.typography.labelMedium, color = ink.copy(alpha = .7f))
+        Text(time ?: "—", style = MaterialTheme.typography.titleLarge, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, color = ink)
+    }
+}
+
 /** The next trip as a boarding pass; booked trips use the accent colour. */
 @Composable
 private fun BoardingPass(j: Journey, today: String, name: (String) -> String?, ticket: () -> Unit, onClick: () -> Unit) {
     val booked = j.status == JourneyStatus.Booked
     val bg = if (booked) Rw.colors.brand else Rw.colors.surface
     val ink = if (booked) Rw.colors.brandInk else Rw.colors.text
-    val timing = tripTiming(j)
-    val arrive = timing?.substringAfter(" → ")?.substringBefore(" · ")
-    val span = timing?.substringAfter(" · ", "")
+    val times = dev.railwatch.shared.domain.tripTimes(j)
+    val span = times.span
     Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(24.dp)).background(bg).clickable(onClick = onClick)
         .semantics { contentDescription = "Next trip ${j.from} to ${j.to}, ${longDay(j.date)}, ${statusLabel(j)}" }) {
         Column(Modifier.padding(start = 20.dp, end = 20.dp, top = 18.dp, bottom = 6.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
@@ -160,9 +168,9 @@ private fun BoardingPass(j: Journey, today: String, name: (String) -> String?, t
                 Text(span.orEmpty(), style = MaterialTheme.typography.labelMedium, color = ink.copy(alpha = .75f), modifier = Modifier.padding(bottom = 20.dp, start = 6.dp, end = 6.dp))
                 Stop(j.to, name(j.to), ink, Modifier.weight(1f), Alignment.End)
             }
-            Row {
-                Text(shortDay(j.date) + if (j.departureConfirmed == true) " · ${j.departure}" else "", style = MaterialTheme.typography.titleMedium, color = ink, modifier = Modifier.weight(1f))
-                if (arrive != null) Text(arrive, style = MaterialTheme.typography.titleMedium, color = ink)
+            Row(verticalAlignment = Alignment.Bottom) {
+                DateTime(times.departDate, times.depart, ink, Alignment.Start, Modifier.weight(1f))
+                if (times.arrive != null) DateTime(times.arriveDate!!, times.arrive, ink, Alignment.End)
             }
         }
         val facts = listOfNotNull(j.trainNumber?.takeIf { it.isNotBlank() }?.let { "Train" to it }, j.coach?.let { "Coach" to it },

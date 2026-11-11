@@ -42,22 +42,26 @@ import dev.railwatch.shared.domain.journeyList
 fun JourneysScreen(model: AppModel, open: (Journey) -> Unit, confirm: (String, () -> Unit) -> Unit, contentPadding: PaddingValues) {
     var list by rememberSaveable { mutableStateOf(JourneyList.Upcoming) }
     val today = model.today
-    val items = journeyList(model.planner, today, list)
+    val planner = model.planner
+    val items = androidx.compose.runtime.remember(planner, today, list) { journeyList(planner, today, list) }
     LazyColumn(contentPadding = contentPadding) {
         item { LargeTitle("Journeys") }
-        item { Segmented(listOf(JourneyList.Upcoming to "Upcoming", JourneyList.ToBook to "To book", JourneyList.History to "History"), list) { list = it } }
+        item { Segmented(listOf(JourneyList.Upcoming to "Upcoming", JourneyList.Planned to "Planned", JourneyList.Cancelled to "Cancelled", JourneyList.History to "History"), list) { list = it } }
         if (items.isEmpty()) item {
-            Text(when (list) { JourneyList.ToBook -> "Nothing to book right now."; JourneyList.History -> "No past trips yet."; else -> "No upcoming trips. Add one with +." },
+            Text(when (list) { JourneyList.Planned -> "Every trip is booked."; JourneyList.Cancelled -> "No cancelled trips."; JourneyList.History -> "No past trips yet."; else -> "No booked trips coming up." },
                 style = MaterialTheme.typography.bodyLarge, color = Rw.colors.muted, modifier = Modifier.padding(top = 24.dp, start = 4.dp))
         }
-        byMonth(items).forEach { (month, trips) ->
-            item(key = "m$month") { MonthHeader(monthLabel(month, today)) }
+        val groups = if (list == JourneyList.Planned) dev.railwatch.shared.domain.plannedGroups(items, today) else byMonth(items).map { (m, t) -> monthLabel(m, today) to t }
+        groups.forEach { (month, trips) ->
+            item(key = "m$month") { MonthHeader(month) }
             items(trips, key = { it.id }) { j ->
                 val first = j == trips.first(); val last = j == trips.last()
                 val shape = RoundedCornerShape(topStart = if (first) 18.dp else 0.dp, topEnd = if (first) 18.dp else 0.dp, bottomStart = if (last) 18.dp else 0.dp, bottomEnd = if (last) 18.dp else 0.dp)
                 androidx.compose.foundation.layout.Column(Modifier.fillMaxWidth().clip(shape)) {
                     SwipeRow(actions(j, model, confirm)) {
-                        JourneyRow(dayNum(j.date), weekdayShort(j.date), "${j.from} → ${j.to}", journeyLine(j, today), toneOf(j), statusLabel(j)) { open(j) }
+                        // Planned is grouped by booking day, not month, so its rows say which month they travel.
+                        val detail = if (list == JourneyList.Planned) "Travel ${dev.railwatch.app.ui.dayMonth(j.date)} · opens ${dev.railwatch.app.ui.shortDay(dev.railwatch.shared.domain.bookingDay(j))} ${dev.railwatch.shared.domain.bookingClock(j)}" else journeyLine(j, today)
+                        JourneyRow(dayNum(j.date), weekdayShort(j.date), "${j.from} → ${j.to}", detail, toneOf(j), statusLabel(j)) { open(j) }
                     }
                     if (!last) RowDivider()
                 }

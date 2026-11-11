@@ -132,6 +132,20 @@ fun transition(j: Journey, status: JourneyStatus, today: String): Journey = j.co
     manualOverride = if (j.ruleId != null) true else j.manualOverride,
 )
 
+/** Departure and arrival as dates and times (no "+1"): screens show the date above each time. */
+data class TripTimes(val departDate: String, val depart: String?, val arriveDate: String?, val arrive: String?, val span: String?)
+
+fun tripTimes(j: Journey): TripTimes {
+    val dep = j.departure.takeIf { j.departureConfirmed == true && it.isNotEmpty() }
+    val arr = j.arrival
+    if (dep == null || arr == null) return TripTimes(j.date, dep, null, null, null)
+    fun min(t: String) = t.substring(0, 2).toInt() * 60 + t.substring(3, 5).toInt()
+    val days = if (j.arrivalDate != null) daysBetween(j.date, j.arrivalDate) else if (min(arr) < min(dep)) 1 else 0
+    val minutes = days * 1440 + min(arr) - min(dep)
+    val span = if (days < 0 || days > 3 || minutes <= 0) null else "${minutes / 60}h" + if (minutes % 60 != 0) " ${minutes % 60}m" else ""
+    return TripTimes(j.date, dep, addDays(j.date, days.coerceIn(0, 3)), arr, span)
+}
+
 /** "23:10 → 07:10 +1 · 8h" from a ticket's departure and arrival; null until both are known. */
 fun tripTiming(j: Journey): String? {
     val dep = j.departure.takeIf { j.departureConfirmed == true && it.isNotEmpty() } ?: return null

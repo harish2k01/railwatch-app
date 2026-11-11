@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
@@ -82,7 +83,9 @@ fun RailWatchApp(shared: List<Uri> = emptyList(), consumeShared: () -> Unit = {}
     }
     val openJourney: (dev.railwatch.shared.domain.Journey) -> Unit = { sheet = Sheet.Journey(it.id) }
     val top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
-    val pad = PaddingValues(start = 16.dp, end = 16.dp, top = top, bottom = 120.dp)
+    // The last item stops a clear gap above the floating tab bar (which sits above the system navigation bar).
+    val navBar = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+    val pad = PaddingValues(start = 16.dp, end = 16.dp, top = top, bottom = navBar + 128.dp)
     Box(Modifier.fillMaxSize().background(Rw.colors.ground)) {
         when (tab) {
             Tab.Today -> TodayScreen(model, open = openJourney, showTicket = { sheet = Sheet.Pass(it.id) }, newRoutine = { sheet = Sheet.Routine(null) }, seeAll = { tab = Tab.Journeys }, contentPadding = pad)
