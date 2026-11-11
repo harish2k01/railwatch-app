@@ -3090,5 +3090,599 @@
    },
    "expected": null
   }
+ ],
+ "parse": [
+  {
+   "input": "PNR No: 1234567890\nTrain No./Name: 12637 / PANDIAN EXP\nClass: 3A\nDate of Journey: 01/12/2026\nFrom: CHENNAI\nTo: MADURAI\nCoach: B1\nSeat No: 42\nBerth: LB\nDeparture Time: 21:30",
+   "expected": {
+    "pnr": "1234567890",
+    "trainNumber": "12637",
+    "trainName": "PANDIAN EXP",
+    "travelClass": "3A",
+    "date": "2026-12-01",
+    "from": "CHENNAI",
+    "to": "MADURAI",
+    "coach": "B1",
+    "seat": "42",
+    "berth": "LB",
+    "departure": "21:30"
+   }
+  },
+  {
+   "input": "{\"PNR\":1234567890,\"trainNo\":\"12637\",\"trainName\":\"Express\",\"seatNo\":42,\"berthType\":\"Lower\",\"journeyDate\":\"01-12-2026\"}",
+   "expected": {
+    "date": "2026-12-01",
+    "trainNumber": "12637",
+    "trainName": "Express",
+    "pnr": "1234567890",
+    "seat": "42",
+    "berth": "Lower"
+   }
+  },
+  {
+   "input": "CNF/B1/42/LB",
+   "expected": {
+    "coach": "B1",
+    "seat": "42",
+    "berth": "LB",
+    "ticketStatus": "CNF"
+   }
+  },
+  {
+   "input": "{\"pnr\":\"123\",\"date\":\"2026-02-30\",\"departure\":\"25:10\",\"trainNumber\":\"ABCD\"}",
+   "expected": {}
+  },
+  {
+   "input": "opaque-encrypted-QR-payload",
+   "expected": {}
+  },
+  {
+   "input": "Current Status\nCNF / B2 / 56 / SIDE LOWER\nScheduled Departure\n21:45",
+   "expected": {
+    "coach": "B2",
+    "seat": "56",
+    "berth": "SIDE LOWER",
+    "departure": "21:45",
+    "ticketStatus": "CNF"
+   }
+  },
+  {
+   "input": "{\"PNR Number\":\"1234567890\",\"passengers\":[{\"Coach No\":\"S2\",\"Berth No\":17,\"Berth Type\":\"LOWER\"}],\"Scheduled Departure\":\"9:15 PM\"}",
+   "expected": {
+    "pnr": "1234567890",
+    "coach": "S2",
+    "seat": "17",
+    "berth": "LOWER",
+    "departure": "21:15"
+   }
+  },
+  {
+   "input": "PNR:1234567890,TrainNo:12637,TrainName:PANDIAN EXP,From:CHENNAI,To:MADURAI,Class:AC 3 Tier (3A),Coach:B1,SeatNo:42,BerthType:LOWER,DepartureTime:21:30",
+   "expected": {
+    "pnr": "1234567890",
+    "trainNumber": "12637",
+    "trainName": "PANDIAN EXP",
+    "travelClass": "3A",
+    "from": "CHENNAI",
+    "to": "MADURAI",
+    "coach": "B1",
+    "seat": "42",
+    "berth": "LOWER",
+    "departure": "21:30"
+   }
+  },
+  {
+   "input": "Booking Status: CNF/B1/24/UPPER\nCurrent Status: CNF/B2/56/LOWER",
+   "expected": {
+    "coach": "B2",
+    "seat": "56",
+    "berth": "LOWER",
+    "ticketStatus": "CNF"
+   }
+  },
+  {
+   "input": "Electronic Reservation Slip (ERS)-Normal User\nBooked From Boarding At To\nMADURAI JN. (MDU) MADURAI JN. (MDU) CHENNAI EGMORE (MS)\nStart Date* 05-Jan-2027 Departure* N.A. Arrival* N.A.\nPNR Train No./Name Class\n9876543210 12632 / NELLAI SF EXP SLEEPER CLASS (SL)\nQuota Distance Booking Date\nGENERAL (GN) 497 KM 06-Nov-2026 08:01:04 HRS\nPassenger Details\n# Name Age Gender Booking Status Current Status\n1. PASSENGER 25 M CNF/S7/27/UPPER CNF /S7/27/UPPER",
+   "expected": {
+    "pnr": "9876543210",
+    "trainNumber": "12632",
+    "trainName": "NELLAI SF EXP",
+    "travelClass": "SL",
+    "date": "2027-01-05",
+    "from": "MDU",
+    "to": "MS",
+    "coach": "S7",
+    "seat": "27",
+    "berth": "UPPER",
+    "ticketStatus": "CNF"
+   }
+  },
+  {
+   "input": "PNR\n4123456789\nTrain No./Name\n12636/VAIGAI SF EXP\nClass\nAC CHAIR CAR (CC)\nQuota\nTATKAL (TQ)\nBooked From\nMADURAI JN (MDU)\nStart Date* 05-Jan-2027\nTo\nCHENNAI EGMORE (MS)\nBooking Status Current Status\n1. A 30 M CNF/D2/45/WS CNF/D2/45/WS",
+   "expected": {
+    "pnr": "4123456789",
+    "trainNumber": "12636",
+    "trainName": "VAIGAI SF EXP",
+    "travelClass": "CC",
+    "date": "2027-01-05",
+    "from": "MDU",
+    "to": "MS",
+    "coach": "D2",
+    "seat": "45",
+    "berth": "WS",
+    "bookingType": "tatkal",
+    "ticketStatus": "CNF"
+   }
+  },
+  {
+   "input": "CNF/HA1/7/LOWER",
+   "expected": {
+    "coach": "HA1",
+    "seat": "7",
+    "berth": "LOWER",
+    "ticketStatus": "CNF"
+   }
+  },
+  {
+   "input": "# Name Age Gender Booking Status Current Status\n1. PASSENGER ONE 30 M CNF/S7/27/UPPER CNF/S7/27/UPPER\n2. PASSENGER TWO 28 F CNF/S7/28/LOWER CNF/S7/28/LOWER\n3. PASSENGER THREE 5 M CNF/S8/5/MIDDLE CNF/S8/5/MIDDLE",
+   "expected": {
+    "coach": "S7, S8",
+    "seat": "27, 28, 5",
+    "berth": "UPPER, LOWER, MIDDLE",
+    "ticketStatus": "CNF"
+   }
+  },
+  {
+   "input": "Current Status: CNF /S3/41/LOWER\nPNR Train No./Name Class\n9876543210 12345 / SAMPLE EXP SLEEPER CLASS (SL)\nPassenger Details\n1. TEST USER 30 M CNF/S3/41/LOWER CNF /S3/41/LOWER\n\nPNR Train No./Name Class\n9876543210 12345 / SAMPLE EXP SLEEPER CLASS (SL)\nPassenger Details\n1. TEST USER 30 M CNF/S3/41/LOWER CNF /S3/41/LOWER\n",
+   "expected": {
+    "pnr": "9876543210",
+    "trainNumber": "12345",
+    "trainName": "SAMPLE EXP",
+    "travelClass": "SL",
+    "coach": "S3",
+    "seat": "41",
+    "berth": "LOWER",
+    "ticketStatus": "CNF"
+   }
+  },
+  {
+   "input": "PNR Train No./Name Class\n9876543270 12345 / SAMPLE EXP SLEEPER CLASS (SL)\nPassenger Details\n1. TEST USER 30 M CNF/S3/41/LOWER CNF /S3/41/LOWER\n\nInvoice Number: PS269876543210 11\nInvoice Number: PS2698765432101\nPNR: 9876543210",
+   "expected": {
+    "pnr": "9876543210",
+    "trainNumber": "12345",
+    "trainName": "SAMPLE EXP",
+    "travelClass": "SL",
+    "coach": "S3",
+    "seat": "41",
+    "berth": "LOWER",
+    "ticketStatus": "CNF"
+   }
+  },
+  {
+   "input": "Tra1n N0./Narne        Class\n9876543210      12345 / SAMPLE SF EXP        SLEEPER CLASS (SL)\n",
+   "expected": {
+    "trainNumber": "12345",
+    "trainName": "SAMPLE SF EXP",
+    "travelClass": "SL"
+   }
+  },
+  {
+   "input": "PNR No.:9876543210\nTXN ID:100000000001\nPassenger Name:TEST USER\nGender:Male\nAge:30\nStatus:CNF/S4/6/UPPER\nQuota:GENERAL (GN)\nTrain No.:12345\nTrain Name:SAMPLE SF EXP\nDate Of Journey:07-Jan-2027\nBoarding Station:CHENNAI EGMORE - MS\nClass:SLEEPER CLASS (SL)\nFrom:CHENNAI EGMORE - MS\nTo:MADURAI JN. - MDU\nTicket Fare: Rs340.0",
+   "expected": {
+    "pnr": "9876543210",
+    "trainNumber": "12345",
+    "trainName": "SAMPLE SF EXP",
+    "travelClass": "SL",
+    "date": "2027-01-07",
+    "from": "MS",
+    "to": "MDU",
+    "coach": "S4",
+    "seat": "6",
+    "berth": "UPPER",
+    "ticketStatus": "CNF"
+   }
+  },
+  {
+   "input": "PNR No.:9876543210,TXN ID:100000000001,Passenger Name:TEST USER,Gender:Male,Age:30,Status:CNF/S4/6/UPPER,Quota:GENERAL (GN),Train No.:12345,Train Name:SAMPLE SF EXP,Date Of Journey:07-Jan-2027,Boarding Station:CHENNAI EGMORE - MS,Class:SLEEPER CLASS (SL),From:CHENNAI EGMORE - MS,To:MADURAI JN. - MDU,Ticket Fare: Rs340.0",
+   "expected": {
+    "pnr": "9876543210",
+    "trainNumber": "12345",
+    "trainName": "SAMPLE SF EXP",
+    "travelClass": "SL",
+    "date": "2027-01-07",
+    "from": "MS",
+    "to": "MDU",
+    "coach": "S4",
+    "seat": "6",
+    "berth": "UPPER",
+    "ticketStatus": "CNF"
+   }
+  },
+  {
+   "input": "Start Date* 17-Nov-2026 Departure* 23:10 17-Nov-2026 Arrival* 07:10 18-Nov-2026",
+   "expected": {
+    "date": "2026-11-17",
+    "departure": "23:10",
+    "arrival": "07:10",
+    "arrivalDate": "2026-11-18"
+   }
+  },
+  {
+   "input": "PNR: 1234567890\nCurrent Status: RAC 12\nDate of Journey: 05-Jan-2027",
+   "expected": {
+    "pnr": "1234567890",
+    "date": "2027-01-05",
+    "ticketStatus": "RAC"
+   }
+  },
+  {
+   "input": "PNR: 1234567890\n1. A 30 M GNWL/40 RLWL/4\nBooking Status Current Status\nGNWL 40 WL 4",
+   "expected": {
+    "pnr": "1234567890",
+    "ticketStatus": "WL"
+   }
+  },
+  {
+   "input": "Ticket Fare 340.00 SR A yg\nIRCTC Convenience Fee (Incl. of GST) 217.70 ela\neWallet Transaction Charge X11.80 .- na\nTravel Insurance Premium (Incl. of GST) 20.45 hk\nTotal Fare (all inclusive) 369.95 [=]",
+   "expected": {
+    "to": "tal Fare (all inclusive) 369.95 [=]",
+    "fare": {
+     "total": 369.95,
+     "ticket": 340,
+     "convenience": 17.7,
+     "wallet": 11.8,
+     "insurance": 0.45
+    }
+   }
+  },
+  {
+   "input": "Ticket Fare Convenience Fee eWallet Transaction Charge Travel Insurance Premium Total Fare\nRs. 340.00 Rs. 17.70 Rs. 11.80 Rs. 0.45 Rs. 369.95 *",
+   "expected": {
+    "fare": {
+     "total": 369.95,
+     "ticket": 340,
+     "convenience": 17.7,
+     "wallet": 11.8,
+     "insurance": 0.45
+    }
+   }
+  },
+  {
+   "input": "Ticket Fare 340.00\nIRCTC Convenience Fee (Incl. of GST) 11.80\nTravel Insurance Premium (Incl. of GST) 0.45\nTotal Fare (all inclusive) 3352.25",
+   "expected": {
+    "to": "tal Fare (all inclusive) 3352.25",
+    "fare": {
+     "total": 352.25,
+     "ticket": 340,
+     "convenience": 11.8,
+     "insurance": 0.45
+    }
+   }
+  },
+  {
+   "input": "Ticket Fare 2340.00\nIRCTC Convenience Fee (Incl. of GST) 11.80\nTravel Insurance Premium (Incl. of GST) 20.45\nTotal Fare (all inclusive) 2352.25",
+   "expected": {
+    "to": "tal Fare (all inclusive) 2352.25",
+    "fare": {
+     "total": 352.25,
+     "ticket": 340,
+     "convenience": 11.8,
+     "insurance": 0.45
+    }
+   }
+  },
+  {
+   "input": "Ticket Fare % 1,190.00\nIRCTC Convenience Fee (Incl. of GST) 23.60\nTravel Insurance Premium (Incl. of GST) 20.45\nTotal Fare (all inclusive) 21,214.05",
+   "expected": {
+    "to": "tal Fare (all inclusive) 21,214.05",
+    "fare": {
+     "total": 1214.05,
+     "ticket": 1190,
+     "convenience": 23.6,
+     "insurance": 0.45
+    }
+   }
+  },
+  {
+   "input": "Ticket Fare 2340.00\nIRCTC Convenience Fee (Incl. of GST) 211.80\nTravel Insurance Premium (Incl. of GST) 20.45\nTotal Fare (all inclusive) 352.25",
+   "expected": {
+    "to": "tal Fare (all inclusive) 352.25",
+    "fare": {
+     "total": 352.25,
+     "ticket": 340,
+     "convenience": 11.8,
+     "insurance": 0.45
+    }
+   }
+  },
+  {
+   "input": "Ticket Fare 340.00\nIRCTC Convenience Fee (Incl. of GST) 11.80\nTravel Insurance Premium (Incl. of GST) 2045\nTotal Fare (all inclusive) $352.25",
+   "expected": {
+    "to": "tal Fare (all inclusive) $352.25",
+    "fare": {
+     "total": 352.25,
+     "ticket": 340,
+     "convenience": 11.8,
+     "insurance": 0.45
+    }
+   }
+  },
+  {
+   "input": "Ticket . Fare 340.00\nIRCTC Convenience Fee (Incl. of GST) 11.80\nTravel Insurance Premium (Incl. of GST) X0.45\nTotal Fare (all inclusive) $352.25",
+   "expected": {
+    "to": "tal Fare (all inclusive) $352.25",
+    "fare": {
+     "total": 352.25,
+     "ticket": 340,
+     "convenience": 11.8,
+     "insurance": 0.45
+    }
+   }
+  },
+  {
+   "input": "Ticket Fare 375.00\nIRCTC Convenience Fee (Incl. of GST) 11.80\nTravel Insurance Premium (Incl. of GST) 0.45\nTotal Fare (all inclusive) 387.25",
+   "expected": {
+    "to": "tal Fare (all inclusive) 387.25",
+    "fare": {
+     "total": 387.25,
+     "ticket": 375,
+     "convenience": 11.8,
+     "insurance": 0.45
+    }
+   }
+  }
+ ],
+ "pdfText": [
+  {
+   "items": [
+    {
+     "str": "B2",
+     "x": 20,
+     "y": 86
+    },
+    {
+     "str": "Coach Number",
+     "x": 20,
+     "y": 100
+    },
+    {
+     "str": "21:45",
+     "x": 350,
+     "y": 86
+    },
+    {
+     "str": "Scheduled Departure*",
+     "x": 350,
+     "y": 100
+    },
+    {
+     "str": "56",
+     "x": 140,
+     "y": 86
+    },
+    {
+     "str": "Seat Number",
+     "x": 140,
+     "y": 100
+    },
+    {
+     "str": "Berth Type",
+     "x": 240,
+     "y": 100
+    },
+    {
+     "str": "LOWER",
+     "x": 240,
+     "y": 86
+    }
+   ],
+   "expected": "Coach: B2\nSeat No: 56\nBerth: LOWER\nScheduled Departure: 21:45\nCoach Number Seat Number Berth Type Scheduled Departure*\nB2 56 LOWER 21:45"
+  },
+  {
+   "items": [
+    {
+     "str": "Coach Number",
+     "x": 20,
+     "y": 100
+    },
+    {
+     "str": "B2",
+     "x": 20,
+     "y": 40
+    }
+   ],
+   "expected": "Coach Number\nB2"
+  },
+  {
+   "items": [
+    {
+     "str": "Train No./Name",
+     "x": 200,
+     "y": -100
+    },
+    {
+     "str": "Class",
+     "x": 500,
+     "y": -100
+    },
+    {
+     "str": "12345 / SAMPLE EXPRESS",
+     "x": 200,
+     "y": -120
+    },
+    {
+     "str": "SLEEPER CLASS (SL)",
+     "x": 500,
+     "y": -120
+    }
+   ],
+   "expected": "Train No./Name: 12345 / SAMPLE EXPRESS\nClass: SLEEPER CLASS (SL)\nTrain No./Name Class\n12345 / SAMPLE EXPRESS SLEEPER CLASS (SL)"
+  }
+ ],
+ "journeys": [
+  {
+   "id": "a",
+   "from": "MDU",
+   "to": "MS",
+   "date": "2027-01-05",
+   "departure": "23:10",
+   "train": "",
+   "travelClass": "",
+   "windowDays": 60,
+   "originOffset": 0,
+   "status": "needs_booking",
+   "pnr": "",
+   "notes": ""
+  },
+  {
+   "id": "b",
+   "from": "MS",
+   "to": "MDU",
+   "date": "2027-01-05",
+   "departure": "23:10",
+   "train": "",
+   "travelClass": "",
+   "windowDays": 60,
+   "originOffset": 0,
+   "status": "needs_booking",
+   "pnr": "",
+   "notes": ""
+  },
+  {
+   "id": "c",
+   "from": "MS",
+   "to": "MDU",
+   "date": "2027-01-07",
+   "departure": "23:10",
+   "train": "",
+   "travelClass": "",
+   "windowDays": 60,
+   "originOffset": 0,
+   "status": "needs_booking",
+   "pnr": "1234567890",
+   "notes": ""
+  },
+  {
+   "id": "d",
+   "from": "MS",
+   "to": "MDU",
+   "date": "2027-01-07",
+   "departure": "23:10",
+   "train": "",
+   "travelClass": "",
+   "windowDays": 60,
+   "originOffset": 0,
+   "status": "needs_booking",
+   "pnr": "",
+   "notes": ""
+  },
+  {
+   "id": "e",
+   "from": "MDU",
+   "to": "MS",
+   "date": "2027-01-09",
+   "departure": "23:10",
+   "train": "",
+   "travelClass": "",
+   "windowDays": 60,
+   "originOffset": 0,
+   "status": "cancelled",
+   "pnr": "",
+   "notes": ""
+  }
+ ],
+ "match": [
+  {
+   "details": {
+    "date": "2027-01-05",
+    "from": "MDU",
+    "to": "MS"
+   },
+   "expected": {
+    "kind": "matched",
+    "journey": "a",
+    "candidates": []
+   }
+  },
+  {
+   "details": {
+    "date": "2027-01-07",
+    "from": "MS",
+    "to": "MDU",
+    "pnr": "1234567890"
+   },
+   "expected": {
+    "kind": "matched",
+    "journey": "c",
+    "candidates": []
+   }
+  },
+  {
+   "details": {
+    "date": "2027-01-07",
+    "from": "MS",
+    "to": "MDU"
+   },
+   "expected": {
+    "kind": "check",
+    "journey": null,
+    "candidates": [
+     "c",
+     "d"
+    ]
+   }
+  },
+  {
+   "details": {
+    "date": "2027-01-05",
+    "from": "TBM",
+    "to": "CGL"
+   },
+   "expected": {
+    "kind": "check",
+    "journey": null,
+    "candidates": [
+     "a",
+     "b"
+    ]
+   }
+  },
+  {
+   "details": {
+    "date": "2027-01-09",
+    "from": "MDU",
+    "to": "MS"
+   },
+   "expected": {
+    "kind": "create",
+    "journey": null,
+    "candidates": []
+   }
+  },
+  {
+   "details": {
+    "from": "MDU",
+    "to": "MS"
+   },
+   "expected": {
+    "kind": "check",
+    "journey": null,
+    "candidates": []
+   }
+  },
+  {
+   "details": {
+    "date": "2027-01-05",
+    "from": "MADURAI",
+    "to": "MS"
+   },
+   "expected": {
+    "kind": "check",
+    "journey": null,
+    "candidates": [
+     "a",
+     "b"
+    ]
+   }
+  }
  ]
 }
