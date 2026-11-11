@@ -30,5 +30,6 @@ object RwIcons {
     val ChevronRight = stroke("chevron-right", "M9 6l6 6-6 6")
     val ChevronLeft = stroke("chevron-left", "M15 6l-6 6 6 6")
     val Share = stroke("share", "M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M16 6l-4-4-4 4M12 2v13")
+    val Pencil = stroke("pencil", "M4 20h4L19 9l-4-4L4 16z", "M13.5 6.5l4 4")
     val Search = stroke("search", "M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14z", "M20 20l-3.5-3.5")
 }

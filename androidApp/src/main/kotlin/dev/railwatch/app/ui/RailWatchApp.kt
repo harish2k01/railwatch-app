@@ -37,7 +37,7 @@ import dev.railwatch.app.ui.theme.Rw
 import dev.railwatch.shared.domain.Rule
 
 /** What the bottom sheet shows. */
-private sealed interface Sheet { data class Journey(val id: String) : Sheet; data object New : Sheet; data class Routine(val rule: Rule?) : Sheet }
+private sealed interface Sheet { data class Journey(val id: String) : Sheet; data class Edit(val id: String) : Sheet; data object New : Sheet; data class Routine(val rule: Rule?) : Sheet }
 
 /** App shell: the current tab under a large title, bottom sheets for details and forms, the floating tab bar. */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -48,6 +48,7 @@ fun RailWatchApp() {
     var tab by rememberSaveable { mutableStateOf(Tab.Today) }
     var sheet by remember { mutableStateOf<Sheet?>(null) }
     var ask by remember { mutableStateOf<Pair<String, () -> Unit>?>(null) }
+    var info by remember { mutableStateOf<String?>(null) }
     val confirm: (String, () -> Unit) -> Unit = { q, run -> ask = q to run }
     val top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val pad = PaddingValues(start = 16.dp, end = 16.dp, top = top, bottom = 120.dp)
@@ -63,11 +64,19 @@ fun RailWatchApp() {
     sheet?.let { s ->
         ModalBottomSheet(onDismissRequest = { sheet = null }, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Rw.colors.surface) {
             when (s) {
-                is Sheet.Journey -> model.planner.journeys.firstOrNull { it.id == s.id }?.let { JourneySheet(it, model, close = { sheet = null }, confirm = confirm) }
+                is Sheet.Journey -> model.planner.journeys.firstOrNull { it.id == s.id }?.let { j ->
+                    JourneySheet(j, model, close = { sheet = null }, confirm = confirm, edit = { sheet = Sheet.Edit(j.id) },
+                        ticket = { info = if (dev.railwatch.shared.domain.hasTicket(j)) "Opening the ticket pass arrives with ticket sharing." else "To add the ticket, open the IRCTC PDF in Gmail or Files, tap Share and choose RailWatch." },
+                        pnr = { info = if (j.pnr.isEmpty()) "Add the PNR with Edit first." else "PNR checks are coming in a later update." })
+                }
+                is Sheet.Edit -> model.planner.journeys.firstOrNull { it.id == s.id }?.let { dev.railwatch.app.ui.screens.EditJourneySheet(it, model) { sheet = Sheet.Journey(it.id) } }
                 Sheet.New -> NewJourneySheet(model) { sheet = null }
                 is Sheet.Routine -> RoutineSheet(model, s.rule) { sheet = null }
             }
         }
+    }
+    info?.let { msg ->
+        AlertDialog(onDismissRequest = { info = null }, containerColor = Rw.colors.surface, text = { Text(msg, color = Rw.colors.text) }, confirmButton = { TextButton({ info = null }) { Text("OK") } })
     }
     ask?.let { (q, run) ->
         AlertDialog(onDismissRequest = { ask = null }, containerColor = Rw.colors.surface, text = { Text(q, color = Rw.colors.text) },
