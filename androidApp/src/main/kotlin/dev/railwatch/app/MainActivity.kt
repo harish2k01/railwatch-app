@@ -19,7 +19,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         if (savedInstanceState == null) take(intent)
-        setContent { RailWatchTheme { RailWatchApp(shared = shared.value, consumeShared = { shared.value = emptyList() }) } }
+        setContent { RailWatchTheme { RailWatchApp(shared = shared.value, consumeShared = { shared.value = emptyList() }, opened = opened.value, consumeOpened = { opened.value = null }) } }
     }
 
     override fun onNewIntent(intent: Intent) { super.onNewIntent(intent); take(intent) }
@@ -33,7 +33,11 @@ class MainActivity : ComponentActivity() {
             else -> emptyList()
         }
         if (uris.isNotEmpty()) shared.value = uris
+        intent.getStringExtra("journey")?.let { opened.value = it to intent.getBooleanExtra("bookingDay", false) }
     }
+
+    /** A journey opened from a notification: (id, show the booking-day screen). */
+    private val opened = mutableStateOf<Pair<String, Boolean>?>(null)
 
     @Suppress("DEPRECATION")
     private fun stream(i: Intent): Uri? = if (Build.VERSION.SDK_INT >= 33) i.getParcelableExtra(Intent.EXTRA_STREAM, Uri::class.java) else i.getParcelableExtra(Intent.EXTRA_STREAM)

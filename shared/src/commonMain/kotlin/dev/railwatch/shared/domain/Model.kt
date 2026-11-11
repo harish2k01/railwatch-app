@@ -99,7 +99,20 @@ enum class JourneyStatus {
 
 @Serializable data class Holiday(val id: String, val name: String, val date: String, val type: String)
 
+@Serializable data class ReminderClock(val previous_evening: String = "20:00", val morning: String = "07:00", val opening: String = "07:55")
+@Serializable data class ScheduleRow(val daysBefore: Int, val time: String)
+@Serializable data class QuietHours(val enabled: Boolean = false, val start: String = "22:00", val end: String = "07:00")
+
 @Serializable data class Settings(
+    /** Booking reminders: the evening before, the morning of, and just before opening (web defaults). */
+    val reminderTimes: List<String> = listOf("previous_evening", "morning", "opening"),
+    val reminderClock: ReminderClock = ReminderClock(),
+    val bookingSchedule: List<ScheduleRow>? = null,
+    val tatkalSchedule: List<ScheduleRow>? = null,
+    val tatkalNonAcSchedule: List<ScheduleRow>? = null,
+    val cancellationEnabled: Boolean = true,
+    val cancellationTime: String = "09:00",
+    val quietHours: QuietHours? = null,
     val bookingWindowDays: Int = 60,
     val routineHorizonMode: String = "months",
     val routineMonthsAhead: Int = 6,

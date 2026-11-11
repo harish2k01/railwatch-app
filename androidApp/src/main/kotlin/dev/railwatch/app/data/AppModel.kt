@@ -56,7 +56,8 @@ class AppModel(context: Context) {
     var planner: Planner by mutableStateOf(store.planner); private set
     val today: String get() = todayIst().toString()
 
-    private fun update(change: (Planner) -> Planner) { planner = store.update(change) }
+    private val appContext = context.applicationContext
+    private fun update(change: (Planner) -> Planner) { planner = store.update(change); Alarms.reschedule(appContext) }
 
     fun saveJourney(j: Journey) = update { p -> p.copy(journeys = p.journeys.filter { it.id != j.id } + j) }
     fun setStatus(j: Journey, status: JourneyStatus) = saveJourney(transition(j, status, today))
@@ -93,5 +94,6 @@ class AppModel(context: Context) {
         // Ticket PDFs are kept for the retention period after a trip ends, then deleted (the journey stays).
         val (cleaned, expired) = dev.railwatch.shared.domain.expiredTicketFiles(planner, today)
         if (expired.isNotEmpty()) { expired.forEach(ticketFiles::delete); planner = store.update { cleaned } }
+        Alarms.channels(appContext); Alarms.reschedule(appContext)
     }
 }

@@ -51,12 +51,13 @@ private sealed interface Sheet {
     data class Import(val uris: List<Uri>) : Sheet
     data class Pass(val id: String) : Sheet
     data class Pdf(val id: String, val file: String) : Sheet
+    data class Booking(val id: String) : Sheet
 }
 
 /** App shell: the current tab under a large title, bottom sheets for details and forms, the floating tab bar. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RailWatchApp(shared: List<Uri> = emptyList(), consumeShared: () -> Unit = {}) {
+fun RailWatchApp(shared: List<Uri> = emptyList(), consumeShared: () -> Unit = {}, opened: Pair<String, Boolean>? = null, consumeOpened: () -> Unit = {}) {
     val context = LocalContext.current
     val model = remember { AppModel(context.applicationContext) }
     var tab by rememberSaveable { mutableStateOf(Tab.Today) }
@@ -66,6 +67,14 @@ fun RailWatchApp(shared: List<Uri> = emptyList(), consumeShared: () -> Unit = {}
     val confirm: (String, () -> Unit) -> Unit = { q, run -> ask = q to run }
     // A ticket shared from another app opens the import sheet.
     LaunchedEffect(shared) { if (shared.isNotEmpty()) { sheet = Sheet.Import(shared); consumeShared() } }
+    // A notification opens its journey (booking reminders open the booking-day screen).
+    LaunchedEffect(opened) { opened?.let { (id, booking) -> sheet = if (booking) Sheet.Booking(id) else Sheet.Journey(id); consumeOpened() } }
+    // Reminders need notification permission (Android 13+); asked once, on first open.
+    val askNotify = androidx.activity.compose.rememberLauncherForActivityResult(androidx.activity.result.contract.ActivityResultContracts.RequestPermission()) { }
+    LaunchedEffect(Unit) {
+        if (android.os.Build.VERSION.SDK_INT >= 33 && androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED)
+            askNotify.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+    }
     val openJourney: (dev.railwatch.shared.domain.Journey) -> Unit = { sheet = Sheet.Journey(it.id) }
     val top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val pad = PaddingValues(start = 16.dp, end = 16.dp, top = top, bottom = 120.dp)
@@ -93,6 +102,7 @@ fun RailWatchApp(shared: List<Uri> = emptyList(), consumeShared: () -> Unit = {}
                 is Sheet.Import -> ImportSheet(model, s.uris) { msg -> sheet = null; if (msg.isNotEmpty()) { info = msg; tab = Tab.Tickets } }
                 is Sheet.Pass -> find(s.id)?.let { j -> j.attachments?.firstOrNull { it.type == "application/pdf" }?.let { f -> TicketPass(j, f, model) { sheet = Sheet.Pdf(j.id, f.id) } } }
                 is Sheet.Pdf -> find(s.id)?.attachments?.firstOrNull { it.id == s.file }?.let { PdfPages(model, it) }
+                is Sheet.Booking -> find(s.id)?.let { dev.railwatch.app.ui.screens.BookingDaySheet(it, model) { sheet = null } }
             }
         }
     }
