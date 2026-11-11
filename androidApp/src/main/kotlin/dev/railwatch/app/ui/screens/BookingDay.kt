@@ -44,7 +44,7 @@ import dev.railwatch.shared.domain.bookingInstant
 import kotlinx.coroutines.delay
 
 /**
- * Booking day: a countdown to when IRCTC opens booking, a short checklist, then Open IRCTC and the outcome
+ * Booking day: a countdown to when IRCTC opens booking, then Open IRCTC and the outcome
  * (I've booked it, Try Tatkal, Skip). Opened from a booking notification or the journey sheet.
  */
 @Composable
@@ -54,8 +54,6 @@ fun BookingDaySheet(j: Journey, model: AppModel, close: () -> Unit) {
     LaunchedEffect(Unit) { while (true) { now = System.currentTimeMillis(); delay(1000) } }
     val left = (bookingInstant(j).toEpochMilliseconds() - now) / 1000
     val tatkal = j.bookingType == "tatkal"
-    val checks = remember { mutableStateListOf(false, false, false) }
-    val items = listOf("Signed in to IRCTC", "Passenger details saved in Master List", "UPI or wallet ready to pay")
 
     Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp).navigationBarsPadding().padding(bottom = 16.dp)) {
         Text(if (tatkal) "TATKAL BOOKING" else "BOOKING DAY", style = MaterialTheme.typography.labelSmall, color = Rw.colors.muted)
@@ -72,14 +70,6 @@ fun BookingDaySheet(j: Journey, model: AppModel, close: () -> Unit) {
             }
         }
         Spacer(Modifier.height(20.dp))
-        Text(if (left > 0) "Before it opens" else "Before you book",fontWeight = FontWeight.SemiBold, color = Rw.colors.text)
-        items.forEachIndexed { i, label ->
-            Row(Modifier.fillMaxWidth().clickable { checks[i] = !checks[i] }.padding(vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-                Spacer(Modifier.size(22.dp).background(if (checks[i]) Rw.colors.brand else Rw.colors.surface2, CircleShape))
-                Text(label, color = if (checks[i]) Rw.colors.muted else Rw.colors.text, modifier = Modifier.padding(start = 12.dp))
-            }
-        }
-        Spacer(Modifier.height(16.dp))
         PrimaryButton("Open IRCTC", { openIrctc(context) }, Modifier.fillMaxWidth())
         Spacer(Modifier.height(10.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {

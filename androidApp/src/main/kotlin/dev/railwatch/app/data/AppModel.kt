@@ -66,6 +66,17 @@ class AppModel(context: Context) {
     fun deleteRoutine(id: String) = update { removeRule(it, id, today) }
     fun setSettings(change: (dev.railwatch.shared.domain.Settings) -> dev.railwatch.shared.domain.Settings) = update { p -> p.copy(settings = change(p.settings)) }
 
+    /** Imports time off from an .ics or date,name,type .csv file; returns a message for the person. */
+    fun importTimeOff(text: String, fileName: String, type: String): String = runCatching {
+        val days = if (fileName.endsWith(".csv", true) || !text.contains("BEGIN:VCALENDAR", true)) dev.railwatch.shared.domain.parseTimeOffCsv(text) else dev.railwatch.shared.domain.parseTimeOffIcs(text, type)
+        var n = 0
+        update { p -> dev.railwatch.shared.domain.addTimeOff(p, days) { java.util.UUID.randomUUID().toString() }.also { n = it.second }.first }
+        if (n == 0) "Those days were already in your time off." else "Added $n day${if (n == 1) "" else "s"} of time off."
+    }.getOrElse { it.message ?: "Couldn't read that file." }
+    fun addTimeOff(date: String, name: String, type: String) = update { p -> dev.railwatch.shared.domain.addTimeOff(p, listOf(dev.railwatch.shared.domain.TimeOffDay(date, name, type))) { java.util.UUID.randomUUID().toString() }.first }
+    fun removeTimeOff(id: String) = update { p -> p.copy(holidays = p.holidays.filter { it.id != id }) }
+    fun keepOnTimeOff(j: Journey) = saveJourney(j.copy(timeOffKept = true))
+
     val ticketFiles = TicketFiles(context)
     val reader by lazy { TicketReader(ticketFiles) }
 

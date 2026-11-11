@@ -83,7 +83,7 @@ fun RailWatchApp(shared: List<Uri> = emptyList(), consumeShared: () -> Unit = {}
             Tab.Today -> TodayScreen(model, open = openJourney, newRoutine = { sheet = Sheet.Routine(null) }, seeAll = { tab = Tab.Journeys }, contentPadding = pad)
             Tab.Journeys -> JourneysScreen(model, open = openJourney, confirm = confirm, contentPadding = pad)
             Tab.Tickets -> TicketsScreen(model, open = { sheet = Sheet.Pass(it.id) }, contentPadding = pad)
-            Tab.You -> YouScreen(model, editRoutine = { sheet = Sheet.Routine(it) }, contentPadding = pad)
+            Tab.You -> YouScreen(model, editRoutine = { sheet = Sheet.Routine(it) }, open = openJourney, info = { info = it }, contentPadding = pad)
         }
         FloatingTabBar(selected = tab, onSelect = { tab = it }, onNew = { sheet = Sheet.New }, modifier = Modifier.align(Alignment.BottomCenter))
     }

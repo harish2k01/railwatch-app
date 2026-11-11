@@ -40,12 +40,13 @@ import dev.railwatch.shared.domain.journeyList
 /** Journeys (canvas NativeJourneys): Upcoming / To book / History, month headings, status dots, swipe actions. */
 @Composable
 fun JourneysScreen(model: AppModel, open: (Journey) -> Unit, confirm: (String, () -> Unit) -> Unit, contentPadding: PaddingValues) {
-    var list by rememberSaveable { mutableStateOf(JourneyList.Upcoming) }
+    var list by rememberSaveable { mutableStateOf<JourneyList?>(JourneyList.Upcoming) } // null: calendar
     val today = model.today
-    val items = journeyList(model.planner, today, list)
+    val items = list?.let { journeyList(model.planner, today, it) }.orEmpty()
     LazyColumn(contentPadding = contentPadding) {
         item { LargeTitle("Journeys") }
-        item { Segmented(listOf(JourneyList.Upcoming to "Upcoming", JourneyList.ToBook to "To book", JourneyList.History to "History"), list) { list = it } }
+        item { Segmented(listOf(JourneyList.Upcoming to "Upcoming", JourneyList.ToBook to "To book", null to "Calendar", JourneyList.History to "History"), list) { list = it } }
+        if (list == null) { item { CalendarView(model, open) }; return@LazyColumn }
         if (items.isEmpty()) item {
             Text(when (list) { JourneyList.ToBook -> "Nothing to book right now."; JourneyList.History -> "No past trips yet."; else -> "No upcoming trips. Add one with +." },
                 style = MaterialTheme.typography.bodyLarge, color = Rw.colors.muted, modifier = Modifier.padding(top = 24.dp, start = 4.dp))
