@@ -40,11 +40,11 @@ class MainActivity : ComponentActivity() {
             else -> emptyList()
         }
         if (uris.isNotEmpty()) shared.value = uris
-        intent.getStringExtra("journey")?.let { opened.value = it to intent.getBooleanExtra("bookingDay", false) }
+        intent.getStringExtra("journey")?.let { opened.value = it to when { intent.getBooleanExtra("pnr", false) -> "pnr"; intent.getBooleanExtra("bookingDay", false) -> "booking"; else -> "journey" } }
     }
 
-    /** A journey opened from a notification: (id, show the booking-day screen). */
-    private val opened = mutableStateOf<Pair<String, Boolean>?>(null)
+    /** A journey opened from a notification or the widget: (id, "journey" | "booking" | "pnr"). */
+    private val opened = mutableStateOf<Pair<String, String>?>(null)
 
     @Suppress("DEPRECATION")
     private fun stream(i: Intent): Uri? = if (Build.VERSION.SDK_INT >= 33) i.getParcelableExtra(Intent.EXTRA_STREAM, Uri::class.java) else i.getParcelableExtra(Intent.EXTRA_STREAM)

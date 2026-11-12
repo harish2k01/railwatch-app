@@ -1,4 +1,4 @@
-﻿package dev.railwatch.app.ui.screens
+package dev.railwatch.app.ui.screens
 
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -63,7 +63,7 @@ import dev.railwatch.shared.domain.timeOffConflicts
 
 private enum class Page(val title: String, val icon: ImageVector) {
     Routines("Routines", RwIcons.List), TimeOff("Holidays & Leave", RwIcons.Calendar), Tickets("Tickets", RwIcons.Ticket),
-    Spend("Spend", RwIcons.Ticket), Reminders("Reminders", RwIcons.Bell), Planning("Planning", RwIcons.Clock), Backup("Backup & Restore", RwIcons.Ticket),
+    Spend("Spend", RwIcons.Ticket), Reminders("Reminders", RwIcons.Bell), Planning("Planning", RwIcons.Clock), Backup("Backup & Restore", RwIcons.Ticket), PhoneCal("Phone Calendar", RwIcons.Calendar), Help("Help & Tour", RwIcons.List),
 }
 
 /** A single-choice popup, as in phone settings. */
@@ -72,7 +72,7 @@ private data class Choice(val title: String, val options: List<Pair<String, Stri
 /** You: a list of setting categories; each opens its own page, and choices open as popups. */
 @Composable
 fun YouScreen(model: AppModel, editRoutine: (Rule?) -> Unit, open: (Journey) -> Unit, showTicket: (Journey) -> Unit, info: (String) -> Unit, contentPadding: PaddingValues,
-              editTimeOff: (dev.railwatch.shared.domain.TimeOffRange?) -> Unit = {}) {
+              editTimeOff: (dev.railwatch.shared.domain.TimeOffRange?) -> Unit = {}, tour: () -> Unit = {}) {
     var page by rememberSaveable { mutableStateOf<Page?>(null) }
     var choice by remember { mutableStateOf<Choice?>(null) }
     BackHandler(enabled = page != null) { page = null }
@@ -113,7 +113,17 @@ fun YouScreen(model: AppModel, editRoutine: (Rule?) -> Unit, open: (Journey) -> 
                     RowDivider()
                     Category(Page.Planning.icon, "Planning", "How far ahead routines plan, how long tickets are kept", alert = false) { page = Page.Planning }
                     RowDivider()
+                    Category(Page.PhoneCal.icon, "Phone Calendar", "Add your trips to the calendar on this phone", alert = false) { page = Page.PhoneCal }
+                    RowDivider()
                     Category(Page.Backup.icon, "Backup & Restore", "Save everything to one file, or bring it back", alert = false) { page = Page.Backup }
+                }
+                Spacer(Modifier.height(16.dp))
+                Grouped {
+                    Category(Page.Planning.icon, "Appearance", when (p.settings.theme) { "light" -> "Light"; "dark" -> "Dark"; else -> "Match the phone" }, alert = false) {
+                        choice = Choice("Appearance", listOf("system" to "Match the Phone", "light" to "Light", "dark" to "Dark"), p.settings.theme) { v -> model.setSettings { it.copy(theme = v) } }
+                    }
+                    RowDivider()
+                    Category(Page.Help.icon, "Help & Tour", "What each part of RailWatch does, and how to use it", alert = false) { tour() }
                 }
             }
             Page.Routines -> routines(model, editRoutine)
@@ -122,6 +132,8 @@ fun YouScreen(model: AppModel, editRoutine: (Rule?) -> Unit, open: (Journey) -> 
             Page.Reminders -> item { RemindersPage(model) { choice = it } }
             Page.Planning -> item { PlanningPage(model) { choice = it } }
             Page.Backup -> item { BackupPage(model, info) }
+            Page.PhoneCal -> item { PhoneCalendarPage(info) }
+            Page.Help -> {}
             Page.Tickets -> {}
         }
     }
@@ -354,6 +366,13 @@ private fun RemindersPage(model: AppModel, ask: (Choice) -> Unit) {
             if (s.cancellationEnabled) { RowDivider(); ValueRow("Follow-Up Time", s.cancellationTime) { ask(Choice("Follow-Up Time", times, s.cancellationTime) { v -> model.setSettings { it.copy(cancellationTime = v) } }) } }
         }
         help("When you mark a ticket to cancel, a daily reminder at this time until you mark it cancelled on IRCTC.")()
+        Spacer(Modifier.height(12.dp))
+        Grouped {
+            Toggle("PNR Check Reminders", s.pnrNudges) { on -> model.setSettings { it.copy(pnrNudges = on) } }
+            RowDivider()
+            Toggle("Booking Countdown", s.bookingCountdown) { on -> model.setSettings { it.copy(bookingCountdown = on) } }
+        }
+        help("PNR check reminders: for a waitlisted or RAC ticket, a reminder at 09:00 each day in the five days before travel and four hours before departure. Tap it to check. Booking countdown: a live timer on the lock screen for the last 15 minutes before a booking window opens.")()
         head("QUIET HOURS")()
         val q = s.quietHours ?: QuietHours()
         Grouped {

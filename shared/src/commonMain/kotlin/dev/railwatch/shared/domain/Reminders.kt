@@ -5,7 +5,7 @@ import kotlinx.datetime.toLocalDateTime
 
 /** One reminder to deliver on the phone. */
 data class Reminder(val key: String, val journeyId: String, val at: Instant, val kind: Kind) {
-    enum class Kind { Booking, Cancellation }
+    enum class Kind { Booking, Cancellation, Pnr, Countdown }
 }
 
 private val DEFAULT_TATKAL = listOf(ScheduleRow(1, "20:00"), ScheduleRow(0, "09:30"), ScheduleRow(0, "09:55"))
@@ -54,10 +54,29 @@ fun outsideQuietHours(at: Instant, q: QuietHours?): Instant {
     return instant(endDay, q.end)
 }
 
-/** Every reminder still ahead, across all upcoming journeys, after quiet hours. */
+/**
+ * PNR nudges for a booked trip still waitlisted or RAC: 09:00 each day in the five days before travel, and four hours
+ * before departure (around when the chart is prepared). The person runs the check; RailWatch only reminds.
+ */
+fun pnrNudgeTimes(j: Journey, today: String): List<Instant> {
+    if (j.status != JourneyStatus.Booked || j.pnr.isEmpty()) return emptyList()
+    val summary = j.pnrStatus?.takeIf { it.pnr == j.pnr }?.let(::pnrSummary) ?: effectiveTicketStatus(j)
+    if (summary != "WL" && summary != "RAC") return emptyList()
+    val days = (5 downTo 0).map { addDays(j.date, -it) }.filter { it >= today }
+    val depart = runCatching { instant(j.date, j.departure) - kotlin.time.Duration.parse("4h") }.getOrNull()
+    return (days.map { instant(it, "09:00") } + listOfNotNull(depart)).distinct().sorted()
+}
+
+/** The countdown notification starts 15 minutes before a booking window opens. */
+fun countdownTime(j: Journey): Instant? =
+    if (j.status == JourneyStatus.NeedsBooking) bookingInstant(j) - kotlin.time.Duration.parse("15m") else null
+
+/** Every reminder still ahead, across all upcoming journeys, after quiet hours (countdowns ignore quiet hours: the window opens regardless). */
 fun upcomingReminders(p: Planner, today: String, now: Instant): List<Reminder> =
     upcoming(p, today).flatMap { j ->
         val kind = if (j.status == JourneyStatus.CancellationNeeded) Reminder.Kind.Cancellation else Reminder.Kind.Booking
-        reminderTimes(p, j, today).map { outsideQuietHours(it, p.settings.quietHours) }.distinct()
-            .filter { it > now }.map { Reminder("${j.id}@$it", j.id, it, kind) }
+        val main = reminderTimes(p, j, today).map { outsideQuietHours(it, p.settings.quietHours) }.distinct().map { it to kind }
+        val pnr = if (p.settings.pnrNudges) pnrNudgeTimes(j, today).map { outsideQuietHours(it, p.settings.quietHours) }.distinct().map { it to Reminder.Kind.Pnr } else emptyList()
+        val countdown = if (p.settings.bookingCountdown) listOfNotNull(countdownTime(j)?.let { it to Reminder.Kind.Countdown }) else emptyList()
+        (main + pnr + countdown).filter { it.first > now }.map { (at, k) -> Reminder("${j.id}@$at#$k", j.id, at, k) }
     }.sortedBy { it.at }

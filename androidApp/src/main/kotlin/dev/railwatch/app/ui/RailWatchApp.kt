@@ -7,6 +7,7 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
@@ -67,9 +68,23 @@ private sealed interface Sheet {
 /** App shell: the current tab under a large title, bottom sheets for details and forms, the floating tab bar. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RailWatchApp(shared: List<Uri> = emptyList(), consumeShared: () -> Unit = {}, opened: Pair<String, Boolean>? = null, consumeOpened: () -> Unit = {}) {
+fun RailWatchApp(shared: List<Uri> = emptyList(), consumeShared: () -> Unit = {}, opened: Pair<String, String>? = null, consumeOpened: () -> Unit = {}) {
     val context = LocalContext.current
     val model = remember { AppModel(context.applicationContext) }
+    // Appearance: the saved choice, or the phone's setting.
+    val dark = when (model.planner.settings.theme) { "light" -> false; "dark" -> true; else -> androidx.compose.foundation.isSystemInDarkTheme() }
+    val view = androidx.compose.ui.platform.LocalView.current
+    androidx.compose.runtime.SideEffect {
+        (view.context as? android.app.Activity)?.window?.let { w -> androidx.core.view.WindowCompat.getInsetsController(w, view).run { isAppearanceLightStatusBars = !dark; isAppearanceLightNavigationBars = !dark } }
+    }
+    dev.railwatch.app.ui.theme.RailWatchTheme(dark = dark) { AppBody(model, shared, consumeShared, opened, consumeOpened) }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun AppBody(model: AppModel, shared: List<Uri>, consumeShared: () -> Unit, opened: Pair<String, String>?, consumeOpened: () -> Unit) {
+    val context = LocalContext.current
+    var touring by rememberSaveable { mutableStateOf(!TourState.seen(context)) }
     var tab by rememberSaveable { mutableStateOf(Tab.Today) }
     var sheet by remember { mutableStateOf<Sheet?>(null) }
     var ask by remember { mutableStateOf<Pair<String, () -> Unit>?>(null) }
@@ -78,11 +93,11 @@ fun RailWatchApp(shared: List<Uri> = emptyList(), consumeShared: () -> Unit = {}
     // A ticket shared from another app opens the import sheet.
     LaunchedEffect(shared) { if (shared.isNotEmpty()) { sheet = Sheet.Import(shared); consumeShared() } }
     // A notification opens its journey (booking reminders open the booking-day screen).
-    LaunchedEffect(opened) { opened?.let { (id, booking) -> sheet = if (booking) Sheet.Booking(id) else Sheet.Journey(id); consumeOpened() } }
+    LaunchedEffect(opened) { opened?.let { (id, mode) -> sheet = when (mode) { "booking" -> Sheet.Booking(id); "pnr" -> Sheet.Pnr(id); else -> Sheet.Journey(id) }; consumeOpened() } }
     // Reminders need notification permission (Android 13+); asked once, on first open.
     val askNotify = androidx.activity.compose.rememberLauncherForActivityResult(androidx.activity.result.contract.ActivityResultContracts.RequestPermission()) { }
     LaunchedEffect(Unit) {
-        if (android.os.Build.VERSION.SDK_INT >= 33 && androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED)
+        if (TourState.seen(context) && android.os.Build.VERSION.SDK_INT >= 33 && androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED)
             askNotify.launch(android.Manifest.permission.POST_NOTIFICATIONS)
     }
     val openJourney: (dev.railwatch.shared.domain.Journey) -> Unit = { sheet = Sheet.Journey(it.id) }
@@ -100,8 +115,10 @@ fun RailWatchApp(shared: List<Uri> = emptyList(), consumeShared: () -> Unit = {}
                 unread = remember(sheet) { dev.railwatch.app.data.Inbox.items(context).count { !it.read } }, newRoutine = { sheet = Sheet.Routine(null) }, seeAll = { tab = Tab.Journeys }, contentPadding = pad)
             Tab.Journeys -> JourneysScreen(model, open = openJourney, confirm = confirm, contentPadding = pad)
             Tab.Calendar -> dev.railwatch.app.ui.screens.CalendarScreen(model, open = openJourney, contentPadding = pad)
-            Tab.More -> YouScreen(model, editRoutine = { sheet = Sheet.Routine(it) }, open = openJourney, showTicket = { sheet = Sheet.Pass(it.id) }, info = { info = it }, contentPadding = pad, editTimeOff = { sheet = Sheet.TimeOff(it) })
+            Tab.More -> YouScreen(model, editRoutine = { sheet = Sheet.Routine(it) }, open = openJourney, showTicket = { sheet = Sheet.Pass(it.id) }, info = { info = it }, contentPadding = pad, editTimeOff = { sheet = Sheet.TimeOff(it) }, tour = { touring = true })
         } }
+        // Content scrolls under a strip the colour of the page, so it never runs into the status bar.
+        Box(Modifier.fillMaxWidth().height(top).background(Rw.colors.ground))
         FloatingTabBar(selected = tab, onSelect = { tab = it }, onNew = { sheet = Sheet.Add }, modifier = Modifier.align(Alignment.BottomCenter))
     }
     sheet?.let { s ->
@@ -128,6 +145,14 @@ fun RailWatchApp(shared: List<Uri> = emptyList(), consumeShared: () -> Unit = {}
                 is Sheet.Pnr -> find(s.id)?.let { dev.railwatch.app.ui.screens.PnrSheet(it, model, confirm) { sheet = Sheet.Journey(it.id) } }
                 is Sheet.Booking -> find(s.id)?.let { dev.railwatch.app.ui.screens.BookingDaySheet(it, model) { sheet = null } }
             }
+        }
+    }
+    // The first-run tour (and its replay from More › Help & Tour), over everything but toasts.
+    val restore = dev.railwatch.app.ui.screens.rememberRestore(model, { info = it })
+    androidx.compose.animation.AnimatedVisibility(touring, enter = androidx.compose.animation.fadeIn(), exit = androidx.compose.animation.fadeOut()) {
+        Tour(restore = { TourState.markSeen(context); touring = false; restore() }) { addTrip ->
+            TourState.markSeen(context); touring = false; tab = Tab.Today
+            if (addTrip) sheet = Sheet.Add
         }
     }
     // Messages and errors show as an app-styled toast above the tab bar, and fade after a few seconds.

@@ -136,6 +136,10 @@ enum class JourneyStatus {
     val weekStartsOn: Int = 0,
     val weekendDays: List<Int> = listOf(0, 6),
     val theme: String = "dark",
+    /** Remind to check PNR on waitlisted or RAC trips in the days before travel. */
+    val pnrNudges: Boolean = true,
+    /** A live countdown notification in the 15 minutes before a booking window opens. */
+    val bookingCountdown: Boolean = true,
 )
 
 @Serializable data class Planner(

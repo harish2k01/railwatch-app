@@ -31,7 +31,7 @@ import kotlinx.coroutines.withContext
 fun BackupPage(model: AppModel, info: (String) -> Unit) {
     val context = LocalContext.current; val scope = rememberCoroutineScope()
     var busy by remember { mutableStateOf(false) }
-    var pending by remember { mutableStateOf<Pair<Planner, List<Pair<String, ByteArray>>>?>(null) }
+    val restore = rememberRestore(model, info) { busy = it }
 
     val save = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
         uri ?: return@rememberLauncherForActivityResult
@@ -44,22 +44,6 @@ fun BackupPage(model: AppModel, info: (String) -> Unit) {
             busy = false; info(msg)
         }
     }
-    val open = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        uri ?: return@rememberLauncherForActivityResult
-        busy = true
-        scope.launch {
-            runCatching {
-                withContext(Dispatchers.IO) {
-                    val text = context.contentResolver.openInputStream(uri)!!.use { s ->
-                        val bytes = s.readBytes(); if (bytes.size > 80_000_000) error("That backup is too large."); bytes.decodeToString()
-                    }
-                    model.readBackup(text)
-                }
-            }.onSuccess { pending = it }.onFailure { info(it.message ?: "Couldn't read that file.") }
-            busy = false
-        }
-    }
-
     val p = model.planner
     val pdfs = p.journeys.sumOf { it.attachments?.size ?: 0 }
     Column {
@@ -69,7 +53,32 @@ fun BackupPage(model: AppModel, info: (String) -> Unit) {
         Grouped {
             ListRow(if (busy) "Working…" else "Save Backup", "Choose where to save the file") { if (!busy) save.launch("railwatch-backup-${model.today}.json") }
             RowDivider()
-            ListRow("Restore From Backup", "Replaces everything here with the file's contents") { if (!busy) open.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) }
+            ListRow("Restore From Backup", "Replaces everything here with the file's contents") { if (!busy) restore() }
+        }
+    }
+
+}
+
+/** Picks a backup file, checks it, and asks before replacing everything. Returns the action that starts it. */
+@Composable
+fun rememberRestore(model: AppModel, info: (String) -> Unit, working: (Boolean) -> Unit = {}): () -> Unit {
+    val context = LocalContext.current; val scope = rememberCoroutineScope()
+    var pending by remember { mutableStateOf<Pair<Planner, List<Pair<String, ByteArray>>>?>(null) }
+    var busy by remember { mutableStateOf(false) }
+    fun busy(v: Boolean) { busy = v; working(v) }
+    val open = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        uri ?: return@rememberLauncherForActivityResult
+        busy(true)
+        scope.launch {
+            runCatching {
+                withContext(Dispatchers.IO) {
+                    val text = context.contentResolver.openInputStream(uri)!!.use { s ->
+                        val bytes = s.readBytes(); if (bytes.size > 80_000_000) error("That backup is too large."); bytes.decodeToString()
+                    }
+                    model.readBackup(text)
+                }
+            }.onSuccess { pending = it }.onFailure { info(it.message ?: "Couldn't read that file.") }
+            busy(false)
         }
     }
 
@@ -80,4 +89,5 @@ fun BackupPage(model: AppModel, info: (String) -> Unit) {
             confirmButton = { TextButton({ model.restore(b); pending = null; info("Backup restored.") }) { Text("Replace") } },
             dismissButton = { TextButton({ pending = null }) { Text("Cancel") } })
     }
+    return { open.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) }
 }
