@@ -90,4 +90,4 @@ jobs:
           git tag "$TAG" "$GITHUB_SHA"
           git push origin "$TAG"
           printf '%s\n\n' "**Install:** download \`RailWatch-${TAG#v}.apk\` below and open it on your Android phone (Android 8.0 or newer). Installing over an earlier release keeps your data. Check the download against \`RailWatch-${TAG#v}.apk.sha256\` if you like." > notes.md
-          gh release create "$TAG" "RailWatch-${TAG#v}.apk" "RailWatch-${TAG#v}.apk.sha256" --title "RailWatch ${TAG#v}" --notes-file notes.md --generate-notes --latest
+          gh release create "$TAG" "RailWatch-${TAG#v}.apk" "RailWatch-${TAG#v}.apk.sha256" --title "$TAG" --notes-file notes.md --generate-notes --latest
