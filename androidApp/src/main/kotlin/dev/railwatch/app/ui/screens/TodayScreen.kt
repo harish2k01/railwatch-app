@@ -65,7 +65,7 @@ fun TodayScreen(model: AppModel, open: (Journey) -> Unit, showTicket: (Journey) 
     val week = upcoming(p, today).filter { it.date <= addDays(today, 6) && it.id != next?.id }.take(4)
     LazyColumn(contentPadding = contentPadding) {
         item { LargeTitle("Today", eyebrow = longDay(today)) { Bell(unread, inbox) } }
-        item { ExactAlarmPrompt() }
+        item { ReminderHealth() }
         item {
             if (next != null) BoardingPass(next, today, model.stations::name, { showTicket(next) }) { open(next) }
             else EmptyStart(hasRoutines = p.rules.isNotEmpty(), newRoutine = newRoutine)
@@ -250,30 +250,55 @@ fun toneOf(j: Journey) = when (j.status) {
     else -> dev.railwatch.app.ui.components.Tone.Muted
 }
 
-/** Shown until reminders are allowed to arrive on the minute ("Alarms & reminders"); without it they can drift by minutes. */
+/**
+ * Anything that would stop reminders reaching the person, most serious first: notifications off, a reminder type
+ * switched off, the app restricted in the background, or no exact alarms. One card, tapping opens the right setting.
+ */
 @Composable
-private fun ExactAlarmPrompt() {
+private fun ReminderHealth() {
     val context = androidx.compose.ui.platform.LocalContext.current
-    val state = androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(dev.railwatch.app.data.Alarms.canExact(context)) }
+    val tick = androidx.compose.runtime.remember { androidx.compose.runtime.mutableIntStateOf(0) }
     androidx.lifecycle.compose.LifecycleResumeEffect(Unit) {
-        val now = dev.railwatch.app.data.Alarms.canExact(context)
-        if (now && !state.value) dev.railwatch.app.data.Alarms.reschedule(context)
-        state.value = now
+        val exact = dev.railwatch.app.data.Alarms.canExact(context)
+        // Coming back with exact alarms newly allowed: put every reminder on the minute.
+        if (exact && context.getSharedPreferences("health", 0).getBoolean("inexact", false)) dev.railwatch.app.data.Alarms.reschedule(context)
+        context.getSharedPreferences("health", 0).edit().putBoolean("inexact", !exact).apply()
+        tick.intValue++
         onPauseOrDispose { }
     }
-    if (state.value || android.os.Build.VERSION.SDK_INT < 31) return
+    val issue = androidx.compose.runtime.remember(tick.intValue) { reminderIssue(context) } ?: return
     androidx.compose.foundation.layout.Row(
         Modifier.fillMaxWidth().padding(bottom = 12.dp)
             .background(Rw.colors.attentionBg, androidx.compose.foundation.shape.RoundedCornerShape(16.dp))
-            .clickable(onClickLabel = "Open alarm settings") {
-                context.startActivity(android.content.Intent(android.provider.Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, android.net.Uri.parse("package:${context.packageName}")))
-            }.padding(16.dp),
+            .clickable(onClickLabel = "Open the setting") { runCatching { context.startActivity(issue.third) } }.padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         androidx.compose.foundation.layout.Column(Modifier.weight(1f)) {
-            Text("Reminders May Arrive Late", color = Rw.colors.attentionInk, fontWeight = FontWeight.Bold)
-            Text("Allow Alarms & Reminders so booking alerts come on the minute. Tap to open the setting.", color = Rw.colors.text, style = MaterialTheme.typography.bodyMedium)
+            Text(issue.first, color = Rw.colors.attentionInk, fontWeight = FontWeight.Bold)
+            Text(issue.second, color = Rw.colors.text, style = MaterialTheme.typography.bodyMedium)
         }
         Icon(RwIcons.ChevronRight, null, tint = Rw.colors.attentionInk)
     }
+}
+
+/** (title, explanation, settings screen) for the most serious problem, or null when reminders will arrive. */
+private fun reminderIssue(context: android.content.Context): Triple<String, String, android.content.Intent>? {
+    val pkg = context.packageName
+    val appNotifications = android.content.Intent(android.provider.Settings.ACTION_APP_NOTIFICATION_SETTINGS).putExtra(android.provider.Settings.EXTRA_APP_PACKAGE, pkg)
+    val nm = context.getSystemService(android.app.NotificationManager::class.java)
+    if (!nm.areNotificationsEnabled())
+        return Triple("Notifications Are Off", "Booking and PNR reminders can't reach you. Tap to turn notifications on for RailWatch.", appNotifications)
+    val names = mapOf(dev.railwatch.app.data.Alarms.BOOKING to "Booking Opens", dev.railwatch.app.data.Alarms.COUNTDOWN to "Booking Countdown",
+        dev.railwatch.app.data.Alarms.PNR to "PNR Checks", dev.railwatch.app.data.Alarms.CANCEL to "Cancellations")
+    val off = names.filterKeys { nm.getNotificationChannel(it)?.importance == android.app.NotificationManager.IMPORTANCE_NONE }.values
+    if (off.isNotEmpty())
+        return Triple("Some Reminders Are Turned Off", "${off.joinToString(", ")} ${if (off.size == 1) "is" else "are"} switched off in the phone's settings. Tap to turn ${if (off.size == 1) "it" else "them"} back on.", appNotifications)
+    val am = context.getSystemService(android.app.ActivityManager::class.java)
+    if (android.os.Build.VERSION.SDK_INT >= 28 && am.isBackgroundRestricted)
+        return Triple("Battery Saver Is Holding Reminders", "RailWatch is restricted in the background, so reminders may not arrive. Tap, then set Battery to Unrestricted.",
+            android.content.Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS, android.net.Uri.parse("package:$pkg")))
+    if (android.os.Build.VERSION.SDK_INT >= 31 && !dev.railwatch.app.data.Alarms.canExact(context))
+        return Triple("Reminders May Arrive Late", "Allow Alarms & Reminders so booking alerts come on the minute. Tap to open the setting.",
+            android.content.Intent(android.provider.Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, android.net.Uri.parse("package:$pkg")))
+    return null
 }

@@ -176,3 +176,5 @@ Designs: canvas row "First-run tour and home-screen widget".
 | - | Automatic weekly backup. | Dropped (not wanted) |
 
 - **Shareable build 0.2.0 (12 Nov):** preview build (release-optimised, debug-signed) copied to `dist/` (git-ignored). Contains no personal data: only the bundled station list.
+
+- **Silent-failure audit (12 Nov):** reminders without exact alarms now use a 10-min window (was up to 1 h); Today shows one card for the most serious reminder problem (notifications off, a reminder type switched off, background-restricted, no exact alarms); an unreadable planner file is kept aside and the person is told, instead of being overwritten by an empty planner (tested); the tour asks for permissions by itself.

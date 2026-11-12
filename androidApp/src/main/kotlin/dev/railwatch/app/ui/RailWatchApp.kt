@@ -90,6 +90,8 @@ private fun AppBody(model: AppModel, shared: List<Uri>, consumeShared: () -> Uni
     var ask by remember { mutableStateOf<Pair<String, () -> Unit>?>(null) }
     var info by remember { mutableStateOf<String?>(null) }
     val confirm: (String, () -> Unit) -> Unit = { q, run -> ask = q to run }
+    // Saved plans that couldn't be read were set aside, not overwritten: say so, and point to the way back.
+    LaunchedEffect(Unit) { if (model.recoveredFromUnreadable) ask = "Your saved plans couldn't be read, so RailWatch started empty. The old file was kept safe on this phone. Restore from your latest backup now?" to { tab = Tab.More } }
     // A ticket shared from another app opens the import sheet.
     LaunchedEffect(shared) { if (shared.isNotEmpty()) { sheet = Sheet.Import(shared); consumeShared() } }
     // A notification opens its journey (booking reminders open the booking-day screen).

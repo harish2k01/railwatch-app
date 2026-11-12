@@ -21,14 +21,22 @@ interface PlannerFiles {
     fun read(): String?
     /** Replaces the saved document in one step (write a temporary file, then rename). */
     fun write(text: String)
+    /** Keeps a copy of a saved document that could not be read, before anything replaces it. */
+    fun keepUnreadable(text: String) {}
 }
 
 /** Loads, keeps routines topped up and lifecycle current, and saves the planner. Every change goes through [update]. */
 class PlannerStore(private val files: PlannerFiles, private val today: () -> String) {
+    /** True when the saved plans could not be read: a copy was kept and the app started empty. */
+    var recoveredFromUnreadable = false; private set
     var planner: Planner = load(); private set
 
     private fun load(): Planner {
-        val saved = files.read()?.let { runCatching { PlannerCodec.decode(it) }.getOrNull() } ?: Planner()
+        val text = files.read()
+        val decoded = text?.let { runCatching { PlannerCodec.decode(it) }.getOrNull() }
+        // Never let an unreadable file be silently replaced by an empty planner: keep it aside first.
+        if (text != null && text.isNotBlank() && decoded == null) { files.keepUnreadable(text); recoveredFromUnreadable = true }
+        val saved = decoded ?: Planner()
         val current = reconcileLifecycle(extendRoutines(saved, today()), today())
         if (current != saved) files.write(PlannerCodec.encode(current))
         return current

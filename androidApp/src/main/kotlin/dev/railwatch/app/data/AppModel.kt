@@ -26,12 +26,14 @@ import java.io.File
 
 /** The planner document in the app's private files, replaced atomically on every save. */
 class AndroidPlannerFiles(context: Context) : PlannerFiles {
-    private val file = AtomicFile(File(context.filesDir, "planner.json"))
+    private val dir = context.filesDir
+    private val file = AtomicFile(File(dir, "planner.json"))
     override fun read(): String? = runCatching { file.readFully().decodeToString() }.getOrNull()
     override fun write(text: String) {
         val out = file.startWrite()
         try { out.write(text.encodeToByteArray()); file.finishWrite(out) } catch (e: Exception) { file.failWrite(out); throw e }
     }
+    override fun keepUnreadable(text: String) { File(dir, "planner-unreadable-${System.currentTimeMillis()}.json").writeText(text) }
 }
 
 /** Station codes and names from the bundled NTES-derived list. */
@@ -58,6 +60,8 @@ class AppModel(context: Context) {
     private val store = PlannerStore(AndroidPlannerFiles(context)) { todayIst().toString() }
     val stations = Stations(context)
     var planner: Planner by mutableStateOf(store.planner); private set
+    /** The saved plans couldn't be read at start (a copy is kept in the app's files); the app tells the person once. */
+    val recoveredFromUnreadable get() = store.recoveredFromUnreadable
     val today: String get() = todayIst().toString()
 
     private val appContext = context.applicationContext
