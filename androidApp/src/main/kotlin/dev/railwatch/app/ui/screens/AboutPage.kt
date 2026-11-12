@@ -46,7 +46,7 @@ fun AboutPage() {
     var doc by rememberSaveable { mutableStateOf<String?>(null) }
     BackHandler(enabled = doc != null) { doc = null }
     val version = remember {
-        runCatching { context.packageManager.getPackageInfo(context.packageName, 0).let { "${it.versionName} (${androidx.core.content.pm.PackageInfoCompat.getLongVersionCode(it)})" } }.getOrDefault("")
+        runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName.orEmpty() }.getOrDefault("")
     }
 
     doc?.let { name ->
@@ -75,6 +75,8 @@ fun AboutPage() {
     }
     Text("RailWatch is an independent app. It is not affiliated with, endorsed by or connected to Indian Railways, IRCTC or CRIS. You book on IRCTC; PNR status comes from Indian Railways' public enquiry service as-is.", color = Rw.colors.muted,
         style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(start = 4.dp, top = 16.dp))
+    Text("Copyright © 2026 Harish T. RailWatch is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License, version 3. It comes with no warranty.", color = Rw.colors.muted,
+        style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(start = 4.dp, top = 8.dp))
 }
 
 @Composable
