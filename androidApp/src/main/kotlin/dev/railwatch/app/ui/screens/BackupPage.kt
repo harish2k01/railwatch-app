@@ -64,7 +64,7 @@ fun BackupPage(model: AppModel, info: (String) -> Unit) {
     val pdfs = p.journeys.sumOf { it.attachments?.size ?: 0 }
     Column {
         Text("Everything in RailWatch goes into one file: ${p.journeys.size} trips, ${p.rules.size} routines, your time off, settings and $pdfs ticket PDFs. " +
-            "Keep it somewhere safe, like Drive. The website reads the same file.",
+            "Keep it somewhere safe, like Drive, to bring everything back on a new phone.",
             style = MaterialTheme.typography.bodyMedium, color = Rw.colors.muted, modifier = Modifier.padding(start = 4.dp, bottom = 12.dp))
         Grouped {
             ListRow(if (busy) "Working…" else "Save Backup", "Choose where to save the file") { if (!busy) save.launch("railwatch-backup-${model.today}.json") }

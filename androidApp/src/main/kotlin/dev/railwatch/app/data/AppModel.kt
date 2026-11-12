@@ -109,8 +109,7 @@ class AppModel(context: Context) {
     }
 
     /**
-     * A backup in the website's format: the planner JSON plus `attachmentFiles` ([{id, data: "data:<type>;base64,…"}]),
-     * so a file made here restores on the website and the other way round.
+     * A backup: the planner JSON plus `attachmentFiles` ([{id, data: "data:<type>;base64,…"}]), the ticket PDFs inline.
      */
     fun backupJson(): String {
         val base = dev.railwatch.shared.data.PlannerCodec.json.encodeToJsonElement(Planner.serializer(), planner).jsonObject
