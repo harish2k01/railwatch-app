@@ -51,7 +51,8 @@ fun JourneysScreen(model: AppModel, open: (Journey) -> Unit, confirm: (String, (
             Text(when (list) { JourneyList.Planned -> "Every trip is booked."; JourneyList.Cancelled -> "No cancelled trips."; JourneyList.History -> "No past trips yet."; else -> "No booked trips coming up." },
                 style = MaterialTheme.typography.bodyLarge, color = Rw.colors.muted, modifier = Modifier.padding(top = 24.dp, start = 4.dp))
         }
-        val groups = if (list == JourneyList.Planned) dev.railwatch.shared.domain.plannedGroups(items, today) else byMonth(items).map { (m, t) -> monthLabel(m, today) to t }
+        // Every list is split by travel month; planned rows still say when booking opens.
+        val groups = byMonth(items).map { (m, t) -> monthLabel(m, today) to t }
         groups.forEach { (month, trips) ->
             item(key = "m$month") { MonthHeader(month) }
             items(trips, key = { it.id }) { j ->
