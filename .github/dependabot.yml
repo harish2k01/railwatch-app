@@ -1,0 +1,14 @@
+﻿# Weekly dependency update pull requests (labelled patch, so merging one makes a patch release).
+version: 2
+updates:
+  - package-ecosystem: gradle
+    directory: /
+    schedule: { interval: weekly }
+    labels: [patch]
+    groups:
+      androidx: { patterns: ["androidx.*"] }
+      kotlin: { patterns: ["org.jetbrains.kotlin*"] }
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: { interval: weekly }
+    labels: [skip-release]
