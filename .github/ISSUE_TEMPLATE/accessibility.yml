@@ -1,0 +1,25 @@
+name: Accessibility barrier
+description: Something is hard or impossible to use with assistive technology, large text or similar
+labels: [accessibility, bug]
+body:
+  - type: textarea
+    id: barrier
+    attributes:
+      label: What's the barrier?
+      description: Which screen, what you were trying to do, and what got in the way.
+    validations:
+      required: true
+  - type: input
+    id: tech
+    attributes:
+      label: Assistive technology and settings
+      placeholder: "TalkBack, font size largest, dark theme"
+    validations:
+      required: true
+  - type: input
+    id: versions
+    attributes:
+      label: RailWatch version, phone and Android version
+      placeholder: "0.3.0, Pixel 8, Android 16"
+    validations:
+      required: true
