@@ -29,6 +29,7 @@
   <img src="docs/screenshots/reminders.png" width="200" alt="6. Reminder settings" />
   <img src="docs/screenshots/about.png" width="200" alt="7. About RailWatch" />
 </p>
+
 ## Features
 
 - **Booking windows, worked out for you.** For every trip, RailWatch knows the day and minute booking opens,
@@ -99,11 +100,7 @@ label.
 
 ## Contributing
 
-1. Fork the repository and create a branch.
-2. Run `./gradlew :shared:jvmTest :androidApp:lintDebug` before opening a pull request.
-3. Open a pull request against `main`. A maintainer adds the version label.
-
-Never commit real tickets, PNRs or personal data. Tests use synthetic data only.
+Contributions are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md). Report security problems privately ([SECURITY.md](SECURITY.md)) and accessibility barriers with the [accessibility issue form](ACCESSIBILITY.md).
 
 ## Roadmap
 
