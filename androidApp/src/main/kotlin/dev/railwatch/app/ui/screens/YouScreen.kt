@@ -409,10 +409,12 @@ private fun RemindersPage(model: AppModel, ask: (Choice) -> Unit) {
 private fun PlanningPage(model: AppModel, ask: (Choice) -> Unit) {
     val s = model.planner.settings
     val keep = s.ticketRetentionDays ?: 7
+    var editWindow by remember { mutableStateOf(false) }
+    if (editWindow) BookingWindowDialog(s.bookingWindowDays, { editWindow = false }) { model.setBookingWindow(it); editWindow = false }
     Grouped {
         ValueRow("Booking Window", "${s.bookingWindowDays} days before travel",
             "How many days before the journey IRCTC opens general booking (60 today). Changing it moves the booking day, reminders and widget for every trip you haven't booked yet. Tatkal always opens the day before.") {
-            ask(Choice("Booking Window", listOf(30, 45, 60, 90, 120).map { "$it" to "$it days before travel" }, "${s.bookingWindowDays}") { v -> model.setBookingWindow(v.toInt()) })
+            editWindow = true
         }
         RowDivider()
         ValueRow("Plan Routines Ahead", "${s.routineMonthsAhead} months",
@@ -486,4 +488,24 @@ internal fun ListRow(title: String, sub: String, onClick: () -> Unit) {
         }
         Icon(RwIcons.ChevronRight, contentDescription = null, tint = Rw.colors.muted)
     }
+}
+
+/** Type the booking window in days (1 to 365), starting from the current value. */
+@Composable
+private fun BookingWindowDialog(current: Int, dismiss: () -> Unit, save: (Int) -> Unit) {
+    var text by remember { mutableStateOf(current.toString()) }
+    val days = text.toIntOrNull()?.takeIf { it in 1..365 }
+    AlertDialog(onDismissRequest = dismiss, containerColor = Rw.colors.surface,
+        title = { Text("Booking Window", color = Rw.colors.text) },
+        text = {
+            Column {
+                Text("Days before travel that IRCTC opens general booking. It's 60 today.", color = Rw.colors.muted, style = MaterialTheme.typography.bodyMedium)
+                OutlinedTextField(text, { text = it.filter(Char::isDigit).take(3) }, singleLine = true, label = { Text("Days before travel") },
+                    isError = days == null, supportingText = { if (days == null) Text("Enter a number from 1 to 365") },
+                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number),
+                    modifier = Modifier.fillMaxWidth().padding(top = 12.dp))
+            }
+        },
+        confirmButton = { TextButton({ days?.let(save) }, enabled = days != null) { Text("Save") } },
+        dismissButton = { TextButton(dismiss) { Text("Cancel") } })
 }
