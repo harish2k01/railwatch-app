@@ -53,7 +53,7 @@ jobs:
           range=${LAST:+$LAST..HEAD}
           section() { # title, pattern
             lines=$(git log --format='%s' ${range:-HEAD} | grep -E "$2" | sed -E 's/^[a-z]+(\(.+\))?!?: //' | sed 's/^/- /')
-            [ -n "$lines" ] && printf '### %s\n%s\n\n' "$1" "$lines"
+            if [ -n "$lines" ]; then printf '### %s\n%s\n\n' "$1" "$lines"; fi
           }
           {
             echo "## RailWatch ${TAG#v}"; echo
@@ -61,10 +61,10 @@ jobs:
             section "Fixes" '^fix(\(.+\))?!?: '
             section "Improvements" '^(perf|refactor|style)(\(.+\))?!?: '
             other=$(git log --format='%s' ${range:-HEAD} | grep -vE '^(feat|fix|perf|refactor|style|docs|ci|chore|test|build)(\(.+\))?!?: ' | sed 's/^/- /')
-            [ -n "$other" ] && printf '### Changes\n%s\n\n' "$other"
+            if [ -n "$other" ]; then printf '### Changes\n%s\n\n' "$other"; fi
             echo "### Install"
             echo "Download \`RailWatch-${TAG#v}.apk\` below and open it on your Android phone (Android 8.0 or newer). Allow installing from your browser or Files app when asked. Installing over an earlier release keeps your data."
-            [ -n "$LAST" ] && { echo; echo "**Full changes:** https://github.com/${{ github.repository }}/compare/$LAST...$TAG"; }
+            if [ -n "$LAST" ]; then echo; echo "**Full changes:** https://github.com/${{ github.repository }}/compare/$LAST...$TAG"; fi
           } > notes.md
           cat notes.md
 
