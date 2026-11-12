@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -40,12 +41,15 @@ import dev.railwatch.shared.domain.hasTicket
 
 /** The quick actions under a journey's title (canvas NativeJourneySheet). */
 @Composable
-fun QuickActions(j: Journey, model: AppModel, onTicket: () -> Unit, onPnr: () -> Unit, onEdit: () -> Unit) {
+fun QuickActions(j: Journey, model: AppModel, onTicket: () -> Unit, onPnr: () -> Unit, onEdit: () -> Unit, onAddTicket: (List<android.net.Uri>) -> Unit = {}) {
     val context = LocalContext.current
+    val pick = androidx.activity.compose.rememberLauncherForActivityResult(androidx.activity.result.contract.ActivityResultContracts.OpenDocument()) { it?.let { u -> onAddTicket(listOf(u)) } }
     // Share sends the ticket PDF itself, so it shows only once a ticket is attached.
     val pdf = j.attachments?.firstOrNull { it.type == "application/pdf" }
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        Quick(RwIcons.Ticket, "Ticket", primary = true, Modifier.weight(1f), onTicket)
+        // With a ticket: open it. Without: pick the PDF from the phone (sharing from Gmail or Files works too).
+        if (pdf != null) Quick(RwIcons.Ticket, "Ticket", primary = true, Modifier.weight(1f), onTicket)
+        else Quick(RwIcons.Plus, "Add Ticket", primary = true, Modifier.weight(1f)) { pick.launch(arrayOf("application/pdf")) }
         // A check needs the 10-digit PNR (added by hand or read from the ticket); without one the button is hidden.
         if (j.pnr.length == 10) Quick(RwIcons.Clock, "Check PNR", false, Modifier.weight(1f), onPnr)
         if (pdf != null) Quick(RwIcons.Share, "Share", false, Modifier.weight(1f)) {
@@ -67,7 +71,8 @@ private fun Quick(icon: ImageVector, label: String, primary: Boolean, modifier: 
 
 /** Edit a journey's ticket details by hand: PNR, train, class, coach, seat, berth, departure and notes. */
 @Composable
-fun EditJourneySheet(j: Journey, model: AppModel, close: () -> Unit) {
+fun EditJourneySheet(j: Journey, model: AppModel, close: () -> Unit, addTicket: (List<android.net.Uri>) -> Unit = {}) {
+    val pickTicket = androidx.activity.compose.rememberLauncherForActivityResult(androidx.activity.result.contract.ActivityResultContracts.OpenDocument()) { it?.let { u -> addTicket(listOf(u)) } }
     var pnr by remember { mutableStateOf(j.pnr) }
     var train by remember { mutableStateOf(j.trainNumber.orEmpty()) }
     var trainName by remember { mutableStateOf(j.trainName.orEmpty()) }
@@ -81,6 +86,13 @@ fun EditJourneySheet(j: Journey, model: AppModel, close: () -> Unit) {
     Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp).padding(bottom = 28.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Text("Edit ${j.from} → ${j.to}", style = MaterialTheme.typography.headlineSmall, color = Rw.colors.text)
         Text(shortDay(j.date), style = MaterialTheme.typography.bodyMedium, color = Rw.colors.muted)
+        // The ticket PDF: pick it from the phone (reading it fills PNR, train, coach and berth).
+        val ticketFile = j.attachments?.firstOrNull { it.type == "application/pdf" }
+        androidx.compose.material3.OutlinedButton({ pickTicket.launch(arrayOf("application/pdf")) }, Modifier.fillMaxWidth().heightIn(min = 48.dp),
+            border = androidx.compose.foundation.BorderStroke(1.dp, Rw.colors.line)) {
+            Icon(if (ticketFile == null) RwIcons.Plus else RwIcons.Ticket, null, tint = Rw.colors.brand, modifier = Modifier.padding(end = 8.dp).size(18.dp))
+            Text(if (ticketFile == null) "Add Ticket From Files" else "Replace Ticket From Files", color = Rw.colors.brand)
+        }
         OutlinedTextField(pnr, { pnr = it.filter(Char::isDigit).take(10) }, label = { Text("PNR (10 digits)") }, singleLine = true, isError = !pnrOk,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.fillMaxWidth(), colors = fieldColors())
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {

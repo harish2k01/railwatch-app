@@ -254,11 +254,11 @@ private fun Permissions(active: Boolean) {
 }
 
 @Composable
-private fun Grant(icon: ImageVector, title: String, sub: String, granted: Boolean, action: String, ask: () -> Unit) = Card {
+internal fun Grant(icon: ImageVector, title: String, sub: String, granted: Boolean, action: String, okLabel: String = "Allowed", ask: () -> Unit) = Card {
     Row(verticalAlignment = Alignment.CenterVertically) {
         IconBox(icon); Spacer(Modifier.width(12.dp))
         Box(Modifier.weight(1f)) { Line(title, sub) }
-        if (granted) Chip("Allowed", Rw.colors.bookedBg, Rw.colors.bookedInk)
+        if (granted) Chip(okLabel, Rw.colors.bookedBg, Rw.colors.bookedInk)
         else Button(ask, Modifier.heightIn(min = 44.dp), shape = CircleShape, colors = ButtonDefaults.buttonColors(containerColor = Rw.colors.brand, contentColor = Rw.colors.brandInk)) { Text(action, fontWeight = FontWeight.Bold) }
     }
 }
@@ -271,3 +271,34 @@ private fun Grant(icon: ImageVector, title: String, sub: String, granted: Boolea
 @Composable private fun Secondary(text: String, onClick: () -> Unit) =
     OutlinedButton(onClick, Modifier.fillMaxWidth().heightIn(min = 52.dp), shape = RoundedCornerShape(16.dp), border = androidx.compose.foundation.BorderStroke(1.dp, Rw.colors.line),
         colors = ButtonDefaults.outlinedButtonColors(contentColor = Rw.colors.text)) { Text(text, fontWeight = FontWeight.SemiBold, fontSize = 16.sp) }
+
+/** More › Permissions: what each permission is for, whether it's allowed, and a button to allow it. */
+@Composable
+fun PermissionsList() {
+    val context = LocalContext.current
+    var version by remember { mutableIntStateOf(0) }
+    LifecycleResumeEffect(Unit) { version++; onPauseOrDispose { } }
+    val notify = remember(version) { Build.VERSION.SDK_INT < 33 || context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == android.content.pm.PackageManager.PERMISSION_GRANTED }
+    val exact = remember(version) { Alarms.canExact(context) }
+    val calendar = remember(version) { PhoneCalendar.allowed(context) }
+    val restricted = remember(version) { Build.VERSION.SDK_INT >= 28 && context.getSystemService(android.app.ActivityManager::class.java).isBackgroundRestricted }
+    val appSettings = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:${context.packageName}"))
+    // Asked once and refused: Android won't show the popup again, so the button opens the app's settings instead.
+    val askNotify = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { ok -> version++; if (!ok) context.startActivity(appSettings) }
+    val askCalendar = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { r -> version++; if (!r.values.all { it }) context.startActivity(appSettings) }
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Text("RailWatch asks only for what reminders and your calendar need. Each one can be changed here at any time.", color = Rw.colors.muted, fontSize = 14.sp, lineHeight = 20.sp, modifier = Modifier.padding(start = 4.dp, bottom = 4.dp))
+        Grant(RwIcons.Bell, "Notifications", "Needed: booking, Tatkal, PNR and cancellation reminders", notify, "Allow") {
+            if (Build.VERSION.SDK_INT >= 33) askNotify.launch(Manifest.permission.POST_NOTIFICATIONS) else context.startActivity(appSettings)
+        }
+        Grant(RwIcons.Clock, "Alarms & Reminders", "Needed: reminders arrive on the minute (no ringing)", exact, "Allow") {
+            if (Build.VERSION.SDK_INT >= 31) context.startActivity(Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, Uri.parse("package:${context.packageName}")))
+        }
+        Grant(RwIcons.Calendar, "Calendar", "Optional: add trips to your phone's calendar", calendar, "Allow") {
+            askCalendar.launch(arrayOf(Manifest.permission.READ_CALENDAR, Manifest.permission.WRITE_CALENDAR))
+        }
+        Grant(RwIcons.Clock, "Battery", if (restricted) "Restricted: reminders may be held back. Set Battery to Unrestricted." else "Not restricted: reminders run in the background", !restricted, "Fix", okLabel = "Good") {
+            context.startActivity(appSettings)
+        }
+    }
+}

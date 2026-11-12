@@ -63,7 +63,7 @@ import dev.railwatch.shared.domain.timeOffConflicts
 
 private enum class Page(val title: String, val icon: ImageVector) {
     Routines("Routines", RwIcons.List), TimeOff("Holidays & Leave", RwIcons.Calendar), Tickets("Tickets", RwIcons.Ticket),
-    Spend("Spend", RwIcons.Ticket), Reminders("Reminders", RwIcons.Bell), Planning("Planning", RwIcons.Clock), Backup("Backup & Restore", RwIcons.Ticket), PhoneCal("Phone Calendar", RwIcons.Calendar), Help("Help & Tour", RwIcons.List), About("About RailWatch", RwIcons.Person),
+    Spend("Spend", RwIcons.Ticket), Reminders("Reminders", RwIcons.Bell), Planning("Planning", RwIcons.Clock), Backup("Backup & Restore", RwIcons.Ticket), PhoneCal("Phone Calendar", RwIcons.Calendar), Help("Help & Tour", RwIcons.List), About("About RailWatch", RwIcons.Person), Permissions("Permissions", RwIcons.Check),
 }
 
 /** A single-choice popup, as in phone settings. */
@@ -113,6 +113,8 @@ fun YouScreen(model: AppModel, editRoutine: (Rule?) -> Unit, open: (Journey) -> 
                     RowDivider()
                     Category(Page.Planning.icon, "Planning", "How far ahead routines plan, how long tickets are kept", alert = false) { page = Page.Planning }
                     RowDivider()
+                    Category(Page.Permissions.icon, "Permissions", "Notifications, alarms, calendar and battery", alert = false) { page = Page.Permissions }
+                    RowDivider()
                     Category(Page.PhoneCal.icon, "Phone Calendar", "Add your trips to the calendar on this phone", alert = false) { page = Page.PhoneCal }
                     RowDivider()
                     Category(Page.Backup.icon, "Backup & Restore", "Save everything to one file, or bring it back", alert = false) { page = Page.Backup }
@@ -137,6 +139,7 @@ fun YouScreen(model: AppModel, editRoutine: (Rule?) -> Unit, open: (Journey) -> 
             Page.PhoneCal -> item { PhoneCalendarPage(info) }
             Page.Help -> {}
             Page.About -> item { AboutPage() }
+            Page.Permissions -> item { dev.railwatch.app.ui.PermissionsList() }
             Page.Tickets -> {}
         }
     }

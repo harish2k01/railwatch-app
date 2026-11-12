@@ -30,6 +30,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import dev.railwatch.app.data.AppModel
@@ -55,7 +57,7 @@ private sealed interface Sheet {
     data class Edit(val id: String) : Sheet
     data object New : Sheet
     data class Routine(val rule: Rule?) : Sheet
-    data class Import(val uris: List<Uri>) : Sheet
+    data class Import(val uris: List<Uri>, val forJourney: String? = null) : Sheet
     data class Pass(val id: String) : Sheet
     data class Pdf(val id: String, val file: String) : Sheet
     data class Booking(val id: String) : Sheet
@@ -130,12 +132,13 @@ private fun AppBody(model: AppModel, shared: List<Uri>, consumeShared: () -> Uni
                 is Sheet.Journey -> find(s.id)?.let { j ->
                     JourneySheet(j, model, close = { sheet = null }, confirm = confirm, edit = { sheet = Sheet.Edit(j.id) },
                         ticket = { if (dev.railwatch.shared.domain.hasTicket(j)) sheet = Sheet.Pass(j.id) else info = "To add the ticket, open the IRCTC PDF in Gmail or Files, tap Share and choose RailWatch." },
-                        pnr = { if (j.pnr.length == 10) sheet = Sheet.Pnr(j.id) else info = "Add the 10-digit PNR with Edit first." })
+                        pnr = { if (j.pnr.length == 10) sheet = Sheet.Pnr(j.id) else info = "Add the 10-digit PNR with Edit first." },
+                        addTicket = { uris -> sheet = Sheet.Import(uris, j.id) })
                 }
-                is Sheet.Edit -> find(s.id)?.let { EditJourneySheet(it, model) { sheet = Sheet.Journey(it.id) } }
+                is Sheet.Edit -> find(s.id)?.let { j -> EditJourneySheet(j, model, close = { sheet = Sheet.Journey(j.id) }, addTicket = { uris -> sheet = Sheet.Import(uris, j.id) }) }
                 Sheet.New -> NewJourneySheet(model) { sheet = null }
                 is Sheet.Routine -> RoutineSheet(model, s.rule) { sheet = null }
-                is Sheet.Import -> ImportSheet(model, s.uris) { msg -> sheet = null; if (msg.isNotEmpty()) { info = msg } }
+                is Sheet.Import -> ImportSheet(model, s.uris, s.forJourney) { msg -> sheet = null; if (msg.isNotEmpty()) { info = msg } }
                 is Sheet.Pass -> find(s.id)?.let { j -> j.attachments?.firstOrNull { it.type == "application/pdf" }?.let { f -> TicketPass(j, f, model) { sheet = Sheet.Pdf(j.id, f.id) } } }
                 is Sheet.Pdf -> find(s.id)?.attachments?.firstOrNull { it.id == s.file }?.let { PdfPages(model, it) }
                 Sheet.Add -> dev.railwatch.app.ui.screens.AddSheet(
@@ -161,14 +164,23 @@ private fun AppBody(model: AppModel, shared: List<Uri>, consumeShared: () -> Uni
     // The toast slides up and fades; it keeps its text while leaving.
     var lastToast by remember { mutableStateOf("") }
     info?.let { msg -> lastToast = msg; LaunchedEffect(msg) { kotlinx.coroutines.delay(4000); if (info == msg) info = null } }
-    androidx.compose.animation.AnimatedVisibility(info != null, Modifier.fillMaxSize(),
-        enter = androidx.compose.animation.slideInVertically { it / 3 } + androidx.compose.animation.fadeIn(),
-        exit = androidx.compose.animation.slideOutVertically { it / 3 } + androidx.compose.animation.fadeOut()) {
-        val msg = lastToast
-        Box(Modifier.fillMaxSize().padding(bottom = 112.dp, start = 16.dp, end = 16.dp), contentAlignment = Alignment.BottomCenter) {
-            androidx.compose.foundation.layout.Row(Modifier.fillMaxWidth().background(Rw.colors.surface2, androidx.compose.foundation.shape.RoundedCornerShape(18.dp))
-                .border(1.dp, Rw.colors.line, androidx.compose.foundation.shape.RoundedCornerShape(18.dp)).clickable { info = null }.padding(horizontal = 18.dp, vertical = 14.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text(msg, color = Rw.colors.text, modifier = Modifier.weight(1f))
+    // The toast lives in its own popup window, so it shows above bottom sheets and dialogs too (they are windows).
+    val toastShown = remember { androidx.compose.animation.core.MutableTransitionState(false) }
+    toastShown.targetState = info != null
+    if (toastShown.currentState || toastShown.targetState) androidx.compose.ui.window.Popup(
+        alignment = Alignment.BottomCenter,
+        properties = androidx.compose.ui.window.PopupProperties(focusable = false, clippingEnabled = false),
+    ) {
+        val navBar = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+        androidx.compose.animation.AnimatedVisibility(toastShown,
+            enter = androidx.compose.animation.slideInVertically { it / 3 } + androidx.compose.animation.fadeIn(),
+            exit = androidx.compose.animation.slideOutVertically { it / 3 } + androidx.compose.animation.fadeOut()) {
+            androidx.compose.foundation.layout.Row(Modifier.fillMaxWidth().padding(bottom = navBar + 96.dp, start = 16.dp, end = 16.dp)
+                .background(Rw.colors.surface2, androidx.compose.foundation.shape.RoundedCornerShape(18.dp))
+                .border(1.dp, Rw.colors.line, androidx.compose.foundation.shape.RoundedCornerShape(18.dp)).clickable { info = null }
+                .padding(horizontal = 18.dp, vertical = 14.dp)
+                .semantics { liveRegion = androidx.compose.ui.semantics.LiveRegionMode.Polite }, verticalAlignment = Alignment.CenterVertically) {
+                Text(lastToast, color = Rw.colors.text, modifier = Modifier.weight(1f))
             }
         }
     }

@@ -96,7 +96,6 @@ Pull requests and other branches are checked by [`ci.yaml`](.github/workflows/ci
 
 ## Roadmap
 
-- Live train running status on the day of travel
 - A full accessibility pass (TalkBack and large text)
 - Google Play listing
 - iOS, built on the same shared core

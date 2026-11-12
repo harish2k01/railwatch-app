@@ -80,7 +80,7 @@ jobs:
         if: steps.version.outputs.skip != 'true'
         env:
           KEYSTORE_B64: ${{ secrets.RAILWATCH_KEYSTORE_B64 }}
-        run: echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/release.jks"
+        run: printf '%s' "$KEYSTORE_B64" | tr -d '\r\n ' | base64 -d > "$RUNNER_TEMP/release.jks"
 
       - name: Test, lint and build the release APK
         if: steps.version.outputs.skip != 'true'

@@ -91,13 +91,14 @@ fun TicketsScreen(model: AppModel, open: (Journey) -> Unit, contentPadding: Padd
 
 /** Import sheet: reads every shared PDF, shows what it found and where it goes, then attaches them in one go. */
 @Composable
-fun ImportSheet(model: AppModel, uris: List<android.net.Uri>, close: (String) -> Unit) {
+fun ImportSheet(model: AppModel, uris: List<android.net.Uri>, forJourney: String? = null, close: (String) -> Unit) {
     var rows by remember { mutableStateOf<List<ImportRow>?>(null) }
     var progress by remember { mutableStateOf("Reading ticket 1 of ${uris.size}…") }
     var rejected by remember { mutableStateOf(0) }
     LaunchedEffect(uris) {
         val (read, bad) = readShared(uris, model.ticketFiles, model.reader, { model.planner.journeys }) { i, n -> progress = "Reading ticket $i of $n…" }
-        rows = read; rejected = bad
+        // Picked from a journey: that journey is the destination for a single ticket (still changeable).
+        rows = if (forJourney != null && read.size == 1) read.map { it.copy(choice = forJourney) } else read; rejected = bad
     }
     Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp).padding(bottom = 28.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(if (uris.size == 1) "Add Ticket" else "Add ${uris.size} tickets", style = MaterialTheme.typography.headlineSmall, color = Rw.colors.text)
