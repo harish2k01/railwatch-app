@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Guidance for AI coding agents (and humans) working in this repository. Read it before changing anything.
+Guidance for any AI coding agent (Claude, Copilot, Codex, Gemini, Cursor and others) and for humans working in this repository. Read it before changing anything.
 
 ## What this is
 
@@ -73,5 +73,6 @@ Lint errors fail CI. Fix them, don't suppress them.
 3. Label every pull request with exactly one of `release: major`, `release: minor` or `release: patch`, or
    with `skip-release`. Merging releases automatically (tag, signed APK, generated notes).
 4. Squash-merge. The PR title becomes the commit and the release-note line, so write it for users.
-5. Commits by AI agents use the author `Claude <noreply@anthropic.com>` and end with a `Co-Authored-By`
-   trailer. Pull request bodies end with the Claude Code attribution line.
+5. AI agents identify themselves: commit as the agent (for example `Agent Name <noreply@vendor>`) or add a
+   `Co-Authored-By:` trailer naming the agent and model, and say in the pull request body that an AI tool
+   helped write it. A human reviews and merges.

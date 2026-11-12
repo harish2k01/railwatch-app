@@ -410,6 +410,11 @@ private fun PlanningPage(model: AppModel, ask: (Choice) -> Unit) {
     val s = model.planner.settings
     val keep = s.ticketRetentionDays ?: 7
     Grouped {
+        ValueRow("Booking Window", "${s.bookingWindowDays} days before travel",
+            "How many days before the journey IRCTC opens general booking (60 today). Changing it moves the booking day, reminders and widget for every trip you haven't booked yet. Tatkal always opens the day before.") {
+            ask(Choice("Booking Window", listOf(30, 45, 60, 90, 120).map { "$it" to "$it days before travel" }, "${s.bookingWindowDays}") { v -> model.setBookingWindow(v.toInt()) })
+        }
+        RowDivider()
         ValueRow("Plan Routines Ahead", "${s.routineMonthsAhead} months",
             "Routines create their trips this far ahead, so you see every booking day and get its reminders. IRCTC opens booking ${s.bookingWindowDays} days before travel, so anything past that is just planning.") {
             ask(Choice("Plan Routines Ahead", listOf(1, 3, 6, 9, 12).map { "$it" to "$it month${if (it == 1) "" else "s"}" }, "${s.routineMonthsAhead}") { v -> model.setSettings { it.copy(routineMonthsAhead = v.toInt()) } })
