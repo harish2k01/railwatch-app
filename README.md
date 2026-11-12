@@ -87,7 +87,8 @@ Every merge to `main` is released automatically by [`release.yaml`](.github/work
    - `patch`: a fix or improvement (1.2.4)
    - `skip-release`: merge without a release, for docs or CI
 
-   Every pull request needs exactly one of these labels; a check blocks merging until it has one.
+   Every pull request needs exactly one version label, or `skip-release` (which wins over any other); a check
+   blocks merging until it has one.
 2. **Build.** Tests and lint run, and an optimised release APK is built and signed with the release key, which
    is held in repository secrets.
 3. **Publish.** The commit is tagged `vX.Y.Z`, and a GitHub release is published with GitHub's generated

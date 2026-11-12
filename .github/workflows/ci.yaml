@@ -29,7 +29,7 @@ jobs:
           path: androidApp/build/outputs/apk/debug/*.apk
           retention-days: 14
   version-label:
-    # Every pull request needs exactly one of major / minor / patch / skip-release: it sets the next version.
+    # Every pull request needs exactly one of major / minor / patch (the next version), or skip-release.
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
@@ -37,9 +37,11 @@ jobs:
         env:
           LABELS: ${{ join(github.event.pull_request.labels.*.name, ' ') }}
         run: |
-          n=0; for l in $LABELS; do case $l in major|minor|patch|skip-release) n=$((n+1));; esac; done
+          # skip-release wins over any version label (Dependabot also adds major/minor/patch for the size of its bump).
+          for l in $LABELS; do [ "$l" = skip-release ] && { echo "skip-release: no release"; exit 0; }; done
+          n=0; for l in $LABELS; do case $l in major|minor|patch) n=$((n+1));; esac; done
           if [ "$n" -ne 1 ]; then
-            echo "::error::Add exactly one label: major (breaking), minor (new feature), patch (fix or improvement) or skip-release. Found: ${LABELS:-none}"
+            echo "::error::Add exactly one label: major (breaking), minor (new feature), patch (fix or improvement), or skip-release. Found: ${LABELS:-none}"
             exit 1
           fi
           echo "Version label OK: $LABELS"
