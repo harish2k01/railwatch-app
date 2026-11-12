@@ -19,17 +19,16 @@
 ---
 
 <p align="center">
-  <img src="docs/screenshots/booking-windows.png" width="200" alt="Booking windows explained" />
-  <img src="docs/screenshots/add.png" width="200" alt="Add a ticket, journey, routine or holiday" />
-  <img src="docs/screenshots/routines.png" width="200" alt="Routines and time off" />
-  <img src="docs/screenshots/reminders.png" width="200" alt="Reminder settings" />
+  <img src="docs/screenshots/welcome.png" width="200" alt="1. Welcome" />
+  <img src="docs/screenshots/booking-windows.png" width="200" alt="2. Booking windows explained" />
+  <img src="docs/screenshots/add.png" width="200" alt="3. Add a ticket, journey, routine or holiday" />
+  <img src="docs/screenshots/routines.png" width="200" alt="4. Routines and time off" />
 </p>
 <p align="center">
-  <img src="docs/screenshots/welcome.png" width="200" alt="Welcome" />
-  <img src="docs/screenshots/permissions.png" width="200" alt="Permissions in the tour" />
-  <img src="docs/screenshots/about.png" width="200" alt="About RailWatch" />
+  <img src="docs/screenshots/permissions.png" width="200" alt="5. Permissions" />
+  <img src="docs/screenshots/reminders.png" width="200" alt="6. Reminder settings" />
+  <img src="docs/screenshots/about.png" width="200" alt="7. About RailWatch" />
 </p>
-
 ## Features
 
 - **Booking windows, worked out for you.** For every trip, RailWatch knows the day and minute booking opens,
@@ -82,12 +81,13 @@ Requirements: JDK 17 or newer, and the Android SDK (compile SDK 37).
 Every merge to `main` is released automatically by [`release.yaml`](.github/workflows/release.yaml):
 
 1. **Version.** The merged pull request's label sets the next [semantic version](https://semver.org):
-   - `major`: a breaking change (2.0.0)
-   - `minor`: a new feature (1.3.0)
-   - `patch`: a fix or improvement (1.2.4)
+   - `release: major`: a breaking change (2.0.0)
+   - `release: minor`: a new feature (1.3.0)
+   - `release: patch`: a fix or improvement (1.2.4)
    - `skip-release`: merge without a release, for docs or CI
 
-   Every pull request needs exactly one of these labels; a check blocks merging until it has one.
+   Every pull request needs exactly one version label, or `skip-release` (which wins over any other); a check
+   blocks merging until it has one.
 2. **Build.** Tests and lint run, and an optimised release APK is built and signed with the release key, which
    is held in repository secrets.
 3. **Publish.** The commit is tagged `vX.Y.Z`, and a GitHub release is published with GitHub's generated
