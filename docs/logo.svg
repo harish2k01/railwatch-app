@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108" width="108" height="108" role="img" aria-label="RailWatch">
+  <rect width="108" height="108" rx="26" fill="#4C4DDC"/>
+  <g transform="translate(2 0)">
+    <path d="M40,78V30h16a12,12 0 0 1 0 24H40M54,54l16,24" fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M35,40h10M35,50h10M35,60h10M35,70h10" stroke="#4C4DDC" stroke-width="3"/>
+  </g>
+</svg>

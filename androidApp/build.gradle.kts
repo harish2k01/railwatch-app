@@ -8,15 +8,21 @@ val releaseSigning = listOf("RAILWATCH_KEYSTORE", "RAILWATCH_STORE_PASSWORD", "R
     .associateWith { providers.environmentVariable(it).orNull?.takeIf(String::isNotBlank) }
 val hasReleaseSigning = releaseSigning.values.all { it != null }
 
+// Version: the release workflow passes -PappVersion=1.4.2 (from the git tag); local builds are 0.0.0-dev.
+// versionCode is derived so every release is higher than the last: major*10000 + minor*100 + patch.
+val appVersion = providers.gradleProperty("appVersion").orNull?.removePrefix("v") ?: "0.0.0-dev"
+val appVersionCode = appVersion.substringBefore("-").split(".").map { it.toIntOrNull() ?: 0 }.plus(listOf(0, 0, 0)).let { (ma, mi, pa) -> ma * 10000 + mi * 100 + pa }.coerceAtLeast(1)
+
 android {
     namespace = "dev.railwatch.app"
     compileSdk = 37
     defaultConfig {
-        applicationId = "dev.railwatch.app"
+        // The installed identity (permanent once released); the Kotlin code keeps its dev.railwatch.app namespace.
+        applicationId = "io.github.harish2k01.railwatch"
         minSdk = 26
         targetSdk = 37
-        versionCode = 2
-        versionName = "0.2.0"
+        versionCode = appVersionCode
+        versionName = appVersion
     }
     if (hasReleaseSigning) {
         signingConfigs.create("release") {
@@ -40,6 +46,8 @@ android {
         matchingFallbacks += "release"
     }
     buildFeatures { compose = true }
+    // The About screen shows the licence and privacy text from these files (one source with the repo).
+    sourceSets.getByName("main").assets.srcDir(layout.buildDirectory.dir("generated/legal").get().asFile)
     compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
 }
 
@@ -56,3 +64,11 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-tooling")
     testImplementation("junit:junit:4.13.2")
 }
+
+// Copies LICENSE and PRIVACY.md into the app's assets so About shows exactly what the repo publishes.
+val copyLegal by tasks.registering(Copy::class) {
+    from(rootProject.file("LICENSE"), rootProject.file("PRIVACY.md"), rootProject.file("MANROPE-OFL.txt"))
+    into(layout.buildDirectory.dir("generated/legal/legal"))
+}
+tasks.matching { it.name.startsWith("merge") && it.name.endsWith("Assets") }.configureEach { dependsOn(copyLegal) }
+tasks.matching { it.name != "copyLegal" && it.name.contains("lint", ignoreCase = true) }.configureEach { dependsOn(copyLegal) }

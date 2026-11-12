@@ -63,7 +63,7 @@ import dev.railwatch.shared.domain.timeOffConflicts
 
 private enum class Page(val title: String, val icon: ImageVector) {
     Routines("Routines", RwIcons.List), TimeOff("Holidays & Leave", RwIcons.Calendar), Tickets("Tickets", RwIcons.Ticket),
-    Spend("Spend", RwIcons.Ticket), Reminders("Reminders", RwIcons.Bell), Planning("Planning", RwIcons.Clock), Backup("Backup & Restore", RwIcons.Ticket), PhoneCal("Phone Calendar", RwIcons.Calendar), Help("Help & Tour", RwIcons.List),
+    Spend("Spend", RwIcons.Ticket), Reminders("Reminders", RwIcons.Bell), Planning("Planning", RwIcons.Clock), Backup("Backup & Restore", RwIcons.Ticket), PhoneCal("Phone Calendar", RwIcons.Calendar), Help("Help & Tour", RwIcons.List), About("About RailWatch", RwIcons.Person),
 }
 
 /** A single-choice popup, as in phone settings. */
@@ -124,6 +124,8 @@ fun YouScreen(model: AppModel, editRoutine: (Rule?) -> Unit, open: (Journey) -> 
                     }
                     RowDivider()
                     Category(Page.Help.icon, "Help & Tour", "What each part of RailWatch does, and how to use it", alert = false) { tour() }
+                    RowDivider()
+                    Category(Page.About.icon, "About RailWatch", "Version, developer, licence and privacy policy", alert = false) { page = Page.About }
                 }
             }
             Page.Routines -> routines(model, editRoutine)
@@ -134,6 +136,7 @@ fun YouScreen(model: AppModel, editRoutine: (Rule?) -> Unit, open: (Journey) -> 
             Page.Backup -> item { BackupPage(model, info) }
             Page.PhoneCal -> item { PhoneCalendarPage(info) }
             Page.Help -> {}
+            Page.About -> item { AboutPage() }
             Page.Tickets -> {}
         }
     }

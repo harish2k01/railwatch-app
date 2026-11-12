@@ -1,7 +1,8 @@
 name: CI
+# Checks pull requests and branch pushes; main is checked (and released) by release.yaml.
 on:
   push:
-    branches: [main]
+    branches-ignore: [main]
   pull_request:
 permissions:
   contents: read

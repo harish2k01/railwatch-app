@@ -109,7 +109,7 @@ fun CalendarView(model: AppModel, open: (Journey) -> Unit) {
         if (trips.isEmpty() && booking.isEmpty() && dayOff == null) Text("Nothing on this day.", color = c.muted, modifier = Modifier.padding(start = 4.dp))
         else Grouped {
             var any = false
-            dayOff?.let { Text("${it.name} · ${if (it.type == "leave") "leave" else "holiday"}", color = c.timeoffInk, modifier = Modifier.fillMaxWidth().background(c.timeoffBg).padding(16.dp)); any = true }
+            dayOff?.let { Text("${it.name} · ${if (it.type == "leave") "Leave" else "Holiday"}", color = c.timeoffInk, modifier = Modifier.fillMaxWidth().background(c.timeoffBg).padding(16.dp)); any = true }
             trips.forEach { j -> if (any) RowDivider(); any = true; JourneyRow(dayNum(j.date), weekdayShort(j.date), "${j.from} → ${j.to}", journeyLine(j, today), toneOf(j), statusLabel(j)) { open(j) } }
             booking.forEach { j -> if (any) RowDivider(); any = true; JourneyRow(dayNum(j.date), weekdayShort(j.date), "Book ${j.from} → ${j.to}", "Opens ${bookingClock(j)} for ${dayNum(j.date)} ${monthLabel(j.date.take(7), today).take(3)}", dev.railwatch.app.ui.components.Tone.Info, "Opens") { open(j) } }
         }

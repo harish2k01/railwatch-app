@@ -133,6 +133,8 @@ private fun Welcome(start: () -> Unit, restore: () -> Unit) {
                 border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF8B8CF6)), colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)) {
                 Text("Restore From Backup", fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
             }
+            Text("An independent app, not affiliated with Indian Railways or IRCTC.", color = Color(0xFFE3E3FF), fontSize = 12.sp,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(top = 4.dp))
         }
     }
 }

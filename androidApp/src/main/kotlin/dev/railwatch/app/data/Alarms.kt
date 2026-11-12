@@ -52,7 +52,8 @@ object Alarms {
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC).setCategory(NotificationCompat.CATEGORY_ALARM)
             .setPriority(NotificationCompat.PRIORITY_HIGH).setContentIntent(open).setColor(0xFF4C4DDC.toInt())
             .build()
-        NotificationManagerCompat.from(context).notify(COUNTDOWN_ID, n)
+        if (Build.VERSION.SDK_INT < 33 || ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED)
+            NotificationManagerCompat.from(context).notify(COUNTDOWN_ID, n)
     }
     private const val MAX = 40 // the next 40 reminders; more are scheduled as these fire or the app opens
 
