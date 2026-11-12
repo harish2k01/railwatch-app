@@ -57,7 +57,8 @@ fun JourneysScreen(model: AppModel, open: (Journey) -> Unit, confirm: (String, (
             items(trips, key = { it.id }) { j ->
                 val first = j == trips.first(); val last = j == trips.last()
                 val shape = RoundedCornerShape(topStart = if (first) 18.dp else 0.dp, topEnd = if (first) 18.dp else 0.dp, bottomStart = if (last) 18.dp else 0.dp, bottomEnd = if (last) 18.dp else 0.dp)
-                androidx.compose.foundation.layout.Column(Modifier.fillMaxWidth().clip(shape)) {
+                // Rows slide into place when a trip moves between lists or changes status.
+                androidx.compose.foundation.layout.Column(Modifier.animateItem().fillMaxWidth().clip(shape)) {
                     SwipeRow(actions(j, model, confirm)) {
                         // Planned is grouped by booking day, not month, so its rows say which month they travel.
                         val detail = if (list == JourneyList.Planned) "Travel ${dev.railwatch.app.ui.dayMonth(j.date)} · opens ${dev.railwatch.app.ui.shortDay(dev.railwatch.shared.domain.bookingDay(j))} ${dev.railwatch.shared.domain.bookingClock(j)}" else journeyLine(j, today)

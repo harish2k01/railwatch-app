@@ -64,7 +64,7 @@ object Alarms {
 
     /** Posts the notification for one reminder, worded from the journey as it is now. */
     fun notify(context: Context, journeyId: String, kind: Reminder.Kind) {
-        if (Build.VERSION.SDK_INT >= 33 && ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) return
+        val allowed = Build.VERSION.SDK_INT < 33 || ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
         val p = AndroidPlannerFiles(context).read()?.let { runCatching { PlannerCodec.decode(it) }.getOrNull() } ?: return
         val j = p.journeys.firstOrNull { it.id == journeyId } ?: return
         val fmt = DateTimeFormatter.ofPattern("EEE d MMM", Locale.forLanguageTag("en-IN"))
@@ -81,7 +81,9 @@ object Alarms {
         val n = NotificationCompat.Builder(context, if (kind == Reminder.Kind.Booking) BOOKING else CANCEL)
             .setSmallIcon(R.drawable.ic_notification).setContentTitle(title).setContentText(body).setContentIntent(open).setAutoCancel(true)
             .setCategory(NotificationCompat.CATEGORY_REMINDER).setPriority(NotificationCompat.PRIORITY_HIGH).build()
-        NotificationManagerCompat.from(context).notify(journeyId.hashCode(), n)
+        // The inbox keeps it even if phone notifications are turned off.
+        if (allowed) NotificationManagerCompat.from(context).notify(journeyId.hashCode(), n)
+        Inbox.add(context, title, body, journeyId)
     }
 }
 

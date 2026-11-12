@@ -3,6 +3,7 @@ package dev.railwatch.app.ui
 import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -59,6 +60,7 @@ private sealed interface Sheet {
     data class Booking(val id: String) : Sheet
     data class Pnr(val id: String) : Sheet
     data object Add : Sheet
+    data object Inbox : Sheet
     data class TimeOff(val range: dev.railwatch.shared.domain.TimeOffRange?) : Sheet
 }
 
@@ -89,12 +91,17 @@ fun RailWatchApp(shared: List<Uri> = emptyList(), consumeShared: () -> Unit = {}
     val navBar = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
     val pad = PaddingValues(start = 16.dp, end = 16.dp, top = top, bottom = navBar + 128.dp)
     Box(Modifier.fillMaxSize().background(Rw.colors.ground)) {
-        when (tab) {
-            Tab.Today -> TodayScreen(model, open = openJourney, showTicket = { sheet = Sheet.Pass(it.id) }, newRoutine = { sheet = Sheet.Routine(null) }, seeAll = { tab = Tab.Journeys }, contentPadding = pad)
+        // Tabs cross-fade with a slight rise instead of snapping.
+        androidx.compose.animation.AnimatedContent(tab, label = "tab", transitionSpec = {
+            (androidx.compose.animation.fadeIn(androidx.compose.animation.core.tween(220)) + androidx.compose.animation.slideInVertically(androidx.compose.animation.core.tween(220)) { it / 40 })
+                .togetherWith(androidx.compose.animation.fadeOut(androidx.compose.animation.core.tween(120)))
+        }) { shown -> when (shown) {
+            Tab.Today -> TodayScreen(model, open = openJourney, showTicket = { sheet = Sheet.Pass(it.id) }, inbox = { sheet = Sheet.Inbox },
+                unread = remember(sheet) { dev.railwatch.app.data.Inbox.items(context).count { !it.read } }, newRoutine = { sheet = Sheet.Routine(null) }, seeAll = { tab = Tab.Journeys }, contentPadding = pad)
             Tab.Journeys -> JourneysScreen(model, open = openJourney, confirm = confirm, contentPadding = pad)
             Tab.Calendar -> dev.railwatch.app.ui.screens.CalendarScreen(model, open = openJourney, contentPadding = pad)
             Tab.More -> YouScreen(model, editRoutine = { sheet = Sheet.Routine(it) }, open = openJourney, showTicket = { sheet = Sheet.Pass(it.id) }, info = { info = it }, contentPadding = pad, editTimeOff = { sheet = Sheet.TimeOff(it) })
-        }
+        } }
         FloatingTabBar(selected = tab, onSelect = { tab = it }, onNew = { sheet = Sheet.Add }, modifier = Modifier.align(Alignment.BottomCenter))
     }
     sheet?.let { s ->
@@ -116,6 +123,7 @@ fun RailWatchApp(shared: List<Uri> = emptyList(), consumeShared: () -> Unit = {}
                     journey = { sheet = Sheet.New }, routine = { sheet = Sheet.Routine(null) },
                     timeOff = { sheet = Sheet.TimeOff(null) },
                     ticket = { uris -> sheet = if (uris.isEmpty()) null else Sheet.Import(uris) })
+                Sheet.Inbox -> dev.railwatch.app.ui.screens.InboxSheet { id -> sheet = Sheet.Journey(id) }
                 is Sheet.TimeOff -> dev.railwatch.app.ui.screens.TimeOffSheet(model, s.range) { msg -> sheet = null; info = msg }
                 is Sheet.Pnr -> find(s.id)?.let { dev.railwatch.app.ui.screens.PnrSheet(it, model, confirm) { sheet = Sheet.Journey(it.id) } }
                 is Sheet.Booking -> find(s.id)?.let { dev.railwatch.app.ui.screens.BookingDaySheet(it, model) { sheet = null } }
@@ -123,8 +131,13 @@ fun RailWatchApp(shared: List<Uri> = emptyList(), consumeShared: () -> Unit = {}
         }
     }
     // Messages and errors show as an app-styled toast above the tab bar, and fade after a few seconds.
-    info?.let { msg ->
-        LaunchedEffect(msg) { kotlinx.coroutines.delay(4000); if (info == msg) info = null }
+    // The toast slides up and fades; it keeps its text while leaving.
+    var lastToast by remember { mutableStateOf("") }
+    info?.let { msg -> lastToast = msg; LaunchedEffect(msg) { kotlinx.coroutines.delay(4000); if (info == msg) info = null } }
+    androidx.compose.animation.AnimatedVisibility(info != null, Modifier.fillMaxSize(),
+        enter = androidx.compose.animation.slideInVertically { it / 3 } + androidx.compose.animation.fadeIn(),
+        exit = androidx.compose.animation.slideOutVertically { it / 3 } + androidx.compose.animation.fadeOut()) {
+        val msg = lastToast
         Box(Modifier.fillMaxSize().padding(bottom = 112.dp, start = 16.dp, end = 16.dp), contentAlignment = Alignment.BottomCenter) {
             androidx.compose.foundation.layout.Row(Modifier.fillMaxWidth().background(Rw.colors.surface2, androidx.compose.foundation.shape.RoundedCornerShape(18.dp))
                 .border(1.dp, Rw.colors.line, androidx.compose.foundation.shape.RoundedCornerShape(18.dp)).clickable { info = null }.padding(horizontal = 18.dp, vertical = 14.dp), verticalAlignment = Alignment.CenterVertically) {

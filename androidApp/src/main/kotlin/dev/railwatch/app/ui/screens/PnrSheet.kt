@@ -53,6 +53,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun PnrSheet(j: Journey, model: AppModel, confirm: (String, () -> Unit) -> Unit, close: () -> Unit) {
     val client = remember { PnrClient() }
+    val context = androidx.compose.ui.platform.LocalContext.current
     val scope = rememberCoroutineScope()
     var picture by remember { mutableStateOf<android.graphics.Bitmap?>(null) }
     var round by remember { mutableIntStateOf(0) }
@@ -72,6 +73,9 @@ fun PnrSheet(j: Journey, model: AppModel, confirm: (String, () -> Unit) -> Unit,
             when (val r = client.finish(j.pnr, answer)) {
                 is PnrClient.Result.Ok -> {
                     val updated = applyPnrStatus(j, r.snapshot); result = r.snapshot
+                    // A changed status goes into the inbox, so there is a record of it.
+                    if ((updated.statusLog?.size ?: 0) > (j.statusLog?.size ?: 0))
+                        dev.railwatch.app.data.Inbox.add(context, "PNR now ${updated.currentStatus}", "${j.from} → ${j.to} · ${dev.railwatch.app.ui.shortDay(j.date)}", j.id)
                     // Whole PNR cancelled: the trip moves to Cancelled. Some passengers cancelled: flagged here and on the trip.
                     if (pnrSummary(r.snapshot) == "CANCELLED" && j.status != JourneyStatus.Cancelled) model.setStatus(updated, JourneyStatus.Cancelled)
                     else model.saveJourney(updated)

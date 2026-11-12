@@ -58,13 +58,13 @@ import dev.railwatch.shared.domain.upcoming
 
 /** Today (canvas NativeToday): large title, boarding-pass next trip, Do next cards, this week. */
 @Composable
-fun TodayScreen(model: AppModel, open: (Journey) -> Unit, showTicket: (Journey) -> Unit, newRoutine: () -> Unit, seeAll: () -> Unit, contentPadding: PaddingValues) {
+fun TodayScreen(model: AppModel, open: (Journey) -> Unit, showTicket: (Journey) -> Unit, inbox: () -> Unit = {}, unread: Int = 0, newRoutine: () -> Unit, seeAll: () -> Unit, contentPadding: PaddingValues) {
     val p = model.planner; val today = model.today
     val next = nextTrip(p, today)
     val cards = doNext(p, today)
     val week = upcoming(p, today).filter { it.date <= addDays(today, 6) && it.id != next?.id }.take(4)
     LazyColumn(contentPadding = contentPadding) {
-        item { LargeTitle("Today", eyebrow = longDay(today)) }
+        item { LargeTitle("Today", eyebrow = longDay(today)) { Bell(unread, inbox) } }
         item {
             if (next != null) BoardingPass(next, today, model.stations::name, { showTicket(next) }) { open(next) }
             else EmptyStart(hasRoutines = p.rules.isNotEmpty(), newRoutine = newRoutine)
