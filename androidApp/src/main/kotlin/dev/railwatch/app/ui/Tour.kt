@@ -94,7 +94,7 @@ fun Tour(restore: () -> Unit, done: (addTrip: Boolean) -> Unit) {
                     "Set up a routine once and every trip appears ahead of time. Add your holidays and leave: RailWatch flags trips that clash and spots long weekends.") { RoutinePicture() }
                 4 -> Step("After You Book",
                     "Check PNR status for every passenger (you type the code shown, RailWatch reads the result). Open your ticket without signal, and see what you spend. Waitlisted trips get a reminder to check again.") { AfterPicture() }
-                else -> Permissions()
+                else -> Permissions(active = pager.currentPage == 5)
             }
         }
         // Skip, dots and the main button.
@@ -213,27 +213,37 @@ private fun AfterPicture() = Column(verticalArrangement = Arrangement.spacedBy(1
 }
 
 @Composable
-private fun Permissions() {
+private fun Permissions(active: Boolean) {
     val context = LocalContext.current
+    fun openAlarms() { if (Build.VERSION.SDK_INT >= 31) context.startActivity(Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, Uri.parse("package:${context.packageName}"))) }
     var version by remember { mutableIntStateOf(0) }
     LifecycleResumeEffect(Unit) { version++; onPauseOrDispose { } }
     val notify = remember(version) { Build.VERSION.SDK_INT < 33 || context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == android.content.pm.PackageManager.PERMISSION_GRANTED }
     val exact = remember(version) { Alarms.canExact(context) }
     val calendar = remember(version) { PhoneCalendar.allowed(context) }
-    val askNotify = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { version++ }
+    // After the notification popup, straight on to the alarms switch (Android has no popup for that one).
+    val askNotify = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { version++; if (!Alarms.canExact(context)) openAlarms() }
+    // On reaching this page: give a moment to read why, then ask for what is missing, once.
+    var asked by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableStateOf(false) }
+    LaunchedEffect(active) {
+        if (!active || asked) return@LaunchedEffect
+        kotlinx.coroutines.delay(1200); asked = true
+        when {
+            !notify && Build.VERSION.SDK_INT >= 33 -> askNotify.launch(Manifest.permission.POST_NOTIFICATIONS)
+            !exact -> openAlarms()
+        }
+    }
     val askCalendar = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { r ->
         version++
         // Allowed: start with the first calendar; it can be changed in More › Phone Calendar.
         if (r.values.all { it }) PhoneCalendar.calendars(context).firstOrNull()?.let { PhoneCalendar.choose(context, it.id) }
     }
     Column(Modifier.fillMaxSize().statusBarsPadding().padding(start = 24.dp, end = 24.dp, top = 64.dp)) {
-        Text("Let RailWatch Remind You", color = Rw.colors.text, fontSize = 30.sp, lineHeight = 35.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.semantics { heading() })
-        Text("Booking windows open at a set minute. These let reminders arrive on time, even when the app is closed.", color = Rw.colors.muted, fontSize = 16.sp, lineHeight = 24.sp, modifier = Modifier.padding(top = 12.dp, bottom = 24.dp))
+        Text("RailWatch Needs Two Permissions", color = Rw.colors.text, fontSize = 30.sp, lineHeight = 35.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.semantics { heading() })
+        Text("Booking windows open at a set minute, so reminders only help if they arrive on time. Allow notifications in the popup, then turn on Alarms & Reminders on the page that opens and come back. Calendar is optional.", color = Rw.colors.muted, fontSize = 16.sp, lineHeight = 24.sp, modifier = Modifier.padding(top = 12.dp, bottom = 24.dp))
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Grant(RwIcons.Bell, "Notifications", "Booking, Tatkal and PNR reminders", notify, "Allow") { if (Build.VERSION.SDK_INT >= 33) askNotify.launch(Manifest.permission.POST_NOTIFICATIONS) }
-            Grant(RwIcons.Clock, "Alarms on Time", "Reminders to the minute", exact, "Allow") {
-                if (Build.VERSION.SDK_INT >= 31) context.startActivity(Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, Uri.parse("package:${context.packageName}")))
-            }
+            Grant(RwIcons.Clock, "Alarms & Reminders", "So reminders come on the minute (no ringing, only notifications)", exact, "Allow") { openAlarms() }
             Grant(RwIcons.Calendar, "Phone Calendar", "Add trips to your calendar (optional)", calendar, "Allow") {
                 askCalendar.launch(arrayOf(Manifest.permission.READ_CALENDAR, Manifest.permission.WRITE_CALENDAR))
             }
