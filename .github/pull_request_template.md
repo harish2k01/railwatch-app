@@ -1,10 +1,10 @@
-﻿## What changed
+## What changed
 
 <!-- A short description. It appears in the release notes as this pull request's title. -->
 
 ## Version label
 
-Add exactly one: `major` (breaking), `minor` (new feature), `patch` (fix or improvement) or `skip-release`.
+Add exactly one: `release: major` (breaking), `release: minor` (new feature), `release: patch` (fix or improvement) or `skip-release`.
 
 ## Checklist
 
