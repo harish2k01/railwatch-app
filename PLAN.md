@@ -159,3 +159,18 @@ checks, release APK; Play Store listing optional.
 
 
 - **Backup & Restore (M6), done 12 Nov:** More → Backup & Restore saves one JSON file in the website's backup format (planner plus base64 ticket PDFs) and restores from one after a confirm; checked on the A001. Remaining in M6: home-screen widget.
+
+## Next phases (agreed 12 Nov)
+
+Designs: canvas row "First-run tour and home-screen widget".
+
+| Phase | Work | Status |
+|---|---|---|
+| F | Home-screen widget (Glance): medium 4x2 shows the most urgent of window opening (last hour) / travelling today / needs booking / all set, plus next trip; small 2x2 booking-opens and check-PNR. Tap opens the trip. Refreshes on every save, every 30 min and at each window change; live countdown via Chronometer. | Built; needs checking on the home screen |
+| G | Add trips to the phone calendar (CalendarContract, the calendar the person picks; updated and removed with the trip). | Planned |
+| H | PNR nudges for waitlisted/RAC trips: daily notification in the days before travel opening the PNR sheet (CAPTCHA typed by the person). | Planned |
+| I | Tatkal/booking countdown: ongoing notification with a chronometer in the last 15 minutes before the window opens (shows on the lock screen). | Planned |
+| J | First-run tour: welcome (with Restore), booking windows, the + sheet, routines and time off, after booking, permissions. Replay from More › Help & Tour. | Planned |
+| K | Light theme (follows the system) and an accessibility pass (TalkBack labels, 48dp targets, font scaling). | Planned |
+| - | Portrait only. | Done |
+| - | Automatic weekly backup. | Dropped (not wanted) |

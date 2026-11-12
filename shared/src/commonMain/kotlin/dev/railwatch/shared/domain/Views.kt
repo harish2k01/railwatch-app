@@ -1,5 +1,7 @@
 package dev.railwatch.shared.domain
 
+import kotlinx.datetime.Instant
+
 /** What the Today and Journeys screens show, worked out from the planner (shared so iOS gets the same answers). */
 
 /** A Do next card on Today. */
@@ -67,3 +69,31 @@ fun plannedGroups(list: List<Journey>, today: String): List<Pair<String, List<Jo
 /** Groups a list into months ("2026-11" → trips), keeping order. */
 fun byMonth(list: List<Journey>): List<Pair<String, List<Journey>>> =
     list.groupBy { it.date.substring(0, 7) }.toList()
+
+/** What the home-screen widget leads with: the most urgent thing to do, else the next dates. */
+sealed interface WidgetFocus {
+    /** A booking window opens within the hour (general or Tatkal). */
+    data class Opening(val journey: Journey, val at: Instant) : WidgetFocus
+    /** A booked trip departs today. */
+    data class Travelling(val journey: Journey) : WidgetFocus
+    /** Windows are open on trips not booked yet. */
+    data class Book(val journey: Journey, val count: Int) : WidgetFocus
+    /** Nothing pressing. */
+    data class AllSet(val nextTrip: Journey?, val nextBookingDay: String?) : WidgetFocus
+}
+
+fun widgetFocus(p: Planner, today: String, now: Instant): WidgetFocus {
+    val list = upcoming(p, today)
+    val waiting = list.filter { it.status == JourneyStatus.NeedsBooking }
+    waiting.map { it to bookingInstant(it) }.filter { it.second > now && it.second - now <= kotlin.time.Duration.parse("1h") }
+        .minByOrNull { it.second }?.let { return WidgetFocus.Opening(it.first, it.second) }
+    list.firstOrNull { it.status == JourneyStatus.Booked && it.date == today }?.let { return WidgetFocus.Travelling(it) }
+    val open = waiting.filter { bookingDay(it) <= today }
+    if (open.isNotEmpty()) return WidgetFocus.Book(open.first(), open.size)
+    return WidgetFocus.AllSet(nextTrip(p, today), waiting.map { bookingDay(it) }.filter { it > today }.minOrNull())
+}
+
+/** When the widget's focus can next change on its own: an hour before, and at, each upcoming window opening. */
+fun widgetNextChange(p: Planner, today: String, now: Instant): Instant? =
+    upcoming(p, today).filter { it.status == JourneyStatus.NeedsBooking }.map { bookingInstant(it) }
+        .flatMap { listOf(it - kotlin.time.Duration.parse("1h"), it) }.filter { it > now }.minOrNull()

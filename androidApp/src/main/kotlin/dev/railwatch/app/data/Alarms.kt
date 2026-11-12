@@ -54,6 +54,7 @@ object Alarms {
             if (canExact(context)) am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at, pi) else am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at, pi)
         }
         prefs.edit().putStringSet("keys", next.map { it.key }.toSet()).apply()
+        Widget.refresh(context)
     }
 
     private fun pending(context: Context, key: String, r: Reminder?): PendingIntent {
