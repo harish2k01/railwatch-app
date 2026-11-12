@@ -76,7 +76,10 @@ object Alarms {
         for (r in next) {
             val pi = pending(context, r.key, r)
             val at = r.at.toEpochMilliseconds()
-            if (canExact(context)) am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at, pi) else am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at, pi)
+            // Without exact alarms Android may hold a plain alarm for up to an hour; a 10-minute window (the smallest
+            // allowed) centred on the time keeps it close: at most 5 minutes early or late.
+            if (canExact(context)) am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at, pi)
+            else am.setWindow(AlarmManager.RTC_WAKEUP, at - 5 * 60_000, 10 * 60_000, pi)
         }
         prefs.edit().putStringSet("keys", next.map { it.key }.toSet()).apply()
         Widget.refresh(context)

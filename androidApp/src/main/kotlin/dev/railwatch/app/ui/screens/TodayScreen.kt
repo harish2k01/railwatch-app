@@ -65,6 +65,7 @@ fun TodayScreen(model: AppModel, open: (Journey) -> Unit, showTicket: (Journey) 
     val week = upcoming(p, today).filter { it.date <= addDays(today, 6) && it.id != next?.id }.take(4)
     LazyColumn(contentPadding = contentPadding) {
         item { LargeTitle("Today", eyebrow = longDay(today)) { Bell(unread, inbox) } }
+        item { ExactAlarmPrompt() }
         item {
             if (next != null) BoardingPass(next, today, model.stations::name, { showTicket(next) }) { open(next) }
             else EmptyStart(hasRoutines = p.rules.isNotEmpty(), newRoutine = newRoutine)
@@ -247,4 +248,32 @@ fun toneOf(j: Journey) = when (j.status) {
     JourneyStatus.NeedsBooking -> dev.railwatch.app.ui.components.Tone.Info
     JourneyStatus.CancellationNeeded -> dev.railwatch.app.ui.components.Tone.Warn
     else -> dev.railwatch.app.ui.components.Tone.Muted
+}
+
+/** Shown until reminders are allowed to arrive on the minute ("Alarms & reminders"); without it they can drift by minutes. */
+@Composable
+private fun ExactAlarmPrompt() {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val state = androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(dev.railwatch.app.data.Alarms.canExact(context)) }
+    androidx.lifecycle.compose.LifecycleResumeEffect(Unit) {
+        val now = dev.railwatch.app.data.Alarms.canExact(context)
+        if (now && !state.value) dev.railwatch.app.data.Alarms.reschedule(context)
+        state.value = now
+        onPauseOrDispose { }
+    }
+    if (state.value || android.os.Build.VERSION.SDK_INT < 31) return
+    androidx.compose.foundation.layout.Row(
+        Modifier.fillMaxWidth().padding(bottom = 12.dp)
+            .background(Rw.colors.attentionBg, androidx.compose.foundation.shape.RoundedCornerShape(16.dp))
+            .clickable(onClickLabel = "Open alarm settings") {
+                context.startActivity(android.content.Intent(android.provider.Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, android.net.Uri.parse("package:${context.packageName}")))
+            }.padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        androidx.compose.foundation.layout.Column(Modifier.weight(1f)) {
+            Text("Reminders May Arrive Late", color = Rw.colors.attentionInk, fontWeight = FontWeight.Bold)
+            Text("Allow Alarms & Reminders so booking alerts come on the minute. Tap to open the setting.", color = Rw.colors.text, style = MaterialTheme.typography.bodyMedium)
+        }
+        Icon(RwIcons.ChevronRight, null, tint = Rw.colors.attentionInk)
+    }
 }
