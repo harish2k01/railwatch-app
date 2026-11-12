@@ -155,5 +155,5 @@ checks, release APK; Play Store listing optional.
 ### Follow-ups, 12 Nov evening
 
 - Trip length shown larger over a dashed arrow; reminders are one editable list (the separate Simple mode is gone); Title Case for headings, buttons and labels; splash animation on launch (track stem, R, name, circle reveal). Done.
-- Logo: R-with-track monogram options (R1-R4) on the design canvas, waiting for a pick; the splash already draws R1.
+- Logo: the Rail R monogram with sleeper gaps (option C) is the app icon and notification icon. Splash redone: a track is laid across the screen, a train runs along it, then the R and "RailWatch" come up and the purple opens onto Today.
 
