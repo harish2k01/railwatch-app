@@ -6,6 +6,9 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.height
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -67,7 +70,8 @@ private data class Choice(val title: String, val options: List<Pair<String, Stri
 
 /** You: a list of setting categories; each opens its own page, and choices open as popups. */
 @Composable
-fun YouScreen(model: AppModel, editRoutine: (Rule?) -> Unit, open: (Journey) -> Unit, showTicket: (Journey) -> Unit, info: (String) -> Unit, contentPadding: PaddingValues) {
+fun YouScreen(model: AppModel, editRoutine: (Rule?) -> Unit, open: (Journey) -> Unit, showTicket: (Journey) -> Unit, info: (String) -> Unit, contentPadding: PaddingValues,
+              editTimeOff: (dev.railwatch.shared.domain.TimeOffRange?) -> Unit = {}) {
     var page by rememberSaveable { mutableStateOf<Page?>(null) }
     var choice by remember { mutableStateOf<Choice?>(null) }
     BackHandler(enabled = page != null) { page = null }
@@ -88,24 +92,30 @@ fun YouScreen(model: AppModel, editRoutine: (Rule?) -> Unit, open: (Journey) -> 
         when (page) {
             null -> item {
                 val conflicts = timeOffConflicts(p, today).size
-                val subs = mapOf(
-                    Page.Routines to (p.rules.size.let { if (it == 0) "None yet" else "$it routine${if (it == 1) "" else "s"}" }),
-                    Page.Tickets to p.journeys.count { hasTicket(it) }.let { if (it == 0) "Share an IRCTC PDF to add one" else "$it saved" },
-                    Page.TimeOff to (if (conflicts > 0) "$conflicts trip${if (conflicts == 1) "" else "s"} on time off" else dev.railwatch.shared.domain.longWeekends(p, today).firstOrNull()?.let { "Next long weekend ${shortDay(it.start)}" } ?: "${p.holidays.count { it.date >= today }} days off ahead"),
-                    Page.Spend to (spendByMonth(p).firstOrNull()?.let { "${monthLabel(it.month, today)} · ${rupees(it.amount)}" } ?: "No fares yet"),
-                    Page.Reminders to "Booking and cancellation alerts",
-                    Page.Planning to "${p.settings.routineMonthsAhead} months ahead · week starts ${if (p.settings.weekStartsOn == 1) "Monday" else "Sunday"}",
-                )
-                Grouped {
-                    Page.entries.forEachIndexed { i, pg ->
-                        if (i > 0) RowDivider()
-                        Category(pg.icon, pg.title, subs[pg].orEmpty(), alert = pg == Page.TimeOff && conflicts > 0) { page = pg }
+                val nextWeekend = dev.railwatch.shared.domain.longWeekends(p, today).firstOrNull()
+                val month = spendByMonth(p).firstOrNull { it.month == today.take(7) }
+                // Your travel at a glance: four tiles, each opening its own screen.
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Tile(Page.Routines, p.rules.size.toString(), if (p.rules.isEmpty()) "Plan a regular trip" else if (p.rules.size == 1) "routine" else "routines", Modifier.weight(1f)) { page = Page.Routines }
+                        Tile(Page.TimeOff, if (conflicts > 0) conflicts.toString() else p.holidays.count { it.date >= today }.toString(),
+                            if (conflicts > 0) "trip${if (conflicts == 1) "" else "s"} on time off" else nextWeekend?.let { "days off · long weekend ${dev.railwatch.app.ui.dayMonth(it.start)}" } ?: "days off ahead", Modifier.weight(1f), alert = conflicts > 0) { page = Page.TimeOff }
                     }
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Tile(Page.Tickets, p.journeys.count { hasTicket(it) }.toString(), "tickets saved", Modifier.weight(1f)) { page = Page.Tickets }
+                        Tile(Page.Spend, rupees(month?.amount ?: 0.0), "this month", Modifier.weight(1f)) { page = Page.Spend }
+                    }
+                }
+                Text("SETTINGS", style = MaterialTheme.typography.labelSmall, color = Rw.colors.muted, modifier = Modifier.padding(start = 4.dp, top = 24.dp, bottom = 8.dp))
+                Grouped {
+                    Category(Page.Reminders.icon, "Reminders", "When booking and cancellation alerts reach you", alert = false) { page = Page.Reminders }
+                    RowDivider()
+                    Category(Page.Planning.icon, "Planning", "How far ahead routines plan, how long tickets are kept", alert = false) { page = Page.Planning }
                 }
             }
             Page.Routines -> routines(model, editRoutine)
-            Page.TimeOff -> item { TimeOffPage(model, open, info) }
-            Page.Spend -> spend(model)
+            Page.TimeOff -> item { TimeOffPage(model, open, info, editTimeOff) }
+            Page.Spend -> item { SpendPage(model, open) }
             Page.Reminders -> item { RemindersPage(model) { choice = it } }
             Page.Planning -> item { PlanningPage(model) { choice = it } }
             Page.Tickets -> {}
@@ -130,38 +140,118 @@ fun YouScreen(model: AppModel, editRoutine: (Rule?) -> Unit, open: (Journey) -> 
 
 private fun rupees(v: Double) = "₹" + "%,.0f".format(java.util.Locale.forLanguageTag("en-IN"), v)
 
+/** Routines as cards: route, the days it runs, what's next, and how many trips it has planned. */
 private fun LazyListScope.routines(model: AppModel, editRoutine: (Rule?) -> Unit) = item {
-    val days = listOf("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat")
-    Grouped {
-        model.planner.rules.forEachIndexed { i, r ->
-            if (i > 0) RowDivider()
-            ListRow(r.name, "${r.from} → ${r.to} · ${r.weekdays.joinToString("/") { days[it] }}${if (r.paused) " · paused" else ""}") { editRoutine(r) }
+    val p = model.planner; val today = model.today
+    val letters = listOf("S", "M", "T", "W", "T", "F", "S")
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        if (p.rules.isEmpty()) Text("A routine plans a regular trip months ahead, so every booking day reaches you without adding trips one by one.", color = Rw.colors.muted)
+        p.rules.forEach { r ->
+            val trips = p.journeys.filter { it.ruleId == r.id && it.date >= today }
+            val next = trips.minByOrNull { it.date }
+            val booked = trips.count { it.status == dev.railwatch.shared.domain.JourneyStatus.Booked }
+            Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(Rw.colors.surface).clickable { editRoutine(r) }.padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(r.name, style = MaterialTheme.typography.titleMedium, color = Rw.colors.muted, modifier = Modifier.weight(1f))
+                    if (r.paused) Text("Paused", style = MaterialTheme.typography.labelMedium, color = Rw.colors.attentionInk, modifier = Modifier.background(Rw.colors.attentionBg, RoundedCornerShape(99.dp)).padding(horizontal = 10.dp, vertical = 4.dp))
+                }
+                Text("${r.from} → ${r.to}", fontSize = 26.sp, fontWeight = FontWeight.Bold, color = Rw.colors.text)
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    (0..6).map { (it + 1) % 7 }.forEach { d ->
+                        val on = d in r.weekdays
+                        Box(Modifier.size(30.dp).background(if (on) Rw.colors.brand else Rw.colors.surface2, androidx.compose.foundation.shape.CircleShape), contentAlignment = Alignment.Center) {
+                            Text(letters[d], style = MaterialTheme.typography.labelMedium, color = if (on) Rw.colors.brandInk else Rw.colors.muted)
+                        }
+                    }
+                }
+                Text(listOfNotNull(next?.let { "Next ${shortDay(it.date)}" }, "${trips.size} planned", "$booked booked", r.returnAfterDays?.let { "return after $it day${if (it == 1) "" else "s"}" }).joinToString(" · "),
+                    color = Rw.colors.muted, style = MaterialTheme.typography.bodyMedium)
+            }
         }
-        if (model.planner.rules.isNotEmpty()) RowDivider()
-        ListRow("New routine", "Plan a regular trip once") { editRoutine(null) }
+        PrimaryButton("New routine", { editRoutine(null) }, Modifier.fillMaxWidth())
     }
 }
 
-private fun LazyListScope.spend(model: AppModel) = item {
-    val today = model.today
-    val spend = spendByMonth(model.planner)
-    Grouped {
-        if (spend.isEmpty()) Text("Fares show here once tickets are added.", color = Rw.colors.muted, modifier = Modifier.padding(16.dp))
-        spend.take(12).forEachIndexed { i, m ->
-            if (i > 0) RowDivider()
-            Row(Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f)) {
-                    Text(monthLabel(m.month, today), color = Rw.colors.text)
-                    Text("${m.trips} trip${if (m.trips == 1) "" else "s"}", color = Rw.colors.muted, style = MaterialTheme.typography.bodyMedium)
+/** Spend: this year's total, the average per trip, refunds, a 12-month bar chart; tap a month to see its trips. */
+@Composable
+private fun SpendPage(model: AppModel, open: (Journey) -> Unit) {
+    val p = model.planner; val today = model.today
+    val paid = p.journeys.filter { it.fare != null && it.status != dev.railwatch.shared.domain.JourneyStatus.Skipped }
+    fun net(j: Journey) = j.fare!!.let { it.total - (it.refund ?: 0.0) }
+    // The last 8 months and the next 4 (booked trips already have their fares).
+    val months = (7 downTo -4).map { back -> val t = today.take(4).toInt() * 12 + today.substring(5, 7).toInt() - 1 - back; "%04d-%02d".format(t / 12, t % 12 + 1) }
+    val byMonth = paid.groupBy { it.date.take(7) }
+    var picked by remember { mutableStateOf(today.take(7)) }
+    val year = paid.filter { it.date.take(4) == today.take(4) }
+    val refunds = paid.sumOf { it.fare!!.refund ?: 0.0 }
+    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            Stat("This year", rupees(year.sumOf(::net)), Modifier.weight(1f))
+            Stat("Per trip", if (year.isEmpty()) "—" else rupees(year.sumOf(::net) / year.size), Modifier.weight(1f))
+            Stat("Refunds", rupees(refunds), Modifier.weight(1f))
+        }
+        // Bars for the last 12 months; the chosen month is highlighted.
+        val max = months.maxOf { m -> byMonth[m].orEmpty().sumOf(::net) }.coerceAtLeast(1.0)
+        Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(Rw.colors.surface).padding(16.dp)) {
+            Row(Modifier.fillMaxWidth().heightIn(min = 150.dp), verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                months.forEach { m ->
+                    val amount = byMonth[m].orEmpty().sumOf(::net)
+                    val frac = (amount / max).toFloat()
+                    Box(Modifier.weight(1f).height((8 + 140 * frac).dp).clip(RoundedCornerShape(topStart = 6.dp, topEnd = 6.dp))
+                        .background(if (m == picked) Rw.colors.brand else if (amount > 0) Rw.colors.brandSoft else Rw.colors.surface2).clickable { picked = m })
                 }
-                Text(rupees(m.amount), color = Rw.colors.text, fontWeight = FontWeight.SemiBold, fontSize = 17.sp)
+            }
+            Row(Modifier.fillMaxWidth().padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                months.forEach { m -> Text(monthLabel(m, today).take(1), modifier = Modifier.weight(1f), textAlign = androidx.compose.ui.text.style.TextAlign.Center, style = MaterialTheme.typography.labelSmall, color = if (m == picked) Rw.colors.text else Rw.colors.muted) }
+            }
+        }
+        val trips = byMonth[picked].orEmpty().sortedBy { it.date }
+        Row(verticalAlignment = Alignment.Bottom) {
+            Text(monthLabel(picked, today), style = MaterialTheme.typography.titleLarge, color = Rw.colors.text, modifier = Modifier.weight(1f))
+            Text(rupees(trips.sumOf(::net)), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = Rw.colors.text)
+        }
+        if (trips.isEmpty()) Text("No fares this month. Fares are read from the tickets you add.", color = Rw.colors.muted)
+        else Grouped {
+            trips.forEachIndexed { i, j ->
+                if (i > 0) RowDivider()
+                Row(Modifier.fillMaxWidth().clickable { open(j) }.heightIn(min = 60.dp).padding(horizontal = 16.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Text("${j.from} → ${j.to}", color = Rw.colors.text, style = MaterialTheme.typography.titleMedium)
+                        Text(listOfNotNull(shortDay(j.date), j.travelClass.takeIf { it.isNotBlank() }, j.fare!!.refund?.let { "refund ${rupees(it)}" }, j.status.takeIf { it == dev.railwatch.shared.domain.JourneyStatus.Cancelled }?.let { "cancelled" }).joinToString(" · "),
+                            color = Rw.colors.muted, style = MaterialTheme.typography.bodyMedium)
+                    }
+                    Text(rupees(net(j)), color = Rw.colors.text, fontWeight = FontWeight.SemiBold)
+                }
             }
         }
     }
 }
 
 @Composable
-private fun TimeOffPage(model: AppModel, open: (Journey) -> Unit, info: (String) -> Unit) {
+private fun Stat(label: String, value: String, modifier: Modifier) {
+    Column(modifier.clip(RoundedCornerShape(16.dp)).background(Rw.colors.surface).padding(14.dp)) {
+        Text(label, style = MaterialTheme.typography.labelMedium, color = Rw.colors.muted)
+        Text(value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = Rw.colors.text, maxLines = 1)
+    }
+}
+
+/** One area of More as a tile: icon, a big number and what it counts. */
+@Composable
+private fun Tile(page: Page, value: String, sub: String, modifier: Modifier, alert: Boolean = false, onClick: () -> Unit) {
+    Column(modifier.heightIn(min = 132.dp).clip(RoundedCornerShape(20.dp)).background(if (alert) Rw.colors.attentionBg else Rw.colors.surface).clickable(onClick = onClick).padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.size(32.dp).background(Rw.colors.brandSoft, RoundedCornerShape(10.dp)), contentAlignment = Alignment.Center) { Icon(page.icon, null, tint = Rw.colors.brandSoftInk, modifier = Modifier.size(18.dp)) }
+            Text(page.title, style = MaterialTheme.typography.titleSmall, color = Rw.colors.text, modifier = Modifier.padding(start = 10.dp), maxLines = 1)
+        }
+        Spacer(Modifier.size(6.dp))
+        Text(value, fontSize = 26.sp, fontWeight = FontWeight.Bold, color = if (alert) Rw.colors.attentionInk else Rw.colors.text, maxLines = 1)
+        Text(sub, style = MaterialTheme.typography.bodySmall, color = if (alert) Rw.colors.attentionInk else Rw.colors.muted, maxLines = 2)
+    }
+}
+
+@Composable
+private fun TimeOffPage(model: AppModel, open: (Journey) -> Unit, info: (String) -> Unit, edit: (dev.railwatch.shared.domain.TimeOffRange?) -> Unit) {
     val p = model.planner; val today = model.today
     val context = LocalContext.current
     val pick = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
@@ -191,7 +281,7 @@ private fun TimeOffPage(model: AppModel, open: (Journey) -> Unit, info: (String)
             Spacer(Modifier.size(12.dp))
         }
         Grouped {
-            if (adding) AddTimeOff(model, today) { adding = false } else ListRow("Add a day off", "Leave or a holiday") { adding = true }
+            ListRow("Add time off", "Leave or a holiday, one day or several") { edit(null) }
             RowDivider()
             ListRow("Import a calendar", "An .ics file, or a CSV with date,name,type") { pick.launch(arrayOf("text/calendar", "text/csv", "text/comma-separated-values", "text/plain", "application/octet-stream")) }
         }
@@ -212,13 +302,15 @@ private fun TimeOffPage(model: AppModel, open: (Journey) -> Unit, info: (String)
             Grouped {
                 ranges.forEachIndexed { i, r ->
                     if (i > 0) RowDivider()
-                    Row(Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(start = 16.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Column(Modifier.weight(1f)) {
-                            Text(r.name, color = Rw.colors.text)
+                    // Tap to edit (dates, name, kind) or remove it there.
+                    Row(Modifier.fillMaxWidth().clickable { edit(r) }.heightIn(min = 60.dp).padding(horizontal = 16.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Box(Modifier.size(10.dp).background(if (r.type == "leave") Rw.colors.open else Rw.colors.brand, androidx.compose.foundation.shape.CircleShape))
+                        Column(Modifier.weight(1f).padding(start = 14.dp)) {
+                            Text(r.name, color = Rw.colors.text, style = MaterialTheme.typography.titleMedium)
                             val n = r.ids.size
                             Text("${span(r.start, r.end)}${if (n > 1) " · $n days" else ""} · ${if (r.type == "leave") "Leave" else "Holiday"}", color = Rw.colors.muted, style = MaterialTheme.typography.bodyMedium)
                         }
-                        Icon(RwIcons.Close, "Remove ${r.name}", tint = Rw.colors.muted, modifier = Modifier.size(44.dp).clickable { r.ids.forEach(model::removeTimeOff) }.padding(12.dp))
+                        Icon(RwIcons.Pencil, "Edit ${r.name}", tint = Rw.colors.muted, modifier = Modifier.size(20.dp))
                     }
                 }
             }
@@ -266,15 +358,17 @@ private fun PlanningPage(model: AppModel, ask: (Choice) -> Unit) {
     val s = model.planner.settings
     val keep = s.ticketRetentionDays ?: 7
     Grouped {
-        ValueRow("Plan routines ahead", "${s.routineMonthsAhead} months") {
+        ValueRow("Plan routines ahead", "${s.routineMonthsAhead} months",
+            "Routines create their trips this far ahead, so you see every booking day and get its reminders. IRCTC opens booking ${s.bookingWindowDays} days before travel, so anything past that is just planning.") {
             ask(Choice("Plan routines ahead", listOf(1, 3, 6, 9, 12).map { "$it" to "$it month${if (it == 1) "" else "s"}" }, "${s.routineMonthsAhead}") { v -> model.setSettings { it.copy(routineMonthsAhead = v.toInt()) } })
         }
         RowDivider()
-        ValueRow("Keep ticket PDFs", "$keep days after the trip") {
+        ValueRow("Keep ticket PDFs", "$keep days after the trip",
+            "Ticket PDFs are deleted this long after the trip to save space. The journey, fare and seat stay.") {
             ask(Choice("Keep ticket PDFs", listOf(7, 30, 90, 365).map { "$it" to "$it days after the trip" }, "$keep") { v -> model.setSettings { it.copy(ticketRetentionDays = v.toInt()) } })
         }
         RowDivider()
-        ValueRow("Week starts on", if (s.weekStartsOn == 1) "Monday" else "Sunday") {
+        ValueRow("Week starts on", if (s.weekStartsOn == 1) "Monday" else "Sunday", "The first column of the calendar.") {
             ask(Choice("Week starts on", listOf("0" to "Sunday", "1" to "Monday"), "${s.weekStartsOn}") { v -> model.setSettings { it.copy(weekStartsOn = v.toInt()) } })
         }
     }
@@ -308,10 +402,13 @@ private fun Category(icon: ImageVector, title: String, sub: String, alert: Boole
 }
 
 @Composable
-private fun ValueRow(title: String, value: String, onClick: () -> Unit) {
-    Column(Modifier.fillMaxWidth().clickable(onClick = onClick).heightIn(min = 60.dp).padding(horizontal = 16.dp, vertical = 10.dp)) {
-        Text(title, style = MaterialTheme.typography.titleMedium, color = Rw.colors.text)
-        Text(value, style = MaterialTheme.typography.bodyMedium, color = Rw.colors.muted)
+private fun ValueRow(title: String, value: String, help: String? = null, onClick: () -> Unit) {
+    Column(Modifier.fillMaxWidth().clickable(onClick = onClick).heightIn(min = 60.dp).padding(horizontal = 16.dp, vertical = 12.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(title, style = MaterialTheme.typography.titleMedium, color = Rw.colors.text, modifier = Modifier.weight(1f))
+            Text(value, style = MaterialTheme.typography.titleMedium, color = Rw.colors.brand)
+        }
+        help?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = Rw.colors.muted, modifier = Modifier.padding(top = 4.dp)) }
     }
 }
 
