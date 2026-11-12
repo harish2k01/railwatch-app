@@ -1,0 +1,51 @@
+name: Bug report
+description: Something in RailWatch doesn't work as expected
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. **Don't include real tickets, PNRs, names or screenshots with personal details.** Use made-up values instead.
+        Security problems go to [private reporting](https://github.com/harish2k01/railwatch-app/security/advisories/new), not here.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open Journeys
+        2. Tap a planned trip
+        3. ...
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: RailWatch version
+      description: More › About RailWatch
+      placeholder: "0.3.0"
+    validations:
+      required: true
+  - type: input
+    id: android
+    attributes:
+      label: Phone and Android version
+      placeholder: "Pixel 8, Android 16"
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options: [Reminders and notifications, Journeys and routines, Tickets and import, PNR check, Calendar or time off, Widget, Backup and restore, Settings, Other]
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else
+      description: Screenshots (with personal details hidden) or other context.
