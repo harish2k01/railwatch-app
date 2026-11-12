@@ -46,7 +46,8 @@ fun QuickActions(j: Journey, model: AppModel, onTicket: () -> Unit, onPnr: () ->
     val pdf = j.attachments?.firstOrNull { it.type == "application/pdf" }
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         Quick(RwIcons.Ticket, "Ticket", primary = true, Modifier.weight(1f), onTicket)
-        Quick(RwIcons.Clock, "Check PNR", false, Modifier.weight(1f), onPnr)
+        // A check needs the 10-digit PNR (added by hand or read from the ticket); without one the button is hidden.
+        if (j.pnr.length == 10) Quick(RwIcons.Clock, "Check PNR", false, Modifier.weight(1f), onPnr)
         if (pdf != null) Quick(RwIcons.Share, "Share", false, Modifier.weight(1f)) {
             val uri = androidx.core.content.FileProvider.getUriForFile(context, context.packageName + ".tickets", model.ticketFiles.file(pdf.id))
             context.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).setType("application/pdf").putExtra(Intent.EXTRA_STREAM, uri).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION), "Share ticket"))
