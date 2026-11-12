@@ -1,17 +1,24 @@
 name: Release
-# Every push to main (a merged pull request or a direct push) becomes a release:
-#   1. the next version is worked out from the commits since the last tag (semantic versioning),
+# Every merge to main becomes a release:
+#   1. the version bump comes from the merged pull request's label: major, minor or patch
+#      (skip-release: merge without releasing; a direct push to main counts as patch),
 #   2. tests and lint run, and a signed, optimised release APK is built with that version,
-#   3. the commit is tagged and a GitHub release is published with notes and the APK attached.
-# Version bump, from the commit messages since the last release (Conventional Commits):
-#   "feat!: …" or "BREAKING CHANGE" → major · "feat: …" → minor · anything else → patch.
-# Commits that only touch docs or CI ("docs:", "ci:", "chore:" and nothing else) don't make a release.
+#   3. the commit is tagged vX.Y.Z and a GitHub release is published with GitHub's generated notes
+#      (merged pull requests grouped by label, see .github/release.yml, plus contributors and a full-changes link),
+#      the APK and its SHA-256 checksum.
 on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      bump:
+        description: Version bump
+        type: choice
+        options: [patch, minor, major]
+        default: patch
 permissions:
   contents: write
+  pull-requests: read
 concurrency:
   group: release
   cancel-in-progress: false
@@ -26,48 +33,25 @@ jobs:
 
       - name: Work out the next version
         id: version
-        run: |
-          last=$(git describe --tags --abbrev=0 --match 'v[0-9]*' 2>/dev/null || echo "")
-          range=${last:+$last..HEAD}
-          subjects=$(git log --format=%s ${range:-HEAD})
-          bodies=$(git log --format=%B ${range:-HEAD})
-          if [ -z "$subjects" ]; then echo "skip=true" >> "$GITHUB_OUTPUT"; exit 0; fi
-          # Nothing but docs/ci/chore commits: no release.
-          if ! echo "$subjects" | grep -qvE '^(docs|ci|chore)(\(.+\))?: '; then echo "skip=true" >> "$GITHUB_OUTPUT"; exit 0; fi
-          cur=${last#v}; cur=${cur:-0.0.0}
-          IFS=. read -r ma mi pa <<< "$cur"
-          if echo "$bodies" | grep -q 'BREAKING CHANGE' || echo "$subjects" | grep -qE '^[a-z]+(\(.+\))?!: '; then ma=$((ma+1)); mi=0; pa=0
-          elif echo "$subjects" | grep -qE '^feat(\(.+\))?: '; then mi=$((mi+1)); pa=0
-          else pa=$((pa+1)); fi
-          next="v$ma.$mi.$pa"
-          echo "Last: ${last:-none}  Next: $next"
-          echo "tag=$next" >> "$GITHUB_OUTPUT"
-          echo "last=$last" >> "$GITHUB_OUTPUT"
-
-      - name: Release notes
-        if: steps.version.outputs.skip != 'true'
         env:
-          LAST: ${{ steps.version.outputs.last }}
-          TAG: ${{ steps.version.outputs.tag }}
+          GH_TOKEN: ${{ github.token }}
+          MANUAL: ${{ inputs.bump }}
         run: |
-          range=${LAST:+$LAST..HEAD}
-          section() { # title, pattern
-            lines=$(git log --format='%s' ${range:-HEAD} | grep -E "$2" | sed -E 's/^[a-z]+(\(.+\))?!?: //' | sed 's/^/- /')
-            if [ -n "$lines" ]; then printf '### %s\n%s\n\n' "$1" "$lines"; fi
-          }
-          {
-            echo "## RailWatch ${TAG#v}"; echo
-            section "New" '^feat(\(.+\))?!?: '
-            section "Fixes" '^fix(\(.+\))?!?: '
-            section "Improvements" '^(perf|refactor|style)(\(.+\))?!?: '
-            other=$(git log --format='%s' ${range:-HEAD} | grep -vE '^(feat|fix|perf|refactor|style|docs|ci|chore|test|build)(\(.+\))?!?: ' | sed 's/^/- /')
-            if [ -n "$other" ]; then printf '### Changes\n%s\n\n' "$other"; fi
-            echo "### Install"
-            echo "Download \`RailWatch-${TAG#v}.apk\` below and open it on your Android phone (Android 8.0 or newer). Allow installing from your browser or Files app when asked. Installing over an earlier release keeps your data."
-            if [ -n "$LAST" ]; then echo; echo "**Full changes:** https://github.com/${{ github.repository }}/compare/$LAST...$TAG"; fi
-          } > notes.md
-          cat notes.md
-
+          labels=$(gh api "repos/${{ github.repository }}/commits/$GITHUB_SHA/pulls" --jq '.[0].labels[].name' 2>/dev/null || true)
+          pr=$(gh api "repos/${{ github.repository }}/commits/$GITHUB_SHA/pulls" --jq '.[0].number // empty' 2>/dev/null || true)
+          if echo "$labels" | grep -qx 'skip-release'; then echo "PR #$pr is labelled skip-release"; echo "skip=true" >> "$GITHUB_OUTPUT"; exit 0; fi
+          # A direct push (no pull request) can opt out with [skip release] in its message.
+          if [ -z "$pr" ] && [ -z "$MANUAL" ] && git log -1 --format=%B | grep -qi '\[skip release\]'; then echo "skip=true" >> "$GITHUB_OUTPUT"; exit 0; fi
+          if [ -n "$MANUAL" ]; then bump=$MANUAL
+          elif echo "$labels" | grep -qx 'major'; then bump=major
+          elif echo "$labels" | grep -qx 'minor'; then bump=minor
+          else bump=patch; fi
+          last=$(git describe --tags --abbrev=0 --match 'v[0-9]*' 2>/dev/null || echo "v0.0.0")
+          IFS=. read -r ma mi pa <<< "${last#v}"
+          case $bump in major) ma=$((ma+1)); mi=0; pa=0;; minor) mi=$((mi+1)); pa=0;; *) pa=$((pa+1));; esac
+          next="v$ma.$mi.$pa"
+          echo "PR: ${pr:-none (direct push)}  labels: ${labels:-none}  bump: $bump  $last -> $next"
+          echo "tag=$next" >> "$GITHUB_OUTPUT"
       - uses: actions/setup-java@v5
         if: steps.version.outputs.skip != 'true'
         with:
@@ -94,7 +78,7 @@ jobs:
           v=${{ steps.version.outputs.tag }}
           cp androidApp/build/outputs/apk/release/androidApp-release.apk "RailWatch-${v#v}.apk"
           # Refuse to publish an APK that isn't signed with the release key.
-          "$ANDROID_HOME"/build-tools/*/apksigner verify --print-certs "RailWatch-${v#v}.apk" | grep -q "CN=Harish T"
+          "$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)/apksigner" verify --print-certs "RailWatch-${v#v}.apk" | grep -q "CN=Harish T"
           sha256sum "RailWatch-${v#v}.apk" > "RailWatch-${v#v}.apk.sha256"
 
       - name: Tag and publish the release
@@ -105,4 +89,5 @@ jobs:
         run: |
           git tag "$TAG" "$GITHUB_SHA"
           git push origin "$TAG"
-          gh release create "$TAG" "RailWatch-${TAG#v}.apk" "RailWatch-${TAG#v}.apk.sha256" --title "RailWatch ${TAG#v}" --notes-file notes.md --latest
+          printf '%s\n\n' "**Install:** download \`RailWatch-${TAG#v}.apk\` below and open it on your Android phone (Android 8.0 or newer). Installing over an earlier release keeps your data. Check the download against \`RailWatch-${TAG#v}.apk.sha256\` if you like." > notes.md
+          gh release create "$TAG" "RailWatch-${TAG#v}.apk" "RailWatch-${TAG#v}.apk.sha256" --title "RailWatch ${TAG#v}" --notes-file notes.md --generate-notes --latest

@@ -79,20 +79,31 @@ Requirements: JDK 17 or newer, and the Android SDK (compile SDK 37).
 
 ## Releases and versioning
 
-Every push to `main` is released automatically by [`release.yaml`](.github/workflows/release.yaml):
+Every merge to `main` is released automatically by [`release.yaml`](.github/workflows/release.yaml):
 
-1. The next [semantic version](https://semver.org) is worked out from the commit messages since the last
-   release ([Conventional Commits](https://www.conventionalcommits.org)):
-   - `feat!:` or `BREAKING CHANGE` gives a major release.
-   - `feat:` gives a minor release.
-   - `fix:` and anything else give a patch release.
-   - A push containing only `docs:`, `ci:` or `chore:` commits makes no release.
-2. Tests and lint run, and an optimised release APK is built and signed with the release key, which is held in
-   repository secrets.
-3. The commit is tagged `vX.Y.Z`, and a GitHub release is published with grouped release notes, the APK and
-   its checksum.
+1. **Version.** The merged pull request's label sets the next [semantic version](https://semver.org):
+   - `major`: a breaking change (2.0.0)
+   - `minor`: a new feature (1.3.0)
+   - `patch`: a fix or improvement (1.2.4)
+   - `skip-release`: merge without a release, for docs or CI
 
-Pull requests and other branches are checked by [`ci.yaml`](.github/workflows/ci.yaml).
+   Every pull request needs exactly one of these labels; a check blocks merging until it has one.
+2. **Build.** Tests and lint run, and an optimised release APK is built and signed with the release key, which
+   is held in repository secrets.
+3. **Publish.** The commit is tagged `vX.Y.Z`, and a GitHub release is published with GitHub's generated
+   notes: merged pull requests grouped by label, contributors, and a full-changes link. The APK and its SHA-256
+   checksum are attached.
+
+Pull requests are checked by [`ci.yaml`](.github/workflows/ci.yaml): tests, lint, a debug APK, and the version
+label.
+
+## Contributing
+
+1. Fork the repository and create a branch.
+2. Run `./gradlew :shared:jvmTest :androidApp:lintDebug` before opening a pull request.
+3. Open a pull request against `main`. A maintainer adds the version label.
+
+Never commit real tickets, PNRs or personal data. Tests use synthetic data only.
 
 ## Roadmap
 

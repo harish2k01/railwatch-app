@@ -1,0 +1,13 @@
+# Groups GitHub's generated release notes by the pull request's version label.
+changelog:
+  exclude:
+    labels: [skip-release]
+  categories:
+    - title: Breaking changes
+      labels: [major]
+    - title: New
+      labels: [minor]
+    - title: Fixes and improvements
+      labels: [patch]
+    - title: Other changes
+      labels: ["*"]

@@ -4,6 +4,7 @@ on:
   push:
     branches-ignore: [main]
   pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
 permissions:
   contents: read
 concurrency:
@@ -27,3 +28,18 @@ jobs:
           name: railwatch-debug-apk
           path: androidApp/build/outputs/apk/debug/*.apk
           retention-days: 14
+  version-label:
+    # Every pull request needs exactly one of major / minor / patch / skip-release: it sets the next version.
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Exactly one version label
+        env:
+          LABELS: ${{ join(github.event.pull_request.labels.*.name, ' ') }}
+        run: |
+          n=0; for l in $LABELS; do case $l in major|minor|patch|skip-release) n=$((n+1));; esac; done
+          if [ "$n" -ne 1 ]; then
+            echo "::error::Add exactly one label: major (breaking), minor (new feature), patch (fix or improvement) or skip-release. Found: ${LABELS:-none}"
+            exit 1
+          fi
+          echo "Version label OK: $LABELS"
