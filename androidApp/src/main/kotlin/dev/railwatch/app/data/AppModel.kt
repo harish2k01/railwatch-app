@@ -16,7 +16,11 @@ import dev.railwatch.shared.domain.saveRule
 import dev.railwatch.shared.domain.transition
 import dev.railwatch.shared.todayIst
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import java.io.File
 
@@ -102,6 +106,48 @@ class AppModel(context: Context) {
             p.copy(journeys = journeys)
         }
         return attached
+    }
+
+    /**
+     * A backup in the website's format: the planner JSON plus `attachmentFiles` ([{id, data: "data:<type>;base64,…"}]),
+     * so a file made here restores on the website and the other way round.
+     */
+    fun backupJson(): String {
+        val base = dev.railwatch.shared.data.PlannerCodec.json.encodeToJsonElement(Planner.serializer(), planner).jsonObject
+        val seen = HashSet<String>()
+        val files = planner.journeys.flatMap { it.attachments.orEmpty() }.filter { seen.add(it.id) }.mapNotNull { a ->
+            val f = ticketFiles.file(a.id); if (!f.exists()) return@mapNotNull null
+            kotlinx.serialization.json.buildJsonObject {
+                put("id", JsonPrimitive(a.id))
+                put("data", JsonPrimitive("data:${a.type};base64," + android.util.Base64.encodeToString(f.readBytes(), android.util.Base64.NO_WRAP)))
+            }
+        }
+        return JsonObject(base + ("attachmentFiles" to JsonArray(files))).toString()
+    }
+
+    /** Checks a backup without changing anything: the planner it holds, and its ticket files checked against their metadata. */
+    fun readBackup(text: String): Pair<Planner, List<Pair<String, ByteArray>>> {
+        val root = runCatching { Json.parseToJsonElement(text).jsonObject }.getOrNull() ?: error("That file isn't a RailWatch backup.")
+        if (root["journeys"] !is JsonArray) error("That file isn't a RailWatch backup.")
+        val next = runCatching { dev.railwatch.shared.data.PlannerCodec.json.decodeFromJsonElement(Planner.serializer(), JsonObject(root - "attachmentFiles")) }
+            .getOrElse { error("That backup couldn't be read.") }
+        val meta = next.journeys.flatMap { it.attachments.orEmpty() }.associateBy { it.id }
+        val files = (root["attachmentFiles"] as? JsonArray).orEmpty().map { item ->
+            val o = item.jsonObject; val id = o["id"]!!.jsonPrimitive.content; val data = o["data"]!!.jsonPrimitive.content
+            val m = meta[id] ?: error("A ticket file in the backup doesn't match any trip.")
+            if (!data.startsWith("data:${m.type};base64,") || id.contains('/') || id.contains("..")) error("A ticket file in the backup is damaged.")
+            id to android.util.Base64.decode(data.substringAfter(','), android.util.Base64.DEFAULT)
+        }
+        return next to files
+    }
+
+    /** Replaces everything with a checked backup: its ticket files are written first, then old files no longer used are removed. */
+    fun restore(backup: Pair<Planner, List<Pair<String, ByteArray>>>) {
+        val (next, files) = backup
+        files.forEach { (id, bytes) -> ticketFiles.file(id).writeBytes(bytes) }
+        val keep = next.journeys.flatMap { it.attachments.orEmpty() }.map { it.id }.toSet()
+        planner.journeys.flatMap { it.attachments.orEmpty() }.filter { it.id !in keep }.forEach { ticketFiles.delete(it.id) }
+        update { next }
     }
 
     /** Removes a ticket PDF from a journey (and the file). */

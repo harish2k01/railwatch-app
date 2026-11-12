@@ -1,4 +1,4 @@
-package dev.railwatch.app.ui.screens
+﻿package dev.railwatch.app.ui.screens
 
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -63,7 +63,7 @@ import dev.railwatch.shared.domain.timeOffConflicts
 
 private enum class Page(val title: String, val icon: ImageVector) {
     Routines("Routines", RwIcons.List), TimeOff("Holidays & Leave", RwIcons.Calendar), Tickets("Tickets", RwIcons.Ticket),
-    Spend("Spend", RwIcons.Ticket), Reminders("Reminders", RwIcons.Bell), Planning("Planning", RwIcons.Clock),
+    Spend("Spend", RwIcons.Ticket), Reminders("Reminders", RwIcons.Bell), Planning("Planning", RwIcons.Clock), Backup("Backup & Restore", RwIcons.Ticket),
 }
 
 /** A single-choice popup, as in phone settings. */
@@ -112,6 +112,8 @@ fun YouScreen(model: AppModel, editRoutine: (Rule?) -> Unit, open: (Journey) -> 
                     Category(Page.Reminders.icon, "Reminders", "When booking and cancellation alerts reach you", alert = false) { page = Page.Reminders }
                     RowDivider()
                     Category(Page.Planning.icon, "Planning", "How far ahead routines plan, how long tickets are kept", alert = false) { page = Page.Planning }
+                    RowDivider()
+                    Category(Page.Backup.icon, "Backup & Restore", "Save everything to one file, or bring it back", alert = false) { page = Page.Backup }
                 }
             }
             Page.Routines -> routines(model, editRoutine)
@@ -119,6 +121,7 @@ fun YouScreen(model: AppModel, editRoutine: (Rule?) -> Unit, open: (Journey) -> 
             Page.Spend -> item { SpendPage(model, open) }
             Page.Reminders -> item { RemindersPage(model) { choice = it } }
             Page.Planning -> item { PlanningPage(model) { choice = it } }
+            Page.Backup -> item { BackupPage(model, info) }
             Page.Tickets -> {}
         }
     }
@@ -432,7 +435,7 @@ private fun Toggle(label: String, on: Boolean, set: (Boolean) -> Unit) {
 }
 
 @Composable
-private fun ListRow(title: String, sub: String, onClick: () -> Unit) {
+internal fun ListRow(title: String, sub: String, onClick: () -> Unit) {
     Row(Modifier.fillMaxWidth().clickable(onClick = onClick).heightIn(min = 60.dp).padding(horizontal = 16.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f)) {
             Text(title, style = MaterialTheme.typography.titleMedium, color = Rw.colors.text)

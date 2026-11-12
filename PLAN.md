@@ -157,3 +157,5 @@ checks, release APK; Play Store listing optional.
 - Trip length shown larger over a dashed arrow; reminders are one editable list (the separate Simple mode is gone); Title Case for headings, buttons and labels; splash animation on launch (track stem, R, name, circle reveal). Done.
 - Logo: the Rail R monogram with sleeper gaps (option C) is the app icon and notification icon. Splash redone: a track is laid across the screen, a train runs along it, then the R and "RailWatch" come up and the purple opens onto Today.
 
+
+- **Backup & Restore (M6), done 12 Nov:** More → Backup & Restore saves one JSON file in the website's backup format (planner plus base64 ticket PDFs) and restores from one after a confirm; checked on the A001. Remaining in M6: home-screen widget.
