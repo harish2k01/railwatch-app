@@ -97,8 +97,10 @@ fun EditJourneySheet(j: Journey, model: AppModel, close: () -> Unit) {
         OutlinedTextField(berth, { berth = it.take(30) }, label = { Text("Berth (e.g. Upper, LB)") }, singleLine = true, modifier = Modifier.fillMaxWidth(), colors = fieldColors())
         TimeField("Departure", departure.ifEmpty { "—" }) { departure = it }
         OutlinedTextField(notes, { notes = it.take(1000) }, label = { Text("Notes") }, modifier = Modifier.fillMaxWidth(), colors = fieldColors())
+        var reminders by remember { mutableStateOf(j.reminderOverride) }
+        if (j.status == dev.railwatch.shared.domain.JourneyStatus.NeedsBooking) JourneyReminders(model.planner, j, reminders, model.today) { reminders = it }
         PrimaryButton("Save", {
-            model.saveJourney(j.copy(pnr = pnr, trainNumber = train.ifBlank { null }, trainName = trainName.ifBlank { null }, travelClass = cls, coach = coach.ifBlank { null },
+            model.saveJourney(j.copy(reminderOverride = reminders, pnr = pnr, trainNumber = train.ifBlank { null }, trainName = trainName.ifBlank { null }, travelClass = cls, coach = coach.ifBlank { null },
                 seat = seat.ifBlank { null }, berth = berth.ifBlank { null }, departure = departure.ifEmpty { j.departure }, departureConfirmed = if (departure.isNotEmpty()) true else j.departureConfirmed,
                 notes = notes, manualOverride = if (j.ruleId != null) true else j.manualOverride))
             close()

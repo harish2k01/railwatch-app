@@ -196,10 +196,14 @@ fun NewJourneySheet(model: AppModel, close: () -> Unit) {
         StationField("From", from, model) { from = it }
         StationField("To", to, model) { to = it }
         DateField("Travel date", date, { date = it }, min = model.today)
-        if (date.isNotEmpty()) Text("Booking opens ${shortDay(bookingDay(Journey(id = "", from = from, to = to, date = date, departure = time, windowDays = model.planner.settings.bookingWindowDays)))} at 08:00",
-            style = MaterialTheme.typography.bodyMedium, color = Rw.colors.muted)
+        var reminders by remember { mutableStateOf<dev.railwatch.shared.domain.ReminderOverride?>(null) }
+        if (date.isNotEmpty()) {
+            val draft = Journey(id = "", from = from, to = to, date = date, departure = time, windowDays = model.planner.settings.bookingWindowDays)
+            Text("Booking opens ${shortDay(bookingDay(draft))} at 08:00", style = MaterialTheme.typography.bodyMedium, color = Rw.colors.muted)
+            JourneyReminders(model.planner, draft, reminders, model.today) { reminders = it }
+        }
         PrimaryButton("Save journey", {
-            model.saveJourney(Journey(id = UUID.randomUUID().toString(), from = from, to = to, date = date, departure = time, windowDays = model.planner.settings.bookingWindowDays)); close()
+            model.saveJourney(Journey(id = UUID.randomUUID().toString(), from = from, to = to, date = date, departure = time, windowDays = model.planner.settings.bookingWindowDays, reminderOverride = reminders)); close()
         }, enabled = ok)
     }
 }

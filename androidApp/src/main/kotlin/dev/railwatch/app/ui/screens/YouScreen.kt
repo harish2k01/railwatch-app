@@ -56,6 +56,7 @@ import dev.railwatch.app.ui.theme.Rw
 import dev.railwatch.shared.domain.Journey
 import dev.railwatch.shared.domain.QuietHours
 import dev.railwatch.shared.domain.Rule
+import dev.railwatch.shared.domain.ScheduleRow
 import dev.railwatch.shared.domain.hasTicket
 import dev.railwatch.shared.domain.spendByMonth
 import dev.railwatch.shared.domain.timeOffConflicts
@@ -321,26 +322,47 @@ private fun TimeOffPage(model: AppModel, open: (Journey) -> Unit, info: (String)
 @Composable
 private fun RemindersPage(model: AppModel, ask: (Choice) -> Unit) {
     val s = model.planner.settings; val clock = s.reminderClock
-    val times = (5..23).flatMap { h -> listOf("%02d:00".format(h), "%02d:30".format(h)) }.map { it to it }
+    val times = HALF_HOURS.map { it to it }
+    fun head(t: String) = @Composable { Text(t, style = MaterialTheme.typography.labelSmall, color = Rw.colors.muted, modifier = Modifier.padding(start = 4.dp, top = 20.dp, bottom = 8.dp)) }
+    fun help(t: String) = @Composable { Text(t, style = MaterialTheme.typography.bodyMedium, color = Rw.colors.muted, modifier = Modifier.padding(start = 4.dp, top = 8.dp)) }
     Column {
-        Grouped {
-            listOf("previous_evening" to "Evening before", "morning" to "Morning of", "opening" to "Just before opening").forEachIndexed { i, (key, label) ->
+        // General booking: three simple reminders, or your own schedule of reminders.
+        head("GENERAL BOOKING (OPENS 08:00, ${s.bookingWindowDays} DAYS AHEAD)")()
+        Segmented(listOf(false to "Simple", true to "Own schedule"), s.bookingSchedule != null) { own ->
+            model.setSettings { it.copy(bookingSchedule = if (own) it.bookingSchedule ?: listOf(ScheduleRow(1, it.reminderClock.previous_evening), ScheduleRow(0, it.reminderClock.morning), ScheduleRow(0, it.reminderClock.opening)) else null) }
+        }
+        Spacer(Modifier.size(10.dp))
+        if (s.bookingSchedule == null) Grouped {
+            listOf(Triple("previous_evening", "Evening before", clock.previous_evening), Triple("morning", "Morning of", clock.morning), Triple("opening", "Just before opening", clock.opening)).forEachIndexed { i, (key, label, at) ->
                 if (i > 0) RowDivider()
-                Toggle(label, key in s.reminderTimes) { on -> model.setSettings { it.copy(reminderTimes = if (on) (it.reminderTimes + key).distinct() else it.reminderTimes - key) } }
+                Row(Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(start = 16.dp, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text(label, color = Rw.colors.text, modifier = Modifier.weight(1f))
+                    Text(at, color = Rw.colors.brand, fontWeight = FontWeight.SemiBold, modifier = Modifier.clickable {
+                        ask(Choice(label, times, at) { v -> model.setSettings { it.copy(reminderClock = when (key) { "previous_evening" -> it.reminderClock.copy(previous_evening = v); "morning" -> it.reminderClock.copy(morning = v); else -> it.reminderClock.copy(opening = v) }) } })
+                    }.padding(10.dp))
+                    Switch(key in s.reminderTimes, { on -> model.setSettings { it.copy(reminderTimes = if (on) (it.reminderTimes + key).distinct() else it.reminderTimes - key) } },
+                        colors = SwitchDefaults.colors(checkedTrackColor = Rw.colors.brand, checkedThumbColor = Rw.colors.brandInk))
+                }
             }
-        }
-        Spacer(Modifier.size(16.dp))
-        Grouped {
-            ValueRow("Evening reminder", clock.previous_evening) { ask(Choice("Evening reminder", times, clock.previous_evening) { v -> model.setSettings { it.copy(reminderClock = it.reminderClock.copy(previous_evening = v)) } }) }
-            RowDivider()
-            ValueRow("Morning reminder", clock.morning) { ask(Choice("Morning reminder", times, clock.morning) { v -> model.setSettings { it.copy(reminderClock = it.reminderClock.copy(morning = v)) } }) }
-        }
-        Spacer(Modifier.size(16.dp))
+        } else ScheduleEditor(s.bookingSchedule!!) { rows -> model.setSettings { it.copy(bookingSchedule = rows) } }
+        help("Applies to every trip unless the trip or its routine has its own reminders. Tap a time to change it.")()
+
+        // Tatkal opens the day before travel: 10:00 for AC classes, 11:00 for non-AC.
+        head("TATKAL (AC OPENS 10:00, NON-AC 11:00, THE DAY BEFORE)")()
+        Text("AC classes", style = MaterialTheme.typography.titleMedium, color = Rw.colors.text, modifier = Modifier.padding(start = 4.dp, bottom = 6.dp))
+        ScheduleEditor(dev.railwatch.shared.domain.tatkalSchedule(s, false)) { rows -> model.setSettings { it.copy(tatkalSchedule = rows) } }
+        Text("Non-AC classes", style = MaterialTheme.typography.titleMedium, color = Rw.colors.text, modifier = Modifier.padding(start = 4.dp, top = 12.dp, bottom = 6.dp))
+        ScheduleEditor(dev.railwatch.shared.domain.tatkalSchedule(s, true)) { rows -> model.setSettings { it.copy(tatkalNonAcSchedule = rows) } }
+        if (s.tatkalSchedule != null || s.tatkalNonAcSchedule != null) Text("Reset Tatkal to the defaults", color = Rw.colors.brand, fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.clickable { model.setSettings { it.copy(tatkalSchedule = null, tatkalNonAcSchedule = null) } }.padding(start = 4.dp, top = 10.dp))
+
+        head("AFTER BOOKING")()
         Grouped {
             Toggle("Cancellation follow-up", s.cancellationEnabled) { on -> model.setSettings { it.copy(cancellationEnabled = on) } }
             if (s.cancellationEnabled) { RowDivider(); ValueRow("Follow-up time", s.cancellationTime) { ask(Choice("Follow-up time", times, s.cancellationTime) { v -> model.setSettings { it.copy(cancellationTime = v) } }) } }
         }
-        Spacer(Modifier.size(16.dp))
+        help("When you mark a ticket to cancel, a daily reminder at this time until you mark it cancelled on IRCTC.")()
+        head("QUIET HOURS")()
         val q = s.quietHours ?: QuietHours()
         Grouped {
             Toggle("Quiet hours", q.enabled) { on -> model.setSettings { it.copy(quietHours = q.copy(enabled = on)) } }

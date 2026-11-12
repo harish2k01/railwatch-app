@@ -18,16 +18,27 @@ fun reminderTimes(p: Planner, j: Journey, today: String): List<Instant> {
     val s = p.settings
     if (j.status == JourneyStatus.CancellationNeeded) return if (s.cancellationEnabled) listOf(instant(today, s.cancellationTime)) else emptyList()
     if (j.status != JourneyStatus.NeedsBooking) return emptyList()
-    if (j.bookingType == "tatkal") {
-        val rows = if (j.tatkalClass == "non_ac") s.tatkalNonAcSchedule ?: DEFAULT_TATKAL.map { if (it.daysBefore == 0) it.copy(time = it.time.replace("09:", "10:")) else it } else s.tatkalSchedule ?: DEFAULT_TATKAL
-        return schedule(bookingDay(j), rows)
-    }
-    s.bookingSchedule?.let { return schedule(bookingDay(j), it) }
+    // The journey's own choice wins, then its routine's, then the settings (web effectiveReminders).
+    val routine = p.rules.firstOrNull { it.id == j.ruleId }?.reminderOverride
+    val chosen = j.reminderOverride?.takeIf { it.mode != "inherit" } ?: routine?.takeIf { it.mode != "inherit" }
+    if (chosen?.mode == "off") return emptyList()
     val day = bookingDay(j)
-    return s.reminderTimes.mapNotNull { t ->
-        when (t) { "previous_evening" -> instant(addDays(day, -1), s.reminderClock.previous_evening); "morning" -> instant(day, s.reminderClock.morning); "opening" -> instant(day, s.reminderClock.opening); else -> null }
-    }.distinct().sorted()
+    if (chosen?.mode == "custom") {
+        chosen.schedule?.let { return schedule(day, it) }
+        return byClock(day, chosen.times, chosen.clock)
+    }
+    if (j.bookingType == "tatkal") return schedule(day, tatkalSchedule(s, j.tatkalClass == "non_ac"))
+    s.bookingSchedule?.let { return schedule(day, it) }
+    return byClock(day, s.reminderTimes, s.reminderClock)
 }
+
+/** The Tatkal schedule in use: the saved one, or the default (non-AC opens an hour later, so it shifts by an hour). */
+fun tatkalSchedule(s: Settings, nonAc: Boolean): List<ScheduleRow> =
+    if (nonAc) s.tatkalNonAcSchedule ?: DEFAULT_TATKAL.map { if (it.daysBefore == 0) it.copy(time = it.time.replace("09:", "10:")) else it } else s.tatkalSchedule ?: DEFAULT_TATKAL
+
+private fun byClock(day: String, times: List<String>, clock: ReminderClock) = times.mapNotNull { t ->
+    when (t) { "previous_evening" -> instant(addDays(day, -1), clock.previous_evening); "morning" -> instant(day, clock.morning); "opening" -> instant(day, clock.opening); else -> null }
+}.distinct().sorted()
 
 /** Moves a time inside quiet hours to their end (IST), the same day or the next. */
 fun outsideQuietHours(at: Instant, q: QuietHours?): Instant {

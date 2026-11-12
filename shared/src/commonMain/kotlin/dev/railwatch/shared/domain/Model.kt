@@ -65,6 +65,7 @@ enum class JourneyStatus {
     val cancelledAt: String? = null,
     val archivedAt: String? = null,
     val attachments: List<Attachment>? = null,
+    val reminderOverride: ReminderOverride? = null,
     val pnrStatus: PnrSnapshot? = null,
     val pnrLastAttemptAt: String? = null,
     val pnrLastError: String? = null,
@@ -101,7 +102,14 @@ enum class JourneyStatus {
     val returnDeparture: String = "",
     val returnTrain: String = "",
     val returnOriginOffset: Int = 0,
+    val reminderOverride: ReminderOverride? = null,
 )
+
+/**
+ * A journey's (or routine's) own reminders, as on the web: "inherit" uses the settings, "off" sends none, "custom"
+ * uses its own times (evening / morning / opening at the clock given) or its own schedule rows.
+ */
+@Serializable data class ReminderOverride(val mode: String = "inherit", val times: List<String> = emptyList(), val clock: ReminderClock = ReminderClock(), val schedule: List<ScheduleRow>? = null)
 
 @Serializable data class Holiday(val id: String, val name: String, val date: String, val type: String)
 
