@@ -16,8 +16,8 @@ kotlin {
     jvm { compilerOptions { jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17) } }
     sourceSets {
         commonMain.dependencies {
-            api("org.jetbrains.kotlinx:kotlinx-datetime:0.6.2")
-            api("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.1")
+            api("org.jetbrains.kotlinx:kotlinx-datetime:0.8.0")
+            api("org.jetbrains.kotlinx:kotlinx-serialization-json:1.12.0")
         }
         commonTest.dependencies {
             implementation(kotlin("test"))
