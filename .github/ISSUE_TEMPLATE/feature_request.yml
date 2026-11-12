@@ -1,0 +1,28 @@
+name: Feature request
+description: Suggest an idea for RailWatch
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+      description: Describe the situation, for example "I often forget when Tatkal opens for...".
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: Your idea
+      description: How you'd like it to work.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you've considered
+  - type: checkboxes
+    id: fit
+    attributes:
+      label: Fit with RailWatch
+      options:
+        - label: It works offline, without an account or server, and doesn't need scraping IRCTC or other sites.
