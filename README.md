@@ -81,9 +81,9 @@ Requirements: JDK 17 or newer, and the Android SDK (compile SDK 37).
 Every merge to `main` is released automatically by [`release.yaml`](.github/workflows/release.yaml):
 
 1. **Version.** The merged pull request's label sets the next [semantic version](https://semver.org):
-   - `major`: a breaking change (2.0.0)
-   - `minor`: a new feature (1.3.0)
-   - `patch`: a fix or improvement (1.2.4)
+   - `release: major`: a breaking change (2.0.0)
+   - `release: minor`: a new feature (1.3.0)
+   - `release: patch`: a fix or improvement (1.2.4)
    - `skip-release`: merge without a release, for docs or CI
 
    Every pull request needs exactly one version label, or `skip-release` (which wins over any other); a check

@@ -4,10 +4,10 @@ changelog:
     labels: [skip-release]
   categories:
     - title: Breaking changes
-      labels: [major]
+      labels: ["release: major"]
     - title: New
-      labels: [minor]
+      labels: ["release: minor"]
     - title: Fixes and improvements
-      labels: [patch]
+      labels: ["release: patch"]
     - title: Other changes
       labels: ["*"]
