@@ -29,6 +29,7 @@
   <img src="docs/screenshots/reminders.png" width="200" alt="6. Reminder settings" />
   <img src="docs/screenshots/about.png" width="200" alt="7. About RailWatch" />
 </p>
+
 ## Features
 
 - **Booking windows, worked out for you.** For every trip, RailWatch knows the day and minute booking opens,
