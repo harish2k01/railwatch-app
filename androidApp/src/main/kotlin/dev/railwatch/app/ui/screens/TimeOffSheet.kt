@@ -35,7 +35,7 @@ fun TimeOffSheet(model: AppModel, existing: TimeOffRange?, close: (String) -> Un
     var type by remember { mutableStateOf(existing?.type ?: "leave") }
     val days = daysBetween(start, end) + 1
     Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp).padding(bottom = 28.dp).imePadding(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text(if (existing == null) "Add time off" else "Edit time off", style = MaterialTheme.typography.headlineSmall, color = Rw.colors.text)
+        Text(if (existing == null) "Add Time Off" else "Edit Time Off", style = MaterialTheme.typography.headlineSmall, color = Rw.colors.text)
         Segmented(listOf("leave" to "Leave", "company" to "Holiday"), type) { type = it }
         OutlinedTextField(name, { name = it.take(100) }, label = { Text("Name") }, placeholder = { Text(if (type == "leave") "Leave" else "e.g. Pongal") }, singleLine = true, colors = fieldColors(), modifier = Modifier.fillMaxWidth())
         DateField("From", start, { start = it; if (end < it) end = it })

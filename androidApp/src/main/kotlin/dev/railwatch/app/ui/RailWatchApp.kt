@@ -147,6 +147,6 @@ fun RailWatchApp(shared: List<Uri> = emptyList(), consumeShared: () -> Unit = {}
     }
     ask?.let { (q, run) ->
         AlertDialog(onDismissRequest = { ask = null }, containerColor = Rw.colors.surface, text = { Text(q, color = Rw.colors.text) },
-            confirmButton = { TextButton({ run(); ask = null }) { Text("Yes") } }, dismissButton = { TextButton({ ask = null }) { Text("Not now") } })
+            confirmButton = { TextButton({ run(); ask = null }) { Text("Yes") } }, dismissButton = { TextButton({ ask = null }) { Text("Not Now") } })
     }
 }

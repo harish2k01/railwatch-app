@@ -83,12 +83,12 @@ fun EditJourneySheet(j: Journey, model: AppModel, close: () -> Unit) {
         OutlinedTextField(pnr, { pnr = it.filter(Char::isDigit).take(10) }, label = { Text("PNR (10 digits)") }, singleLine = true, isError = !pnrOk,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.fillMaxWidth(), colors = fieldColors())
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            OutlinedTextField(train, { train = it.filter(Char::isDigit).take(5) }, label = { Text("Train no.") }, singleLine = true,
+            OutlinedTextField(train, { train = it.filter(Char::isDigit).take(5) }, label = { Text("Train No.") }, singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.weight(1f), colors = fieldColors())
             OutlinedTextField(cls, { cls = it.uppercase().take(3) }, label = { Text("Class") }, singleLine = true,
                 keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters), modifier = Modifier.weight(1f), colors = fieldColors())
         }
-        OutlinedTextField(trainName, { trainName = it.take(100) }, label = { Text("Train name") }, singleLine = true, modifier = Modifier.fillMaxWidth(), colors = fieldColors())
+        OutlinedTextField(trainName, { trainName = it.take(100) }, label = { Text("Train Name") }, singleLine = true, modifier = Modifier.fillMaxWidth(), colors = fieldColors())
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             OutlinedTextField(coach, { coach = it.uppercase().take(20) }, label = { Text("Coach") }, singleLine = true,
                 keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters), modifier = Modifier.weight(1f), colors = fieldColors())

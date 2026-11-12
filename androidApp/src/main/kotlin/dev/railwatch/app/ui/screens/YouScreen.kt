@@ -62,7 +62,7 @@ import dev.railwatch.shared.domain.spendByMonth
 import dev.railwatch.shared.domain.timeOffConflicts
 
 private enum class Page(val title: String, val icon: ImageVector) {
-    Routines("Routines", RwIcons.List), TimeOff("Holidays & leave", RwIcons.Calendar), Tickets("Tickets", RwIcons.Ticket),
+    Routines("Routines", RwIcons.List), TimeOff("Holidays & Leave", RwIcons.Calendar), Tickets("Tickets", RwIcons.Ticket),
     Spend("Spend", RwIcons.Ticket), Reminders("Reminders", RwIcons.Bell), Planning("Planning", RwIcons.Clock),
 }
 
@@ -169,7 +169,7 @@ private fun LazyListScope.routines(model: AppModel, editRoutine: (Rule?) -> Unit
                     color = Rw.colors.muted, style = MaterialTheme.typography.bodyMedium)
             }
         }
-        PrimaryButton("New routine", { editRoutine(null) }, Modifier.fillMaxWidth())
+        PrimaryButton("New Routine", { editRoutine(null) }, Modifier.fillMaxWidth())
     }
 }
 
@@ -187,8 +187,8 @@ private fun SpendPage(model: AppModel, open: (Journey) -> Unit) {
     val refunds = paid.sumOf { it.fare!!.refund ?: 0.0 }
     Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            Stat("This year", rupees(year.sumOf(::net)), Modifier.weight(1f))
-            Stat("Per trip", if (year.isEmpty()) "—" else rupees(year.sumOf(::net) / year.size), Modifier.weight(1f))
+            Stat("This Year", rupees(year.sumOf(::net)), Modifier.weight(1f))
+            Stat("Per Trip", if (year.isEmpty()) "—" else rupees(year.sumOf(::net) / year.size), Modifier.weight(1f))
             Stat("Refunds", rupees(refunds), Modifier.weight(1f))
         }
         // Bars for the last 12 months; the chosen month is highlighted.
@@ -282,9 +282,9 @@ private fun TimeOffPage(model: AppModel, open: (Journey) -> Unit, info: (String)
             Spacer(Modifier.size(12.dp))
         }
         Grouped {
-            ListRow("Add time off", "Leave or a holiday, one day or several") { edit(null) }
+            ListRow("Add Time Off", "Leave or a holiday, one day or several") { edit(null) }
             RowDivider()
-            ListRow("Import a calendar", "An .ics file, or a CSV with date,name,type") { pick.launch(arrayOf("text/calendar", "text/csv", "text/comma-separated-values", "text/plain", "application/octet-stream")) }
+            ListRow("Import a Calendar", "An .ics file, or a CSV with date,name,type") { pick.launch(arrayOf("text/calendar", "text/csv", "text/comma-separated-values", "text/plain", "application/octet-stream")) }
         }
         if (weekends.isNotEmpty()) {
             Text("LONG WEEKENDS", style = MaterialTheme.typography.labelSmall, color = Rw.colors.muted, modifier = Modifier.padding(start = 4.dp, top = 20.dp, bottom = 8.dp))
@@ -328,44 +328,33 @@ private fun RemindersPage(model: AppModel, ask: (Choice) -> Unit) {
     Column {
         // General booking: three simple reminders, or your own schedule of reminders.
         head("GENERAL BOOKING (OPENS 08:00, ${s.bookingWindowDays} DAYS AHEAD)")()
-        Segmented(listOf(false to "Simple", true to "Own schedule"), s.bookingSchedule != null) { own ->
-            model.setSettings { it.copy(bookingSchedule = if (own) it.bookingSchedule ?: listOf(ScheduleRow(1, it.reminderClock.previous_evening), ScheduleRow(0, it.reminderClock.morning), ScheduleRow(0, it.reminderClock.opening)) else null) }
-        }
-        Spacer(Modifier.size(10.dp))
-        if (s.bookingSchedule == null) Grouped {
-            listOf(Triple("previous_evening", "Evening before", clock.previous_evening), Triple("morning", "Morning of", clock.morning), Triple("opening", "Just before opening", clock.opening)).forEachIndexed { i, (key, label, at) ->
-                if (i > 0) RowDivider()
-                Row(Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(start = 16.dp, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text(label, color = Rw.colors.text, modifier = Modifier.weight(1f))
-                    Text(at, color = Rw.colors.brand, fontWeight = FontWeight.SemiBold, modifier = Modifier.clickable {
-                        ask(Choice(label, times, at) { v -> model.setSettings { it.copy(reminderClock = when (key) { "previous_evening" -> it.reminderClock.copy(previous_evening = v); "morning" -> it.reminderClock.copy(morning = v); else -> it.reminderClock.copy(opening = v) }) } })
-                    }.padding(10.dp))
-                    Switch(key in s.reminderTimes, { on -> model.setSettings { it.copy(reminderTimes = if (on) (it.reminderTimes + key).distinct() else it.reminderTimes - key) } },
-                        colors = SwitchDefaults.colors(checkedTrackColor = Rw.colors.brand, checkedThumbColor = Rw.colors.brandInk))
-                }
-            }
-        } else ScheduleEditor(s.bookingSchedule!!) { rows -> model.setSettings { it.copy(bookingSchedule = rows) } }
-        help("Applies to every trip unless the trip or its routine has its own reminders. Tap a time to change it.")()
+        // One list of reminders. Settings without a saved list start from the evening / morning / opening times.
+        val rows = s.bookingSchedule ?: listOfNotNull(
+            ScheduleRow(1, clock.previous_evening).takeIf { "previous_evening" in s.reminderTimes },
+            ScheduleRow(0, clock.morning).takeIf { "morning" in s.reminderTimes },
+            ScheduleRow(0, clock.opening).takeIf { "opening" in s.reminderTimes })
+        ScheduleEditor(rows) { r -> model.setSettings { it.copy(bookingSchedule = r) } }
+        help("Applies to every trip unless the trip or its routine has its own reminders. Tap a day or time to change it.")()
 
         // Tatkal opens the day before travel: 10:00 for AC classes, 11:00 for non-AC.
         head("TATKAL (AC OPENS 10:00, NON-AC 11:00, THE DAY BEFORE)")()
-        Text("AC classes", style = MaterialTheme.typography.titleMedium, color = Rw.colors.text, modifier = Modifier.padding(start = 4.dp, bottom = 6.dp))
+        Text("AC Classes", style = MaterialTheme.typography.titleMedium, color = Rw.colors.text, modifier = Modifier.padding(start = 4.dp, bottom = 6.dp))
         ScheduleEditor(dev.railwatch.shared.domain.tatkalSchedule(s, false)) { rows -> model.setSettings { it.copy(tatkalSchedule = rows) } }
-        Text("Non-AC classes", style = MaterialTheme.typography.titleMedium, color = Rw.colors.text, modifier = Modifier.padding(start = 4.dp, top = 12.dp, bottom = 6.dp))
+        Text("Non-AC Classes", style = MaterialTheme.typography.titleMedium, color = Rw.colors.text, modifier = Modifier.padding(start = 4.dp, top = 12.dp, bottom = 6.dp))
         ScheduleEditor(dev.railwatch.shared.domain.tatkalSchedule(s, true)) { rows -> model.setSettings { it.copy(tatkalNonAcSchedule = rows) } }
-        if (s.tatkalSchedule != null || s.tatkalNonAcSchedule != null) Text("Reset Tatkal to the defaults", color = Rw.colors.brand, fontWeight = FontWeight.SemiBold,
+        if (s.tatkalSchedule != null || s.tatkalNonAcSchedule != null) Text("Reset Tatkal to Defaults", color = Rw.colors.brand, fontWeight = FontWeight.SemiBold,
             modifier = Modifier.clickable { model.setSettings { it.copy(tatkalSchedule = null, tatkalNonAcSchedule = null) } }.padding(start = 4.dp, top = 10.dp))
 
         head("AFTER BOOKING")()
         Grouped {
-            Toggle("Cancellation follow-up", s.cancellationEnabled) { on -> model.setSettings { it.copy(cancellationEnabled = on) } }
-            if (s.cancellationEnabled) { RowDivider(); ValueRow("Follow-up time", s.cancellationTime) { ask(Choice("Follow-up time", times, s.cancellationTime) { v -> model.setSettings { it.copy(cancellationTime = v) } }) } }
+            Toggle("Cancellation Follow-Up", s.cancellationEnabled) { on -> model.setSettings { it.copy(cancellationEnabled = on) } }
+            if (s.cancellationEnabled) { RowDivider(); ValueRow("Follow-Up Time", s.cancellationTime) { ask(Choice("Follow-Up Time", times, s.cancellationTime) { v -> model.setSettings { it.copy(cancellationTime = v) } }) } }
         }
         help("When you mark a ticket to cancel, a daily reminder at this time until you mark it cancelled on IRCTC.")()
         head("QUIET HOURS")()
         val q = s.quietHours ?: QuietHours()
         Grouped {
-            Toggle("Quiet hours", q.enabled) { on -> model.setSettings { it.copy(quietHours = q.copy(enabled = on)) } }
+            Toggle("Quiet Hours", q.enabled) { on -> model.setSettings { it.copy(quietHours = q.copy(enabled = on)) } }
             if (q.enabled) {
                 val all = (0..23).map { "%02d:00".format(it) }.map { it to it }
                 RowDivider(); ValueRow("From", q.start) { ask(Choice("Quiet from", all, q.start) { v -> model.setSettings { it.copy(quietHours = q.copy(start = v)) } }) }
@@ -380,18 +369,18 @@ private fun PlanningPage(model: AppModel, ask: (Choice) -> Unit) {
     val s = model.planner.settings
     val keep = s.ticketRetentionDays ?: 7
     Grouped {
-        ValueRow("Plan routines ahead", "${s.routineMonthsAhead} months",
+        ValueRow("Plan Routines Ahead", "${s.routineMonthsAhead} months",
             "Routines create their trips this far ahead, so you see every booking day and get its reminders. IRCTC opens booking ${s.bookingWindowDays} days before travel, so anything past that is just planning.") {
-            ask(Choice("Plan routines ahead", listOf(1, 3, 6, 9, 12).map { "$it" to "$it month${if (it == 1) "" else "s"}" }, "${s.routineMonthsAhead}") { v -> model.setSettings { it.copy(routineMonthsAhead = v.toInt()) } })
+            ask(Choice("Plan Routines Ahead", listOf(1, 3, 6, 9, 12).map { "$it" to "$it month${if (it == 1) "" else "s"}" }, "${s.routineMonthsAhead}") { v -> model.setSettings { it.copy(routineMonthsAhead = v.toInt()) } })
         }
         RowDivider()
-        ValueRow("Keep ticket PDFs", "$keep days after the trip",
+        ValueRow("Keep Ticket PDFs", "$keep days after the trip",
             "Ticket PDFs are deleted this long after the trip to save space. The journey, fare and seat stay.") {
-            ask(Choice("Keep ticket PDFs", listOf(7, 30, 90, 365).map { "$it" to "$it days after the trip" }, "$keep") { v -> model.setSettings { it.copy(ticketRetentionDays = v.toInt()) } })
+            ask(Choice("Keep Ticket PDFs", listOf(7, 30, 90, 365).map { "$it" to "$it days after the trip" }, "$keep") { v -> model.setSettings { it.copy(ticketRetentionDays = v.toInt()) } })
         }
         RowDivider()
-        ValueRow("Week starts on", if (s.weekStartsOn == 1) "Monday" else "Sunday", "The first column of the calendar.") {
-            ask(Choice("Week starts on", listOf("0" to "Sunday", "1" to "Monday"), "${s.weekStartsOn}") { v -> model.setSettings { it.copy(weekStartsOn = v.toInt()) } })
+        ValueRow("Week Starts On", if (s.weekStartsOn == 1) "Monday" else "Sunday", "The first column of the calendar.") {
+            ask(Choice("Week Starts On", listOf("0" to "Sunday", "1" to "Monday"), "${s.weekStartsOn}") { v -> model.setSettings { it.copy(weekStartsOn = v.toInt()) } })
         }
     }
 }

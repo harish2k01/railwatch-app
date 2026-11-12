@@ -65,7 +65,7 @@ fun BookingDaySheet(j: Journey, model: AppModel, close: () -> Unit) {
                 Text("Opens at ${bookingClock(j)} in", color = Rw.colors.openInk)
                 Text(countdown(left), fontSize = 44.sp, fontWeight = FontWeight.Bold, color = Rw.colors.openInk)
             } else {
-                Text("Booking is open", fontSize = 26.sp, fontWeight = FontWeight.Bold, color = Rw.colors.bookedInk)
+                Text("Booking Is Open", fontSize = 26.sp, fontWeight = FontWeight.Bold, color = Rw.colors.bookedInk)
                 Text("Book now, seats go fast", color = Rw.colors.bookedInk)
             }
         }

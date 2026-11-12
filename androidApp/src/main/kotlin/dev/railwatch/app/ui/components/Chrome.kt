@@ -61,7 +61,7 @@ fun FloatingTabBar(selected: Tab, onSelect: (Tab) -> Unit, onNew: () -> Unit, mo
     ) {
         TabItem(Tab.Today, selected, onSelect); TabItem(Tab.Journeys, selected, onSelect)
         Box(Modifier.padding(horizontal = 4.dp).size(54.dp).clip(CircleShape).background(c.brand), contentAlignment = Alignment.Center) {
-            IconButton(onClick = onNew, modifier = Modifier.semantics { contentDescription = "New journey" }) {
+            IconButton(onClick = onNew, modifier = Modifier.semantics { contentDescription = "New Journey" }) {
                 Icon(RwIcons.Plus, contentDescription = null, tint = c.brandInk)
             }
         }

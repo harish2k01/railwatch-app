@@ -35,7 +35,7 @@ object Alarms {
 
     fun channels(context: Context) {
         val nm = context.getSystemService(NotificationManager::class.java)
-        nm.createNotificationChannel(NotificationChannel(BOOKING, "Booking opens", NotificationManager.IMPORTANCE_HIGH).apply { description = "Reminders before IRCTC booking opens for your trips" })
+        nm.createNotificationChannel(NotificationChannel(BOOKING, "Booking Opens", NotificationManager.IMPORTANCE_HIGH).apply { description = "Reminders before IRCTC booking opens for your trips" })
         nm.createNotificationChannel(NotificationChannel(CANCEL, "Cancellations", NotificationManager.IMPORTANCE_DEFAULT).apply { description = "Follow-ups for tickets you marked to cancel" })
     }
 

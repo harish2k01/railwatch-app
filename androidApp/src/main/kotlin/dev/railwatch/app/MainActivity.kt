@@ -19,7 +19,14 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         if (savedInstanceState == null) take(intent)
-        setContent { RailWatchTheme { RailWatchApp(shared = shared.value, consumeShared = { shared.value = emptyList() }, opened = opened.value, consumeOpened = { opened.value = null }) } }
+        // The splash plays on a fresh start (not when the app is brought back or reopened after rotation).
+        val splash = mutableStateOf(savedInstanceState == null)
+        setContent { RailWatchTheme {
+            androidx.compose.foundation.layout.Box {
+                RailWatchApp(shared = shared.value, consumeShared = { shared.value = emptyList() }, opened = opened.value, consumeOpened = { opened.value = null })
+                if (splash.value) dev.railwatch.app.ui.Splash { splash.value = false }
+            }
+        } }
     }
 
     override fun onNewIntent(intent: Intent) { super.onNewIntent(intent); take(intent) }

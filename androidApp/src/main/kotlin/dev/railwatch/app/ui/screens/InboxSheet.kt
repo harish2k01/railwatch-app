@@ -63,6 +63,6 @@ fun InboxSheet(open: (String) -> Unit) {
                 }
             }
         }
-        if (items.isNotEmpty()) Text("Clear all", color = Rw.colors.danger, style = MaterialTheme.typography.titleMedium, modifier = Modifier.clickable { Inbox.clear(context) }.padding(vertical = 8.dp))
+        if (items.isNotEmpty()) Text("Clear All", color = Rw.colors.danger, style = MaterialTheme.typography.titleMedium, modifier = Modifier.clickable { Inbox.clear(context) }.padding(vertical = 8.dp))
     }
 }

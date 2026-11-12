@@ -69,7 +69,7 @@ fun ScheduleEditor(rows: List<ScheduleRow>, change: (List<ScheduleRow>) -> Unit)
                 Icon(RwIcons.Close, "Remove this reminder", tint = Rw.colors.muted, modifier = Modifier.size(44.dp).clickable { change(rows.filterIndexed { k, _ -> k != i }) }.padding(12.dp))
             }
         }
-        if (rows.size < 6) Text("+ Add a reminder", color = Rw.colors.brand, fontWeight = FontWeight.SemiBold,
+        if (rows.size < 6) Text("+ Add a Reminder", color = Rw.colors.brand, fontWeight = FontWeight.SemiBold,
             modifier = Modifier.clip(RoundedCornerShape(10.dp)).clickable { change(rows + ScheduleRow(0, "07:00")) }.padding(vertical = 10.dp, horizontal = 4.dp))
     }
     editing?.let { (i, what) ->
@@ -84,8 +84,8 @@ fun ScheduleEditor(rows: List<ScheduleRow>, change: (List<ScheduleRow>) -> Unit)
 fun JourneyReminders(p: Planner, j: Journey, value: ReminderOverride?, today: String, change: (ReminderOverride?) -> Unit) {
     val mode = value?.mode ?: "inherit"
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Text("Booking reminders", style = MaterialTheme.typography.titleMedium, color = Rw.colors.text)
-        Segmented(listOf("inherit" to "As in settings", "custom" to "Custom", "off" to "Off"), mode) { m ->
+        Text("Booking Reminders", style = MaterialTheme.typography.titleMedium, color = Rw.colors.text)
+        Segmented(listOf("inherit" to "As in Settings", "custom" to "Custom", "off" to "Off"), mode) { m ->
             change(when (m) {
                 "inherit" -> null
                 "off" -> ReminderOverride("off")

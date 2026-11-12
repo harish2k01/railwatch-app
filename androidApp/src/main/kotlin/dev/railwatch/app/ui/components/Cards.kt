@@ -49,7 +49,7 @@ import androidx.compose.ui.unit.sp
 import dev.railwatch.app.ui.theme.Rw
 import kotlin.math.roundToInt
 
-/** Section heading with an optional action on the right ("Do next · See all"). */
+/** Section heading with an optional action on the right ("Do Next · See all"). */
 @Composable
 fun SectionHead(title: String, action: String? = null, onAction: () -> Unit = {}) {
     Row(Modifier.fillMaxWidth().padding(top = 22.dp, bottom = 10.dp), verticalAlignment = Alignment.CenterVertically) {

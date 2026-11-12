@@ -76,7 +76,7 @@ fun TicketsScreen(model: AppModel, open: (Journey) -> Unit, contentPadding: Padd
         item { header() }
         if (list.isEmpty()) item {
             Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(22.dp)).background(Rw.colors.surface).padding(20.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text("No tickets yet", style = MaterialTheme.typography.headlineSmall, color = Rw.colors.text)
+                Text("No Tickets Yet", style = MaterialTheme.typography.headlineSmall, color = Rw.colors.text)
                 Text("Open the IRCTC ticket PDF in Gmail or Files, tap Share and choose RailWatch.", style = MaterialTheme.typography.bodyLarge, color = Rw.colors.muted)
             }
         }
@@ -100,7 +100,7 @@ fun ImportSheet(model: AppModel, uris: List<android.net.Uri>, close: (String) ->
         rows = read; rejected = bad
     }
     Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp).padding(bottom = 28.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text(if (uris.size == 1) "Add ticket" else "Add ${uris.size} tickets", style = MaterialTheme.typography.headlineSmall, color = Rw.colors.text)
+        Text(if (uris.size == 1) "Add Ticket" else "Add ${uris.size} tickets", style = MaterialTheme.typography.headlineSmall, color = Rw.colors.text)
         val list = rows
         if (list == null) Row(verticalAlignment = Alignment.CenterVertically) { CircularProgressIndicator(color = Rw.colors.brand, modifier = Modifier.padding(end = 12.dp)); Text(progress, color = Rw.colors.text) }
         else {
@@ -125,7 +125,7 @@ private fun ImportCard(r: ImportRow, model: AppModel, choose: (String?) -> Unit)
             style = MaterialTheme.typography.bodyMedium, color = Rw.colors.muted)
         val options: List<Pair<String?, String>> = when (val m = r.match) {
             is TicketMatch.Matched -> listOf<Pair<String?, String>>(m.journey.id to "Attach to ${m.journey.from} → ${m.journey.to}", null to "Skip")
-            is TicketMatch.Check -> m.candidates.map { it.id to "${it.from} → ${it.to}" } + listOfNotNull(("create" to "New journey").takeIf { d.date != null && d.from != null && d.to != null }, null to "Skip")
+            is TicketMatch.Check -> m.candidates.map { it.id to "${it.from} → ${it.to}" } + listOfNotNull(("create" to "New Journey").takeIf { d.date != null && d.from != null && d.to != null }, null to "Skip")
             TicketMatch.Create -> listOfNotNull(("create" to "New booked journey").takeIf { d.date != null && d.from != null && d.to != null }, null to "Skip")
         }
         if (r.match is TicketMatch.Check) Text((r.match as TicketMatch.Check).reason, style = MaterialTheme.typography.bodyMedium, color = Rw.colors.attentionInk)
@@ -162,7 +162,7 @@ fun TicketPass(j: Journey, file: Attachment, model: AppModel, openPdf: () -> Uni
                 val times = dev.railwatch.shared.domain.tripTimes(j)
                 if (times.depart != null) Row(verticalAlignment = Alignment.Bottom) {
                     DateTime(times.departDate, times.depart, ink, Alignment.Start, Modifier.weight(1f))
-                    times.span?.let { Text(it, style = MaterialTheme.typography.labelMedium, color = muted, modifier = Modifier.padding(bottom = 4.dp)) }
+                    TripSpan(times.span, ink, Modifier.padding(bottom = 2.dp))
                     if (times.arrive != null) DateTime(times.arriveDate!!, times.arrive, ink, Alignment.End, Modifier.weight(1f))
                 }
             }

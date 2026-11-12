@@ -151,3 +151,9 @@ checks, release APK; Play Store listing optional.
 - **PNR enquiry** may change or block clients. Mitigation: official-page fallback, failures logged on device.
 - **Station list freshness** without a server: the list ships with each app release.
 - **iOS** needs a Mac and an Apple developer account ($99/year) when we get there.
+
+### Follow-ups, 12 Nov evening
+
+- Trip length shown larger over a dashed arrow; reminders are one editable list (the separate Simple mode is gone); Title Case for headings, buttons and labels; splash animation on launch (track stem, R, name, circle reveal). Done.
+- Logo: R-with-track monogram options (R1-R4) on the design canvas, waiting for a pick; the splash already draws R1.
+

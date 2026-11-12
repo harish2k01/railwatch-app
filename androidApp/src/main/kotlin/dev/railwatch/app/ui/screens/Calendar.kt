@@ -102,7 +102,7 @@ fun CalendarView(model: AppModel, open: (Journey) -> Unit) {
             }
         }
         Row(Modifier.padding(top = 8.dp, start = 4.dp), horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.CenterVertically) {
-            Legend(c.brand, "Travel"); Legend(c.open, "Booking opens"); Legend(c.timeoffBg, "Time off")
+            Legend(c.brand, "Travel"); Legend(c.open, "Booking Opens"); Legend(c.timeoffBg, "Time Off")
         }
         Text(longDay(picked), style = MaterialTheme.typography.titleMedium, color = c.text, modifier = Modifier.padding(top = 20.dp, bottom = 8.dp, start = 4.dp))
         val trips = travel[picked].orEmpty(); val booking = opens[picked].orEmpty(); val dayOff = off[picked]

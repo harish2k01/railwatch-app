@@ -127,12 +127,12 @@ fun PnrSheet(j: Journey, model: AppModel, confirm: (String, () -> Unit) -> Unit,
             if (pic != null) Image(pic.asImageBitmap(), "CAPTCHA picture", contentScale = ContentScale.Fit, filterQuality = FilterQuality.None, modifier = Modifier.fillMaxWidth().height(90.dp).padding(8.dp))
             else if (loading) CircularProgressIndicator(color = Rw.colors.brand)
         }
-        Text("New picture", color = Rw.colors.brand, fontWeight = FontWeight.SemiBold, modifier = Modifier.clickable(enabled = !loading) { error = null; round++ }.padding(vertical = 4.dp))
+        Text("New Picture", color = Rw.colors.brand, fontWeight = FontWeight.SemiBold, modifier = Modifier.clickable(enabled = !loading) { error = null; round++ }.padding(vertical = 4.dp))
         OutlinedTextField(answer, { answer = it.take(12) }, label = { Text("Answer") }, singleLine = true, colors = fieldColors(), modifier = Modifier.fillMaxWidth(),
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Go, autoCorrectEnabled = false, keyboardType = androidx.compose.ui.text.input.KeyboardType.Number), keyboardActions = KeyboardActions(onGo = { submit() }))
         error?.let { Text(it, color = Rw.colors.danger) }
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            PrimaryButton(if (loading && picture != null) "Checking…" else "Check status", submit, Modifier.weight(1f), enabled = answer.isNotBlank() && !loading && picture != null)
+            PrimaryButton(if (loading && picture != null) "Checking…" else "Check Status", submit, Modifier.weight(1f), enabled = answer.isNotBlank() && !loading && picture != null)
             SecondaryButton("Cancel", close)
         }
     }

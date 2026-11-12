@@ -35,7 +35,7 @@ fun AddSheet(journey: () -> Unit, routine: () -> Unit, timeOff: () -> Unit, tick
         Option(RwIcons.Ticket, "Ticket", "Pick IRCTC PDFs. Details are read and each is linked to its journey, or a journey is created for it.") { pick.launch(arrayOf("application/pdf")) }
         Option(RwIcons.Calendar, "Journey", "A one-off trip to plan and get booking reminders for", journey)
         Option(RwIcons.List, "Routine", "A trip you make regularly, planned months ahead", routine)
-        Option(RwIcons.Clock, "Holiday or leave", "Days off; trips on them are flagged and long weekends shown", timeOff)
+        Option(RwIcons.Clock, "Holiday or Leave", "Days off; trips on them are flagged and long weekends shown", timeOff)
     }
 }
 
