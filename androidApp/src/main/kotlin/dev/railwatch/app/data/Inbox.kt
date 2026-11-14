@@ -15,7 +15,7 @@ object Inbox {
     fun items(c: Context): List<InboxItem> = runCatching { json.decodeFromString<List<InboxItem>>(prefs(c).getString("items", "[]")!!) }.getOrDefault(emptyList())
 
     fun add(c: Context, title: String, body: String, journeyId: String? = null) {
-        val item = InboxItem(java.util.UUID.randomUUID().toString(), kotlinx.datetime.Clock.System.now().toString(), title, body, journeyId)
+        val item = InboxItem(java.util.UUID.randomUUID().toString(), kotlin.time.Clock.System.now().toString(), title, body, journeyId)
         save(c, (listOf(item) + items(c)).take(100))
     }
 

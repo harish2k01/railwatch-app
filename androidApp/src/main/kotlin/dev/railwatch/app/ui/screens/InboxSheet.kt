@@ -29,7 +29,7 @@ import androidx.compose.ui.unit.sp
 import dev.railwatch.app.data.Inbox
 import dev.railwatch.app.ui.components.RwIcons
 import dev.railwatch.app.ui.theme.Rw
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import kotlinx.datetime.toLocalDateTime
 
 /** The bell on Today, with a dot and count when something new arrived. */
