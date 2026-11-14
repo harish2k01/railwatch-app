@@ -22,7 +22,7 @@ import dev.railwatch.shared.domain.effectiveTicketStatus
 import dev.railwatch.shared.domain.widgetFocus
 import dev.railwatch.shared.domain.widgetNextChange
 import dev.railwatch.shared.todayIst
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -64,9 +64,9 @@ object Widget {
     }
 
     private val clock = DateTimeFormatter.ofPattern("HH:mm", Locale.forLanguageTag("en-IN"))
-    private fun timeIst(at: kotlinx.datetime.Instant) = java.time.Instant.ofEpochMilli(at.toEpochMilliseconds()).atZone(java.time.ZoneId.of("Asia/Kolkata"))
+    private fun timeIst(at: kotlin.time.Instant) = java.time.Instant.ofEpochMilli(at.toEpochMilliseconds()).atZone(java.time.ZoneId.of("Asia/Kolkata"))
     /** "in 7h 05m", "in 25m" until an instant. */
-    private fun until(at: kotlinx.datetime.Instant): String {
+    private fun until(at: kotlin.time.Instant): String {
         val m = ((at.toEpochMilliseconds() - System.currentTimeMillis()) / 60_000).coerceAtLeast(0)
         return if (m >= 60) "in ${m / 60}h ${"%02d".format(m % 60)}m" else "in ${m}m"
     }

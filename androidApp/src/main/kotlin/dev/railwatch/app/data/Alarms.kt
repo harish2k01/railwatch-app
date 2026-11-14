@@ -73,7 +73,7 @@ object Alarms {
         val prefs = context.getSharedPreferences("alarms", Context.MODE_PRIVATE)
         prefs.getStringSet("keys", emptySet())!!.forEach { am.cancel(pending(context, it, null)) }
         val planner = AndroidPlannerFiles(context).read()?.let { runCatching { PlannerCodec.decode(it) }.getOrNull() } ?: return
-        val next = upcomingReminders(planner, todayIst().toString(), kotlinx.datetime.Clock.System.now()).take(MAX)
+        val next = upcomingReminders(planner, todayIst().toString(), kotlin.time.Clock.System.now()).take(MAX)
         for (r in next) {
             val pi = pending(context, r.key, r)
             val at = r.at.toEpochMilliseconds()

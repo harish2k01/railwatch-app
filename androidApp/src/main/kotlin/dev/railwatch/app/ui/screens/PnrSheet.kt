@@ -81,7 +81,7 @@ fun PnrSheet(j: Journey, model: AppModel, confirm: (String, () -> Unit) -> Unit,
                     else model.saveJourney(updated)
                 }
                 PnrClient.Result.WrongAnswer -> { error = "That answer didn't match. Try the new picture."; round++ }
-                is PnrClient.Result.Failed -> { error = r.message; model.saveJourney(j.copy(pnrLastAttemptAt = kotlinx.datetime.Clock.System.now().toString(), pnrLastError = r.message)) }
+                is PnrClient.Result.Failed -> { error = r.message; model.saveJourney(j.copy(pnrLastAttemptAt = kotlin.time.Clock.System.now().toString(), pnrLastError = r.message)) }
             }
             loading = false
         }

@@ -52,7 +52,7 @@ class PnrClient {
         when {
             message.contains("captcha", true) -> Result.WrongAnswer
             message.isNotEmpty() -> Result.Failed("Indian Railways couldn't return this PNR right now. Your last status is unchanged.")
-            else -> runCatching { Result.Ok(parsePnrStatus(data, pnr, kotlinx.datetime.Clock.System.now())) }.getOrElse { Result.Failed("Indian Railways returned a status RailWatch couldn't read.") }
+            else -> runCatching { Result.Ok(parsePnrStatus(data, pnr, kotlin.time.Clock.System.now())) }.getOrElse { Result.Failed("Indian Railways returned a status RailWatch couldn't read.") }
         }
     }
 

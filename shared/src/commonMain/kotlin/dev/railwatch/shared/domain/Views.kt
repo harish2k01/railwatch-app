@@ -1,6 +1,6 @@
 package dev.railwatch.shared.domain
 
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 
 /** What the Today and Journeys screens show, worked out from the planner (shared so iOS gets the same answers). */
 
@@ -31,7 +31,7 @@ fun nextTrip(p: Planner, today: String): Journey? = upcoming(p, today).let { lis
 fun hasTicket(j: Journey) = j.attachments.orEmpty().any { it.type == "application/pdf" }
 
 /** Today's Do next cards, most urgent first, at most [limit]. */
-fun doNext(p: Planner, today: String, limit: Int = 6, now: Instant = kotlinx.datetime.Clock.System.now()): List<DoNext> {
+fun doNext(p: Planner, today: String, limit: Int = 6, now: Instant = kotlin.time.Clock.System.now()): List<DoNext> {
     val list = upcoming(p, today)
     val cancel = list.filter { it.status == JourneyStatus.CancellationNeeded }.map { DoNext.ConfirmCancel(it) }
     // Open only once the opening minute has passed (08:00, or 10:00 / 11:00 for Tatkal), not from midnight.

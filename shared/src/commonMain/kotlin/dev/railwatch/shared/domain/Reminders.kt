@@ -1,6 +1,6 @@
 package dev.railwatch.shared.domain
 
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import kotlinx.datetime.toLocalDateTime
 
 /** One reminder to deliver on the phone. */

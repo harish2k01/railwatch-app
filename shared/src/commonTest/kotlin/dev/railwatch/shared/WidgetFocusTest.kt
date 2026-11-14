@@ -7,7 +7,7 @@ import dev.railwatch.shared.domain.Planner
 import dev.railwatch.shared.domain.WidgetFocus
 import dev.railwatch.shared.domain.doNext
 import dev.railwatch.shared.domain.widgetFocus
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
