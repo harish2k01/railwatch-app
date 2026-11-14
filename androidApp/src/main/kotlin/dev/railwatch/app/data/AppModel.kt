@@ -72,6 +72,12 @@ class AppModel(context: Context) {
     fun deleteJourney(j: Journey) = update { p -> p.copy(journeys = p.journeys.filter { it.id != j.id }) }
     fun saveRoutine(rule: Rule) = update { saveRule(it, rule, today) }
     fun deleteRoutine(id: String) = update { removeRule(it, id, today) }
+    /** A new booking window: saved, and applied to routines and every trip not booked yet (booked ones keep theirs). */
+    fun setBookingWindow(days: Int) = update { p ->
+        p.copy(settings = p.settings.copy(bookingWindowDays = days),
+            rules = p.rules.map { it.copy(windowDays = days) },
+            journeys = p.journeys.map { if (it.status == JourneyStatus.NeedsBooking) it.copy(windowDays = days) else it })
+    }
     fun setSettings(change: (dev.railwatch.shared.domain.Settings) -> dev.railwatch.shared.domain.Settings) = update { p -> p.copy(settings = change(p.settings)) }
 
     /** Imports time off from an .ics or date,name,type .csv file; returns a message for the person. */

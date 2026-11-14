@@ -63,47 +63,81 @@ object Widget {
         planner?.let { widgetNextChange(it, today, now) }?.let { am.set(AlarmManager.RTC, it.toEpochMilliseconds(), tick) }
     }
 
+    private val clock = DateTimeFormatter.ofPattern("HH:mm", Locale.forLanguageTag("en-IN"))
+    private fun timeIst(at: kotlinx.datetime.Instant) = java.time.Instant.ofEpochMilli(at.toEpochMilliseconds()).atZone(java.time.ZoneId.of("Asia/Kolkata"))
+    /** "in 7h 05m", "in 25m" until an instant. */
+    private fun until(at: kotlinx.datetime.Instant): String {
+        val m = ((at.toEpochMilliseconds() - System.currentTimeMillis()) / 60_000).coerceAtLeast(0)
+        return if (m >= 60) "in ${m / 60}h ${"%02d".format(m % 60)}m" else "in ${m}m"
+    }
+    /** Date, departure and train, skipping what isn't known. */
+    private fun details(j: Journey) = listOfNotNull(d(j.date), j.departure.ifBlank { null }, (j.trainName ?: j.train).ifBlank { null }).joinToString(" · ")
+
     private fun views(context: Context, focus: WidgetFocus, next: Journey?, small: Boolean): RemoteViews {
         val v = RemoteViews(context.packageName, R.layout.widget)
-        var brand = false; var journey: Journey? = null
+        var brand = false; var journey: Journey? = null; var chip: String? = null; var chipStyle = R.drawable.widget_chip_dark
         v.setViewVisibility(R.id.countdown, View.GONE); v.setViewVisibility(R.id.headline, View.VISIBLE)
         when (focus) {
             is WidgetFocus.Opening -> {
-                brand = true; journey = focus.journey
-                val j = focus.journey
-                v.setTextViewText(R.id.label, if (j.bookingType == "tatkal") "Tatkal opens in" else "Booking opens in")
+                brand = true; journey = focus.journey; val j = focus.journey
+                v.setTextViewText(R.id.label, "${if (j.bookingType == "tatkal") "Tatkal" else "Booking"} opens ${timeIst(focus.at).format(clock)}")
                 v.setViewVisibility(R.id.headline, View.GONE); v.setViewVisibility(R.id.countdown, View.VISIBLE)
-                val left = focus.at.toEpochMilliseconds() - System.currentTimeMillis()
-                v.setChronometer(R.id.countdown, SystemClock.elapsedRealtime() + left, null, true)
-                v.setTextViewText(R.id.sub, "${bookingClock(j)} · ${d(j.date)} · ${route(j)}")
+                v.setChronometer(R.id.countdown, SystemClock.elapsedRealtime() + (focus.at.toEpochMilliseconds() - System.currentTimeMillis()), null, true)
+                v.setTextViewText(R.id.sub, "${route(j)} · ${d(j.date)}")
+                chip = "Get ready"
             }
             is WidgetFocus.Travelling -> {
                 journey = focus.journey; val j = focus.journey
-                v.setTextViewText(R.id.label, "Today · departs ${j.departure}")
+                v.setTextViewText(R.id.label, "Travelling today")
                 v.setTextViewText(R.id.headline, route(j))
-                v.setTextViewText(R.id.sub, listOfNotNull(effectiveTicketStatus(j) ?: j.currentStatus, j.trainName ?: j.train.ifBlank { null }).joinToString(" · "))
+                v.setTextViewText(R.id.sub, listOfNotNull("Departs ${j.departure}", listOfNotNull(j.coach, j.seat ?: j.berth).joinToString(" ").ifBlank { null }).joinToString(" · "))
+                chip = effectiveTicketStatus(j) ?: j.currentStatus; chipStyle = R.drawable.widget_chip_green
             }
             is WidgetFocus.Book -> {
                 brand = true; journey = focus.journey; val j = focus.journey
-                v.setTextViewText(R.id.label, if (focus.count > 1) "Book now · ${focus.count} trips open" else "Book now · window open")
-                v.setTextViewText(R.id.headline, if (small) d(j.date) else "${d(j.date)} · ${route(j)}")
-                v.setTextViewText(R.id.sub, if (small) route(j) else "Not booked yet${j.trainName?.let { " · $it" } ?: ""}")
+                v.setTextViewText(R.id.label, "Booking is open")
+                v.setTextViewText(R.id.headline, route(j))
+                v.setTextViewText(R.id.sub, "${details(j)} · not booked yet")
+                chip = if (focus.count > 1) "${focus.count} to book" else "Book now"
+            }
+            is WidgetFocus.OpensSoon -> {
+                journey = focus.journey; val j = focus.journey
+                val today = todayIst().toString(); val day = timeIst(focus.at).toLocalDate().toString()
+                v.setTextViewText(R.id.label, "Booking opens ${if (day == today) "today" else "tomorrow"} ${timeIst(focus.at).format(clock)}")
+                v.setTextViewText(R.id.headline, route(j))
+                v.setTextViewText(R.id.sub, details(j))
+                chip = until(focus.at)
             }
             is WidgetFocus.AllSet -> {
-                journey = focus.nextTrip
-                v.setTextViewText(R.id.label, "All set")
-                v.setTextViewText(R.id.headline, focus.nextTrip?.let { if (small) d(it.date) else "Next: ${d(it.date)} · ${route(it)}" } ?: "No trips planned")
-                v.setTextViewText(R.id.sub, focus.nextBookingDay?.let { "Next booking day ${d(it)}" } ?: "Tap + in RailWatch to add one")
+                journey = focus.nextTrip; val j = focus.nextTrip
+                v.setTextViewText(R.id.label, if (j == null) "RailWatch" else "Next trip")
+                v.setTextViewText(R.id.headline, j?.let { route(it) } ?: "No trips planned")
+                v.setTextViewText(R.id.sub, j?.let { details(it) } ?: "Tap + in RailWatch to add one")
+                chip = j?.let { effectiveTicketStatus(it) ?: if (it.status == dev.railwatch.shared.domain.JourneyStatus.Booked) "Booked" else null }
+                if (j?.status == dev.railwatch.shared.domain.JourneyStatus.Booked) chipStyle = R.drawable.widget_chip_green
             }
         }
-        // The next trip under the focus, unless the focus is already that trip (or there's no room).
-        val showNext = !small && next != null && next.id != journey?.id && focus !is WidgetFocus.AllSet
-        v.setViewVisibility(R.id.next, if (showNext) View.VISIBLE else View.GONE)
-        if (showNext) v.setTextViewText(R.id.next, "Next trip ${d(next!!.date)} · ${route(next)} · ${next.departure}")
+        if (brand) chipStyle = R.drawable.widget_chip_light
+        v.setViewVisibility(R.id.chip, if (chip.isNullOrBlank()) View.GONE else View.VISIBLE)
+        chip?.let { v.setTextViewText(R.id.chip, it) }
+        v.setInt(R.id.chip, "setBackgroundResource", chipStyle)
+        v.setTextColor(R.id.chip, when (chipStyle) { R.drawable.widget_chip_green -> 0xFF86EFAC.toInt(); R.drawable.widget_chip_light -> 0xFFFFFFFF.toInt(); else -> 0xFFC7C8FC.toInt() })
+        // The bottom line: the next trip, unless the card is already about it; else the next booking day when all set.
+        val bottom = when {
+            small -> null
+            focus is WidgetFocus.AllSet -> focus.nextBookingDay?.let { "Next booking day: ${d(it)}" }
+            next != null && next.id != journey?.id -> "Next trip: ${d(next.date)} · ${route(next)} · ${next.departure}"
+            else -> null
+        }
+        v.setViewVisibility(R.id.next, if (bottom == null) View.GONE else View.VISIBLE)
+        v.setViewVisibility(R.id.divider, if (bottom == null) View.GONE else View.VISIBLE)
+        bottom?.let { v.setTextViewText(R.id.next, it) }
         v.setInt(R.id.root, "setBackgroundResource", if (brand) R.drawable.widget_brand else R.drawable.widget_surface)
+        v.setInt(R.id.logo, "setColorFilter", if (brand) 0xFFFFFFFF.toInt() else 0xFFA5A6FA.toInt())
         v.setTextColor(R.id.label, if (brand) 0xFFE3E3FF.toInt() else 0xFFA5A6FA.toInt())
         v.setTextColor(R.id.sub, if (brand) 0xFFE3E3FF.toInt() else 0xFFB3BAC6.toInt())
         v.setTextColor(R.id.next, if (brand) 0xFFFFFFFF.toInt() else 0xFFC9CED8.toInt())
+        v.setInt(R.id.divider, "setBackgroundColor", if (brand) 0x40FFFFFF else 0xFF232B38.toInt())
         val open = Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
         journey?.let { open.putExtra("journey", it.id) }
         v.setOnClickPendingIntent(R.id.root, PendingIntent.getActivity(context, 9 + (if (small) 1 else 0), open, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE))

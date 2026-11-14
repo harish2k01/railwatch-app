@@ -31,14 +31,15 @@ fun nextTrip(p: Planner, today: String): Journey? = upcoming(p, today).let { lis
 fun hasTicket(j: Journey) = j.attachments.orEmpty().any { it.type == "application/pdf" }
 
 /** Today's Do next cards, most urgent first, at most [limit]. */
-fun doNext(p: Planner, today: String, limit: Int = 6): List<DoNext> {
+fun doNext(p: Planner, today: String, limit: Int = 6, now: Instant = kotlinx.datetime.Clock.System.now()): List<DoNext> {
     val list = upcoming(p, today)
     val cancel = list.filter { it.status == JourneyStatus.CancellationNeeded }.map { DoNext.ConfirmCancel(it) }
-    val open = list.filter { it.status == JourneyStatus.NeedsBooking && bookingDay(it) <= today }
+    // Open only once the opening minute has passed (08:00, or 10:00 / 11:00 for Tatkal), not from midnight.
+    val open = list.filter { it.status == JourneyStatus.NeedsBooking && bookingInstant(it) <= now }
     // With a 60-day window most planned trips are open at once: more than two become one card.
     val book = if (open.size > 2) listOf(DoNext.BookMany(open.first(), open.size)) else open.map { DoNext.BookNow(it) }
     val ticket = list.filter { it.status == JourneyStatus.Booked && !hasTicket(it) }.take(1).map { DoNext.NeedsTicket(it) }
-    val soon = list.filter { it.status == JourneyStatus.NeedsBooking && bookingDay(it) > today && daysBetween(today, bookingDay(it)) <= 7 }
+    val soon = list.filter { it.status == JourneyStatus.NeedsBooking && bookingInstant(it) > now && daysBetween(today, bookingDay(it)) <= 7 }
         .sortedBy { bookingDay(it) }.map { DoNext.OpensSoon(it, bookingDay(it)) }
     return (cancel + book + ticket + soon).take(limit)
 }
@@ -72,28 +73,31 @@ fun byMonth(list: List<Journey>): List<Pair<String, List<Journey>>> =
 
 /** What the home-screen widget leads with: the most urgent thing to do, else the next dates. */
 sealed interface WidgetFocus {
-    /** A booking window opens within the hour (general or Tatkal). */
+    /** A booking window opens within the hour (general or Tatkal): a live countdown. */
     data class Opening(val journey: Journey, val at: Instant) : WidgetFocus
     /** A booked trip departs today. */
     data class Travelling(val journey: Journey) : WidgetFocus
-    /** Windows are open on trips not booked yet. */
+    /** Windows are open (the opening minute has passed) on trips not booked yet. */
     data class Book(val journey: Journey, val count: Int) : WidgetFocus
+    /** A window opens later today or tomorrow. */
+    data class OpensSoon(val journey: Journey, val at: Instant) : WidgetFocus
     /** Nothing pressing. */
     data class AllSet(val nextTrip: Journey?, val nextBookingDay: String?) : WidgetFocus
 }
 
 fun widgetFocus(p: Planner, today: String, now: Instant): WidgetFocus {
     val list = upcoming(p, today)
-    val waiting = list.filter { it.status == JourneyStatus.NeedsBooking }
-    waiting.map { it to bookingInstant(it) }.filter { it.second > now && it.second - now <= kotlin.time.Duration.parse("1h") }
-        .minByOrNull { it.second }?.let { return WidgetFocus.Opening(it.first, it.second) }
+    val waiting = list.filter { it.status == JourneyStatus.NeedsBooking }.map { it to bookingInstant(it) }
+    val ahead = waiting.filter { it.second > now }.minByOrNull { it.second }
+    ahead?.takeIf { it.second - now <= kotlin.time.Duration.parse("1h") }?.let { return WidgetFocus.Opening(it.first, it.second) }
     list.firstOrNull { it.status == JourneyStatus.Booked && it.date == today }?.let { return WidgetFocus.Travelling(it) }
-    val open = waiting.filter { bookingDay(it) <= today }
+    val open = waiting.filter { it.second <= now }.map { it.first }
     if (open.isNotEmpty()) return WidgetFocus.Book(open.first(), open.size)
-    return WidgetFocus.AllSet(nextTrip(p, today), waiting.map { bookingDay(it) }.filter { it > today }.minOrNull())
+    ahead?.takeIf { it.second - now <= kotlin.time.Duration.parse("36h") }?.let { return WidgetFocus.OpensSoon(it.first, it.second) }
+    return WidgetFocus.AllSet(nextTrip(p, today), ahead?.let { bookingDay(it.first) })
 }
 
 /** When the widget's focus can next change on its own: an hour before, and at, each upcoming window opening. */
 fun widgetNextChange(p: Planner, today: String, now: Instant): Instant? =
     upcoming(p, today).filter { it.status == JourneyStatus.NeedsBooking }.map { bookingInstant(it) }
-        .flatMap { listOf(it - kotlin.time.Duration.parse("1h"), it) }.filter { it > now }.minOrNull()
+        .flatMap { listOf(it - kotlin.time.Duration.parse("36h"), it - kotlin.time.Duration.parse("1h"), it) }.filter { it > now }.minOrNull()

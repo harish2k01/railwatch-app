@@ -213,7 +213,7 @@ private fun DoCard(c: DoNext, onClick: () -> Unit) {
     val (bg, ink, icon, title, line) = when (c) {
         is DoNext.BookNow -> Quint(Rw.colors.attentionBg, Rw.colors.attentionInk, RwIcons.Ticket, "Book Now", "Booking window is open")
         is DoNext.BookMany -> Quint(Rw.colors.attentionBg, Rw.colors.attentionInk, RwIcons.Ticket, "${c.count} trips to book", "Booking Is Open · soonest")
-        is DoNext.OpensSoon -> Quint(Rw.colors.openBg, Rw.colors.openInk, RwIcons.Clock, "Booking Opens", shortDay(c.opens) + " · 08:00")
+        is DoNext.OpensSoon -> Quint(Rw.colors.openBg, Rw.colors.openInk, RwIcons.Clock, if (c.journey.bookingType == "tatkal") "Tatkal Opens" else "Booking Opens", shortDay(c.opens) + " · " + dev.railwatch.shared.domain.bookingClock(c.journey))
         is DoNext.ConfirmCancel -> Quint(Rw.colors.cancelBg, Rw.colors.cancelInk, RwIcons.Close, "Confirm cancellation", "Cancelled on IRCTC?")
         is DoNext.NeedsTicket -> Quint(Rw.colors.attentionBg, Rw.colors.attentionInk, RwIcons.Ticket, "Share the Ticket", "Then it’s one tap away")
     }

@@ -64,6 +64,9 @@ import dev.railwatch.shared.domain.timeOffConflicts
 private enum class Page(val title: String, val icon: ImageVector) {
     Routines("Routines", RwIcons.List), TimeOff("Holidays & Leave", RwIcons.Calendar), Tickets("Tickets", RwIcons.Ticket),
     Spend("Spend", RwIcons.Ticket), Reminders("Reminders", RwIcons.Bell), Planning("Planning", RwIcons.Clock), Backup("Backup & Restore", RwIcons.Ticket), PhoneCal("Phone Calendar", RwIcons.Calendar), Help("Help & Tour", RwIcons.List), About("About RailWatch", RwIcons.Person), Permissions("Permissions", RwIcons.Check),
+    Settings("Settings", RwIcons.Clock);
+    /** Pages opened from Settings go back to Settings; the rest go back to More. */
+    val parent: Page? get() = if (this in setOf(Reminders, Planning, Backup, PhoneCal, Permissions)) Settings else null
 }
 
 /** A single-choice popup, as in phone settings. */
@@ -75,14 +78,14 @@ fun YouScreen(model: AppModel, editRoutine: (Rule?) -> Unit, open: (Journey) -> 
               editTimeOff: (dev.railwatch.shared.domain.TimeOffRange?) -> Unit = {}, tour: () -> Unit = {}) {
     var page by rememberSaveable { mutableStateOf<Page?>(null) }
     var choice by remember { mutableStateOf<Choice?>(null) }
-    BackHandler(enabled = page != null) { page = null }
+    BackHandler(enabled = page != null) { page = page?.parent }
     val p = model.planner; val today = model.today
 
     val header: @Composable () -> Unit = {
         val pg = page
         if (pg == null) LargeTitle("More")
         else Row(Modifier.padding(top = 12.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-            Icon(RwIcons.ChevronLeft, "Back", tint = Rw.colors.brand, modifier = Modifier.size(44.dp).clickable { page = null }.padding(8.dp))
+            Icon(RwIcons.ChevronLeft, "Back", tint = Rw.colors.brand, modifier = Modifier.size(44.dp).clickable { page = page?.parent }.padding(8.dp))
             Text(pg.title, fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Rw.colors.text)
         }
     }
@@ -107,27 +110,37 @@ fun YouScreen(model: AppModel, editRoutine: (Rule?) -> Unit, open: (Journey) -> 
                         Tile(Page.Spend, rupees(month?.amount ?: 0.0), "this month", Modifier.weight(1f)) { page = Page.Spend }
                     }
                 }
-                Text("SETTINGS", style = MaterialTheme.typography.labelSmall, color = Rw.colors.muted, modifier = Modifier.padding(start = 4.dp, top = 24.dp, bottom = 8.dp))
+                Spacer(Modifier.height(24.dp))
                 Grouped {
-                    Category(Page.Reminders.icon, "Reminders", "When booking and cancellation alerts reach you", alert = false) { page = Page.Reminders }
-                    RowDivider()
-                    Category(Page.Planning.icon, "Planning", "How far ahead routines plan, how long tickets are kept", alert = false) { page = Page.Planning }
-                    RowDivider()
-                    Category(Page.Permissions.icon, "Permissions", "Notifications, alarms, calendar and battery", alert = false) { page = Page.Permissions }
-                    RowDivider()
-                    Category(Page.PhoneCal.icon, "Phone Calendar", "Add your trips to the calendar on this phone", alert = false) { page = Page.PhoneCal }
-                    RowDivider()
-                    Category(Page.Backup.icon, "Backup & Restore", "Save everything to one file, or bring it back", alert = false) { page = Page.Backup }
+                    Category(Page.Settings.icon, "Settings", "Reminders, planning, appearance, permissions, calendar and backup", alert = false) { page = Page.Settings }
                 }
                 Spacer(Modifier.height(16.dp))
+                Grouped {
+                    Category(Page.Help.icon, "Help & Tour", "What each part of RailWatch does, and how to use it", alert = false) { tour() }
+                    RowDivider()
+                    Category(Page.About.icon, "About RailWatch", "Version, developer, licence and privacy policy", alert = false) { page = Page.About }
+                }
+            }
+            Page.Settings -> item {
+                Text("ALERTS", style = MaterialTheme.typography.labelSmall, color = Rw.colors.muted, modifier = Modifier.padding(start = 4.dp, top = 8.dp, bottom = 8.dp))
+                Grouped {
+                    Category(Page.Reminders.icon, "Reminders", "When booking, Tatkal, PNR and cancellation alerts reach you", alert = false) { page = Page.Reminders }
+                    RowDivider()
+                    Category(Page.Permissions.icon, "Permissions", "Notifications, alarms, calendar and battery", alert = false) { page = Page.Permissions }
+                }
+                Text("PLANS", style = MaterialTheme.typography.labelSmall, color = Rw.colors.muted, modifier = Modifier.padding(start = 4.dp, top = 20.dp, bottom = 8.dp))
+                Grouped {
+                    Category(Page.Planning.icon, "Planning", "How far ahead routines plan, how long tickets are kept", alert = false) { page = Page.Planning }
+                    RowDivider()
+                    Category(Page.PhoneCal.icon, "Phone Calendar", "Add your trips to the calendar on this phone", alert = false) { page = Page.PhoneCal }
+                }
+                Text("APP", style = MaterialTheme.typography.labelSmall, color = Rw.colors.muted, modifier = Modifier.padding(start = 4.dp, top = 20.dp, bottom = 8.dp))
                 Grouped {
                     Category(Page.Planning.icon, "Appearance", when (p.settings.theme) { "light" -> "Light"; "dark" -> "Dark"; else -> "Match the phone" }, alert = false) {
                         choice = Choice("Appearance", listOf("system" to "Match the Phone", "light" to "Light", "dark" to "Dark"), p.settings.theme) { v -> model.setSettings { it.copy(theme = v) } }
                     }
                     RowDivider()
-                    Category(Page.Help.icon, "Help & Tour", "What each part of RailWatch does, and how to use it", alert = false) { tour() }
-                    RowDivider()
-                    Category(Page.About.icon, "About RailWatch", "Version, developer, licence and privacy policy", alert = false) { page = Page.About }
+                    Category(Page.Backup.icon, "Backup & Restore", "Save everything to one file, or bring it back", alert = false) { page = Page.Backup }
                 }
             }
             Page.Routines -> routines(model, editRoutine)
@@ -396,7 +409,14 @@ private fun RemindersPage(model: AppModel, ask: (Choice) -> Unit) {
 private fun PlanningPage(model: AppModel, ask: (Choice) -> Unit) {
     val s = model.planner.settings
     val keep = s.ticketRetentionDays ?: 7
+    var editWindow by remember { mutableStateOf(false) }
+    if (editWindow) BookingWindowDialog(s.bookingWindowDays, { editWindow = false }) { model.setBookingWindow(it); editWindow = false }
     Grouped {
+        ValueRow("Booking Window", "${s.bookingWindowDays} days before travel",
+            "How many days before the journey IRCTC opens general booking (60 today). Changing it moves the booking day, reminders and widget for every trip you haven't booked yet. Tatkal always opens the day before.") {
+            editWindow = true
+        }
+        RowDivider()
         ValueRow("Plan Routines Ahead", "${s.routineMonthsAhead} months",
             "Routines create their trips this far ahead, so you see every booking day and get its reminders. IRCTC opens booking ${s.bookingWindowDays} days before travel, so anything past that is just planning.") {
             ask(Choice("Plan Routines Ahead", listOf(1, 3, 6, 9, 12).map { "$it" to "$it month${if (it == 1) "" else "s"}" }, "${s.routineMonthsAhead}") { v -> model.setSettings { it.copy(routineMonthsAhead = v.toInt()) } })
@@ -468,4 +488,24 @@ internal fun ListRow(title: String, sub: String, onClick: () -> Unit) {
         }
         Icon(RwIcons.ChevronRight, contentDescription = null, tint = Rw.colors.muted)
     }
+}
+
+/** Type the booking window in days (1 to 365), starting from the current value. */
+@Composable
+private fun BookingWindowDialog(current: Int, dismiss: () -> Unit, save: (Int) -> Unit) {
+    var text by remember { mutableStateOf(current.toString()) }
+    val days = text.toIntOrNull()?.takeIf { it in 1..365 }
+    AlertDialog(onDismissRequest = dismiss, containerColor = Rw.colors.surface,
+        title = { Text("Booking Window", color = Rw.colors.text) },
+        text = {
+            Column {
+                Text("Days before travel that IRCTC opens general booking. It's 60 today.", color = Rw.colors.muted, style = MaterialTheme.typography.bodyMedium)
+                OutlinedTextField(text, { text = it.filter(Char::isDigit).take(3) }, singleLine = true, label = { Text("Days before travel") },
+                    isError = days == null, supportingText = { if (days == null) Text("Enter a number from 1 to 365") },
+                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number),
+                    modifier = Modifier.fillMaxWidth().padding(top = 12.dp))
+            }
+        },
+        confirmButton = { TextButton({ days?.let(save) }, enabled = days != null) { Text("Save") } },
+        dismissButton = { TextButton(dismiss) { Text("Cancel") } })
 }
