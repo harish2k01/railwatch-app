@@ -97,7 +97,21 @@ private fun AppBody(model: AppModel, shared: List<Uri>, consumeShared: () -> Uni
     // A ticket shared from another app opens the import sheet.
     LaunchedEffect(shared) { if (shared.isNotEmpty()) { sheet = Sheet.Import(shared); consumeShared() } }
     // A notification opens its journey (booking reminders open the booking-day screen).
-    LaunchedEffect(opened) { opened?.let { (id, mode) -> sheet = when (mode) { "booking" -> Sheet.Booking(id); "pnr" -> Sheet.Pnr(id); else -> Sheet.Journey(id) }; consumeOpened() } }
+    LaunchedEffect(opened) { opened?.let { (id, mode) ->
+        val today = model.today
+        val upcoming = dev.railwatch.shared.domain.upcoming(model.planner, today)
+        sheet = when (mode) {
+            "booking" -> Sheet.Booking(id)
+            "pnr" -> Sheet.Pnr(id)
+            "add" -> Sheet.Add
+            "next" -> dev.railwatch.shared.domain.nextTrip(model.planner, today)?.let { Sheet.Journey(it.id) } ?: run { info = "No upcoming trips yet. Tap + to add one."; null }
+            // The next booked trip that has a PNR; without one, say so.
+            "checkpnr" -> upcoming.firstOrNull { it.status == dev.railwatch.shared.domain.JourneyStatus.Booked && it.pnr.length == 10 }?.let { Sheet.Pnr(it.id) }
+                ?: run { info = "No upcoming booked trip has a PNR yet."; null }
+            else -> Sheet.Journey(id)
+        }
+        consumeOpened()
+    } }
     // Reminders need notification permission (Android 13+); asked once, on first open.
     val askNotify = androidx.activity.compose.rememberLauncherForActivityResult(androidx.activity.result.contract.ActivityResultContracts.RequestPermission()) { }
     LaunchedEffect(Unit) {
