@@ -189,6 +189,7 @@ private fun BoardingPass(j: Journey, today: String, name: (String) -> String?, t
                 DateTime(times.departDate, times.depart, ink, Alignment.Start, Modifier.weight(1f))
                 if (times.arrive != null) DateTime(times.arriveDate!!, times.arrive, ink, Alignment.End)
             }
+            ChartLine(j, today, ink)
         }
         val facts = listOfNotNull(j.trainNumber?.takeIf { it.isNotBlank() }?.let { "Train" to it }, j.coach?.let { "Coach" to it },
             listOfNotNull(j.seat, j.berth?.let(::berthLabel)).joinToString(" ").takeIf { it.isNotEmpty() }?.let { "Berth" to it }, j.travelClass.takeIf { it.isNotBlank() }?.let { "Class" to it })

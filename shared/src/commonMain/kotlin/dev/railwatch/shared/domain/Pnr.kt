@@ -120,3 +120,16 @@ fun chartTime(j: Journey): Instant? = runCatching {
     if (minutes in 301..840) Instant.parse("${addDays(j.date, -1)}T21:00:00+05:30")
     else Instant.parse("${j.date}T${j.departure.trim()}:00+05:30") - kotlin.time.Duration.parse("8h")
 }.getOrNull()
+
+/** Whether the last check said the chart is prepared ("Chart Prepared", not "Chart Not Prepared"). */
+fun chartPrepared(s: PnrSnapshot?): Boolean = s?.chartStatus?.let { it.contains("prepared", true) && !it.contains("not", true) } == true
+
+/** A booked, waitlisted or RAC trip whose chart hasn't been seen yet: the chart time is worth showing. */
+fun watchesChart(j: Journey): Boolean =
+    j.status == JourneyStatus.Booked && j.pnr.isNotEmpty() && effectiveTicketStatus(j) in setOf("WL", "RAC") && !chartPrepared(j.pnrStatus?.takeIf { it.pnr == j.pnr })
+
+/** The chart is out and every travelling passenger is still waitlisted: an e-ticket like this is cancelled and refunded. */
+fun waitlistedAfterChart(j: Journey): Boolean {
+    val s = j.pnrStatus?.takeIf { it.pnr == j.pnr } ?: return false
+    return j.status == JourneyStatus.Booked && chartPrepared(s) && pnrSummary(s.copy(passengers = s.passengers.filterNot(::isCancelled))) == "WL"
+}

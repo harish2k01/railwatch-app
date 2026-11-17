@@ -104,8 +104,10 @@ fun PnrSheet(j: Journey, model: AppModel, confirm: (String, () -> Unit) -> Unit,
                 Text(when {
                     summary == "CANCELLED" -> "Every passenger is cancelled, so the trip moved to Cancelled."
                     partly != null -> "The other passengers are still booked."
-                    summary == "WL" -> "Not confirmed yet. Check again nearer the chart."
-                    summary == "RAC" -> "You can travel; a full berth may come when the chart is prepared."
+                    summary == "WL" && !dev.railwatch.shared.domain.chartPrepared(r) -> chartNote(j, model.today) ?: "Not confirmed yet. Check again nearer the chart."
+                    summary == "WL" -> "The chart is out and you're still waitlisted. A fully waitlisted e-ticket is cancelled and refunded."
+                    summary == "RAC" && !dev.railwatch.shared.domain.chartPrepared(r) -> "You can travel; a full berth may come with the chart. " + (chartNote(j, model.today) ?: "")
+                    summary == "RAC" -> "The chart is out: you travel on a shared RAC berth."
                     else -> r.chartStatus
                 }, color = ink)
                 if (r.chartStatus.isNotEmpty() && summary != "CANCELLED") Text(r.chartStatus, color = ink, style = MaterialTheme.typography.bodyMedium)
