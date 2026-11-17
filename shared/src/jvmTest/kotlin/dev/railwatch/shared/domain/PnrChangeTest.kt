@@ -23,6 +23,17 @@ class PnrChangeTest {
         assertEquals(listOf("WL 40 → WL 12", "WL 12 → WL 5"), second.statusLog?.map { it.detail })
     }
 
+    @Test fun chartStates() {
+        val j = Journey(id = "a", from = "AAA", to = "BBB", date = "2026-11-20", departure = "21:00", pnr = "1234567890", status = JourneyStatus.Booked)
+        val wl = applyPnrStatus(j, snap("WL/40" to "WL/12").copy(chartStatus = "Chart Not Prepared"))
+        kotlin.test.assertTrue(watchesChart(wl))
+        kotlin.test.assertFalse(waitlistedAfterChart(wl))
+        val out = applyPnrStatus(wl, snap("WL/40" to "WL/3").copy(chartStatus = "Chart Prepared"))
+        kotlin.test.assertFalse(watchesChart(out))
+        kotlin.test.assertTrue(waitlistedAfterChart(out))
+        kotlin.test.assertFalse(waitlistedAfterChart(applyPnrStatus(wl, snap("WL/40" to "CNF/S4/24").copy(chartStatus = "Chart Prepared"))))
+    }
+
     @Test fun chartTimeFollowsTheEightHourRule() {
         fun at(dep: String) = chartTime(Journey(id = "a", from = "AAA", to = "BBB", date = "2026-11-20", departure = dep))
         assertEquals(Instant.parse("2026-11-20T13:00:00+05:30"), at("21:00"))
