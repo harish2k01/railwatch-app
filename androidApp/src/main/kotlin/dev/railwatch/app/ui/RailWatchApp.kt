@@ -62,6 +62,7 @@ private sealed interface Sheet {
     data class Pdf(val id: String, val file: String) : Sheet
     data class Booking(val id: String) : Sheet
     data class Pnr(val id: String) : Sheet
+    data class BookAgain(val id: String) : Sheet
     data object Add : Sheet
     data object Inbox : Sheet
     data class TimeOff(val range: dev.railwatch.shared.domain.TimeOffRange?) : Sheet
@@ -147,10 +148,11 @@ private fun AppBody(model: AppModel, shared: List<Uri>, consumeShared: () -> Uni
                     JourneySheet(j, model, close = { sheet = null }, confirm = confirm, edit = { sheet = Sheet.Edit(j.id) },
                         ticket = { if (dev.railwatch.shared.domain.hasTicket(j)) sheet = Sheet.Pass(j.id) else info = "To add the ticket, open the IRCTC PDF in Gmail or Files, tap Share and choose RailWatch." },
                         pnr = { if (j.pnr.length == 10) sheet = Sheet.Pnr(j.id) else info = "Add the 10-digit PNR with Edit first." },
-                        addTicket = { uris -> sheet = Sheet.Import(uris, j.id) })
+                        addTicket = { uris -> sheet = Sheet.Import(uris, j.id) }, bookAgain = { sheet = Sheet.BookAgain(j.id) })
                 }
                 is Sheet.Edit -> find(s.id)?.let { j -> EditJourneySheet(j, model, close = { sheet = Sheet.Journey(j.id) }, addTicket = { uris -> sheet = Sheet.Import(uris, j.id) }) }
                 Sheet.New -> NewJourneySheet(model) { sheet = null }
+                is Sheet.BookAgain -> find(s.id)?.let { j -> dev.railwatch.app.ui.screens.BookAgainSheet(j, model) { saved -> info = "Saved. It's in Journeys as Needs Booking."; sheet = Sheet.Journey(saved.id) } }
                 is Sheet.Routine -> RoutineSheet(model, s.rule) { sheet = null }
                 is Sheet.Import -> ImportSheet(model, s.uris, s.forJourney) { msg -> sheet = null; if (msg.isNotEmpty()) { info = msg } }
                 is Sheet.Pass -> find(s.id)?.let { j -> j.attachments?.firstOrNull { it.type == "application/pdf" }?.let { f -> TicketPass(j, f, model) { sheet = Sheet.Pdf(j.id, f.id) } } }
