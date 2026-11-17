@@ -31,7 +31,7 @@ import java.util.Locale
  * reminders as exact alarms (inexact if the person hasn't allowed exact alarms); a restart reschedules them too.
  */
 object Alarms {
-    const val BOOKING = "booking"; const val CANCEL = "cancellation"; const val PNR = "pnr"; const val COUNTDOWN = "countdown"
+    const val BOOKING = "booking"; const val CANCEL = "cancellation"; const val PNR = "pnr"; const val COUNTDOWN = "countdown"; const val CHECKLIST = "checklist"
     private const val COUNTDOWN_ID = 4242
 
     /**
@@ -63,6 +63,7 @@ object Alarms {
         nm.createNotificationChannel(NotificationChannel(PNR, "PNR Checks", NotificationManager.IMPORTANCE_DEFAULT).apply { description = "Reminders to check waitlisted and RAC tickets before travel" })
         nm.createNotificationChannel(NotificationChannel(COUNTDOWN, "Booking Countdown", NotificationManager.IMPORTANCE_HIGH).apply { description = "A live countdown on the lock screen in the last 15 minutes before booking opens"; lockscreenVisibility = android.app.Notification.VISIBILITY_PUBLIC })
         nm.createNotificationChannel(NotificationChannel(CANCEL,"Cancellations", NotificationManager.IMPORTANCE_DEFAULT).apply { description = "Follow-ups for tickets you marked to cancel" })
+        nm.createNotificationChannel(NotificationChannel(CHECKLIST, "Checklists", NotificationManager.IMPORTANCE_DEFAULT).apply { description = "The evening before a trip, what is still left on its checklist" })
     }
 
     fun canExact(context: Context) = Build.VERSION.SDK_INT < 31 || context.getSystemService(AlarmManager::class.java).canScheduleExactAlarms()
@@ -109,11 +110,16 @@ object Alarms {
             }
             Reminder.Kind.Pnr -> "Check your PNR" to "${j.from} → ${j.to} · $travel · ${(j.pnrStatus?.let(::pnrSummary) ?: j.currentStatus ?: "Waitlisted")} · tap to check"
             Reminder.Kind.Countdown -> return
+            Reminder.Kind.Checklist -> {
+                val left = dev.railwatch.shared.domain.checklistLeft(p, j)
+                if (left.isEmpty()) return
+                "Tomorrow: ${j.from} → ${j.to} at ${j.departure}" to "${left.size} ${if (left.size == 1) "thing" else "things"} left on your list: ${left.take(4).joinToString(", ")}"
+            }
             Reminder.Kind.TatkalBackup -> "Tatkal opens at ${if (dev.railwatch.shared.domain.isAcClass(j)) "10:00" else "11:00"}" to "${j.from} → ${j.to} · $travel · you're ${(j.pnrStatus?.let(::pnrSummary) ?: j.currentStatus ?: "waitlisted")}. Book a Tatkal ticket as a backup for a confirmed berth."
             Reminder.Kind.Cancellation -> "Cancel your ticket" to "${j.from} → ${j.to} · $travel · cancel on IRCTC, then mark it in RailWatch"
         }
         val open = PendingIntent.getActivity(context, journeyId.hashCode(), Intent(context, MainActivity::class.java).putExtra("journey", journeyId).putExtra("bookingDay", kind == Reminder.Kind.Booking).putExtra("pnr", kind == Reminder.Kind.Pnr).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-        val n = NotificationCompat.Builder(context, when (kind) { Reminder.Kind.Booking -> BOOKING; Reminder.Kind.Pnr, Reminder.Kind.TatkalBackup -> PNR; else -> CANCEL })
+        val n = NotificationCompat.Builder(context, when (kind) { Reminder.Kind.Booking -> BOOKING; Reminder.Kind.Pnr, Reminder.Kind.TatkalBackup -> PNR; Reminder.Kind.Checklist -> CHECKLIST; else -> CANCEL })
             .setSmallIcon(R.drawable.ic_notification).setContentTitle(title).setContentText(body).setContentIntent(open).setAutoCancel(true)
             .setCategory(NotificationCompat.CATEGORY_REMINDER).setPriority(NotificationCompat.PRIORITY_HIGH).build()
         // The inbox keeps it even if phone notifications are turned off.

@@ -85,6 +85,7 @@ fun JourneySheet(j: Journey, model: AppModel, close: () -> Unit, confirm: (Strin
         TripWarnings(j, model)
         WaitlistedAfterChart(j, model)
         StatusTimeline(j, today)
+        TripChecklist(j, model)
         val times = dev.railwatch.shared.domain.tripTimes(j)
         // Departs and arrives, each with its date above the time (times come from the ticket).
         Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(Rw.colors.surface2).padding(16.dp), verticalAlignment = Alignment.CenterVertically) {

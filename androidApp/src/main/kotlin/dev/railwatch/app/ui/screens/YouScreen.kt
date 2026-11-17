@@ -63,10 +63,10 @@ import dev.railwatch.shared.domain.timeOffConflicts
 
 private enum class Page(val title: String, val icon: ImageVector) {
     Routines("Routines", RwIcons.List), TimeOff("Holidays & Leave", RwIcons.Calendar), Tickets("Tickets", RwIcons.Ticket),
-    Spend("Spend", RwIcons.Ticket), Reminders("Reminders", RwIcons.Bell), Planning("Planning", RwIcons.Clock), Backup("Backup & Restore", RwIcons.Ticket), PhoneCal("Phone Calendar", RwIcons.Calendar), Help("Help & Tour", RwIcons.List), About("About RailWatch", RwIcons.Person), Permissions("Permissions", RwIcons.Check),
-    Settings("Settings", RwIcons.Clock);
+    Stats("Stats", RwIcons.Ticket), Reminders("Reminders", RwIcons.Bell), Planning("Planning", RwIcons.Clock), Backup("Backup & Restore", RwIcons.Ticket), PhoneCal("Phone Calendar", RwIcons.Calendar), Help("Help & Tour", RwIcons.List), About("About RailWatch", RwIcons.Person), Permissions("Permissions", RwIcons.Check),
+    Checklists("Checklists", RwIcons.Check), Settings("Settings", RwIcons.Clock);
     /** Pages opened from Settings go back to Settings; the rest go back to More. */
-    val parent: Page? get() = if (this in setOf(Reminders, Planning, Backup, PhoneCal, Permissions)) Settings else null
+    val parent: Page? get() = if (this in setOf(Reminders, Planning, Backup, PhoneCal, Permissions, Checklists)) Settings else null
 }
 
 /** A single-choice popup, as in phone settings. */
@@ -107,7 +107,8 @@ fun YouScreen(model: AppModel, editRoutine: (Rule?) -> Unit, open: (Journey) -> 
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         Tile(Page.Tickets, p.journeys.count { hasTicket(it) }.toString(), "tickets saved", Modifier.weight(1f)) { page = Page.Tickets }
-                        Tile(Page.Spend, rupees(month?.amount ?: 0.0), "this month", Modifier.weight(1f)) { page = Page.Spend }
+                        val tripsThisYear = remember(p, today) { dev.railwatch.shared.domain.yearStats(p, today.take(4).toInt(), today).trips }
+                        Tile(Page.Stats, tripsThisYear.toString(), "trips this year · ${rupees(month?.amount ?: 0.0)} this month", Modifier.weight(1f)) { page = Page.Stats }
                     }
                 }
                 Spacer(Modifier.height(24.dp))
@@ -133,6 +134,8 @@ fun YouScreen(model: AppModel, editRoutine: (Rule?) -> Unit, open: (Journey) -> 
                     Category(Page.Planning.icon, "Planning", "How far ahead routines plan, how long tickets are kept", alert = false) { page = Page.Planning }
                     RowDivider()
                     Category(Page.PhoneCal.icon, "Phone Calendar", "Add your trips to the calendar on this phone", alert = false) { page = Page.PhoneCal }
+                    RowDivider()
+                    Category(Page.Checklists.icon, "Checklists", "What to pack, by class, train, destination or overnight", alert = false) { page = Page.Checklists }
                 }
                 Text("APP", style = MaterialTheme.typography.labelSmall, color = Rw.colors.muted, modifier = Modifier.padding(start = 4.dp, top = 20.dp, bottom = 8.dp))
                 Grouped {
@@ -145,7 +148,7 @@ fun YouScreen(model: AppModel, editRoutine: (Rule?) -> Unit, open: (Journey) -> 
             }
             Page.Routines -> routines(model, editRoutine)
             Page.TimeOff -> item { TimeOffPage(model, open, info, editTimeOff) }
-            Page.Spend -> item { SpendPage(model, open) }
+            Page.Stats -> item { StatsPage(model) { SpendPage(model, open) } }
             Page.Reminders -> item { RemindersPage(model) { choice = it } }
             Page.Planning -> item { PlanningPage(model) { choice = it } }
             Page.Backup -> item { BackupPage(model, info) }
@@ -153,6 +156,7 @@ fun YouScreen(model: AppModel, editRoutine: (Rule?) -> Unit, open: (Journey) -> 
             Page.Help -> {}
             Page.About -> item { AboutPage() }
             Page.Permissions -> item { dev.railwatch.app.ui.PermissionsList() }
+            Page.Checklists -> item { ChecklistsPage(model) }
             Page.Tickets -> {}
         }
     }
@@ -173,7 +177,7 @@ fun YouScreen(model: AppModel, editRoutine: (Rule?) -> Unit, open: (Journey) -> 
     }
 }
 
-private fun rupees(v: Double) = "₹" + "%,.0f".format(java.util.Locale.forLanguageTag("en-IN"), v)
+internal fun rupees(v: Double) = "₹" + "%,.0f".format(java.util.Locale.forLanguageTag("en-IN"), v)
 
 /** Routines as cards: route, the days it runs, what's next, and how many trips it has planned. */
 private fun LazyListScope.routines(model: AppModel, editRoutine: (Rule?) -> Unit) = item {
@@ -390,8 +394,10 @@ private fun RemindersPage(model: AppModel, ask: (Choice) -> Unit) {
             Toggle("PNR Check Reminders", s.pnrNudges) { on -> model.setSettings { it.copy(pnrNudges = on) } }
             RowDivider()
             Toggle("Booking Countdown", s.bookingCountdown) { on -> model.setSettings { it.copy(bookingCountdown = on) } }
+            RowDivider()
+            Toggle("Checklist Reminder", s.checklistNudge) { on -> model.setSettings { it.copy(checklistNudge = on) } }
         }
-        help("PNR check reminders: for a waitlisted or RAC ticket, a reminder at 09:00 each day in the five days before travel and four hours before departure. Tap it to check. Booking countdown: a live timer on the lock screen for the last 15 minutes before a booking window opens.")()
+        help("PNR check reminders: for a waitlisted or RAC ticket, a reminder at 09:00 each day in the five days before travel and just after the chart is usually prepared, and one when Tatkal opens for that train. Checklist reminder: at 20:00 the evening before, what is still left on the trip's checklist. Booking countdown: a live timer on the lock screen for the last 15 minutes before a booking window opens.")()
         head("QUIET HOURS")()
         val q = s.quietHours ?: QuietHours()
         Grouped {

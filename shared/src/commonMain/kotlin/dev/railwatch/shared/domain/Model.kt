@@ -72,6 +72,10 @@ enum class JourneyStatus {
     val pnrLastError: String? = null,
     /** Marked as a one-way trip: no "no return planned" warning. */
     val oneWay: Boolean? = null,
+    /** Checklist items ticked, marked not needed, and added just for this trip. */
+    val checked: List<String>? = null,
+    val checkSkipped: List<String>? = null,
+    val checkExtra: List<String>? = null,
 )
 
 @Serializable data class PnrPassenger(val number: Int = 1, val booking: String = "", val current: String = "", val coach: String = "", val berth: String = "")
@@ -143,6 +147,8 @@ enum class JourneyStatus {
     val pnrNudges: Boolean = true,
     /** A live countdown notification in the 15 minutes before a booking window opens. */
     val bookingCountdown: Boolean = true,
+    /** The evening-before reminder when checklist items are still open. */
+    val checklistNudge: Boolean = true,
 )
 
 @Serializable data class Planner(
@@ -151,4 +157,12 @@ enum class JourneyStatus {
     val rules: List<Rule> = emptyList(),
     val holidays: List<Holiday> = emptyList(),
     val settings: Settings = Settings(),
+    /** Packing lists; null until the person edits them (then the default Every Trip list is used). */
+    val checklists: List<Checklist>? = null,
 )
+
+/** A packing list used on every trip its [rule] matches. */
+@Serializable data class Checklist(val id: String, val name: String, val items: List<String> = emptyList(), val rule: ChecklistRule = ChecklistRule())
+
+/** When a list applies: "always", "class" (values = classes), "train" (numbers), "to" (station codes), "overnight" or "tatkal". */
+@Serializable data class ChecklistRule(val kind: String = "always", val values: List<String> = emptyList())

@@ -43,7 +43,9 @@
 - **Live booking countdown** on the lock screen in the last 15 minutes before a window opens.
 - **Home-screen widget** showing the next thing to do: a window about to open, today's trip, trips to book.
 - **Holidays and leave.** Trips that clash with time off are flagged, and long weekends are spotted.
-- **Phone calendar sync**, spend tracking with charts, a notifications inbox, and a light and dark theme.
+- **Checklists** for each trip, built from your own lists by class, train, destination or overnight, with a reminder the evening before.
+- **Stats**: your year in trains, Tatkal and booking streaks, records, and spending.
+- **Phone calendar sync**, a notifications inbox, and a light and dark theme.
 - **Backup and restore**: everything, ticket PDFs included, in one file.
 
 ## Private by design
