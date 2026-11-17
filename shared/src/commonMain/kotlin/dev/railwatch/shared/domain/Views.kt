@@ -17,6 +17,10 @@ sealed interface DoNext {
     data class ConfirmCancel(override val journey: Journey) : DoNext
     /** Booked, but no ticket shared yet. */
     data class NeedsTicket(override val journey: Journey) : DoNext
+    /** Two trips overlap in time. */
+    data class Clash(override val journey: Journey, val other: Journey) : DoNext
+    /** A booked trip with no trip back within 30 days. */
+    data class NoReturn(override val journey: Journey) : DoNext
 }
 
 private val ACTIVE = setOf(JourneyStatus.NeedsBooking, JourneyStatus.Booked, JourneyStatus.CancellationNeeded)
@@ -41,7 +45,8 @@ fun doNext(p: Planner, today: String, limit: Int = 6, now: Instant = kotlin.time
     val ticket = list.filter { it.status == JourneyStatus.Booked && !hasTicket(it) }.take(1).map { DoNext.NeedsTicket(it) }
     val soon = list.filter { it.status == JourneyStatus.NeedsBooking && bookingInstant(it) > now && daysBetween(today, bookingDay(it)) <= 7 }
         .sortedBy { bookingDay(it) }.map { DoNext.OpensSoon(it, bookingDay(it)) }
-    return (cancel + book + ticket + soon).take(limit)
+    val warnings = clashes(p, today).map { (a, b) -> DoNext.Clash(a, b) } + missingReturns(p, today).take(1).map { DoNext.NoReturn(it) }
+    return (cancel + warnings + book + ticket + soon).take(limit)
 }
 
 /** The Journeys lists. */
@@ -101,3 +106,43 @@ fun widgetFocus(p: Planner, today: String, now: Instant): WidgetFocus {
 fun widgetNextChange(p: Planner, today: String, now: Instant): Instant? =
     upcoming(p, today).filter { it.status == JourneyStatus.NeedsBooking }.map { bookingInstant(it) }
         .flatMap { listOf(it - kotlin.time.Duration.parse("36h"), it - kotlin.time.Duration.parse("1h"), it) }.filter { it > now }.minOrNull()
+/** When a trip occupies: departure to arrival (or one hour if the arrival isn't known), in IST. */
+private fun span(j: Journey): Pair<Instant, Instant>? = runCatching {
+    val start = Instant.parse("${j.date}T${j.departure}:00+05:30")
+    // Arrival on its own date, or the next day when it's earlier than departure (overnight trains).
+    val end = j.arrival?.let { a -> val day = j.arrivalDate ?: if (a < j.departure) addDays(j.date, 1) else j.date; Instant.parse("${day}T$a:00+05:30") }
+        ?.takeIf { it > start } ?: (start + kotlin.time.Duration.parse("1h"))
+    start to end
+}.getOrNull()
+
+/** Pairs of upcoming booked or planned trips whose travel times overlap, soonest first. */
+fun clashes(p: Planner, today: String): List<Pair<Journey, Journey>> {
+    val trips = upcoming(p, today).filter { it.status == JourneyStatus.Booked || it.status == JourneyStatus.NeedsBooking }.mapNotNull { j -> span(j)?.let { j to it } }
+    val out = mutableListOf<Pair<Journey, Journey>>()
+    for (i in trips.indices) for (k in i + 1 until trips.size) {
+        val (a, sa) = trips[i]; val (b, sb) = trips[k]
+        if (sa.first < sb.second && sb.first < sa.second) out += a to b
+    }
+    return out
+}
+
+/** Booked trips in the next 60 days with no trip back (B to A) within 30 days after, unless marked one-way. */
+fun missingReturns(p: Planner, today: String): List<Journey> {
+    val trips = upcoming(p, today)
+    val horizon = addDays(today, 60)
+    return trips.filter { it.status == JourneyStatus.Booked && it.oneWay != true && it.date <= horizon }.filter { j ->
+        trips.none { r -> r.id != j.id && r.from.equals(j.to, true) && r.to.equals(j.from, true) && r.date >= j.date && r.date <= addDays(j.date, 30) }
+    }
+}
+
+/** Search across a trip: stations (codes or names), train, PNR, coach, notes and the travel date ("12 jan", "jan", "2027-01-12"). */
+fun matchesQuery(j: Journey, query: String, stationName: (String) -> String? = { null }): Boolean {
+    val q = query.trim().lowercase(); if (q.isEmpty()) return true
+    val months = listOf("jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec")
+    val (y, m, d) = j.date.split("-").let { Triple(it[0], it[1].toInt(), it[2].toInt()) }
+    val month = months[m - 1]
+    val hay = listOfNotNull(j.from, j.to, stationName(j.from), stationName(j.to), j.train, j.trainNumber, j.trainName, j.pnr, j.coach, j.seat, j.travelClass, j.notes,
+        j.date, "$d $month", "$d $month $y", month, "$month $y").joinToString(" | ").lowercase()
+    // A month typed in full ("january") or in part ("janu") matches that month.
+    return q.split(Regex("\\s+")).all { word -> hay.contains(word) || (word.length >= 3 && word.take(3) in months && word.take(3) == month) }
+}

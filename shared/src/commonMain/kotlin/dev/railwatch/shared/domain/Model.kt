@@ -69,6 +69,8 @@ enum class JourneyStatus {
     val pnrStatus: PnrSnapshot? = null,
     val pnrLastAttemptAt: String? = null,
     val pnrLastError: String? = null,
+    /** Marked as a one-way trip: no "no return planned" warning. */
+    val oneWay: Boolean? = null,
 )
 
 @Serializable data class PnrPassenger(val number: Int = 1, val booking: String = "", val current: String = "", val coach: String = "", val berth: String = "")
