@@ -195,7 +195,7 @@ private fun BoardingPass(j: Journey, today: String, name: (String) -> String?, t
         if (facts.isNotEmpty()) {
             Perforation(notch = Rw.colors.ground, line = ink.copy(alpha = .3f))
             Row(Modifier.fillMaxWidth().padding(start = 20.dp, end = 20.dp, bottom = 16.dp), horizontalArrangement = Arrangement.SpaceBetween) { facts.forEach { (k, v) -> Fact(k, v, ink) } }
-            if (dev.railwatch.shared.domain.hasTicket(j)) androidx.compose.material3.Text("Show Ticket", color = Rw.colors.brand, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold, textAlign = androidx.compose.ui.text.style.TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 16.dp).background(ink, androidx.compose.foundation.shape.RoundedCornerShape(14.dp)).clickable(onClick = ticket).padding(vertical = 12.dp))
+            if (dev.railwatch.shared.domain.hasTicket(j)) androidx.compose.material3.Text("Show Ticket", color = Rw.colors.brand, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold, textAlign = androidx.compose.ui.text.style.TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 16.dp).background(ink, androidx.compose.foundation.shape.RoundedCornerShape(14.dp)).clickable(onClick = ticket).padding(vertical = 14.dp))
         } else Spacer(Modifier.height(12.dp))
     }
 }

@@ -46,6 +46,6 @@ fun TimeOffSheet(model: AppModel, existing: TimeOffRange?, close: (String) -> Un
             close(if (existing == null) "Time off added." else "Time off updated.")
         }, Modifier.fillMaxWidth(), enabled = days in 1..366)
         if (existing != null) Text("Remove", color = Rw.colors.danger, style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.clickable { existing.ids.forEach(model::removeTimeOff); close("Time off removed.") }.padding(vertical = 8.dp))
+            modifier = Modifier.clickable { existing.ids.forEach(model::removeTimeOff); close("Time off removed.") }.padding(vertical = 14.dp))
     }
 }

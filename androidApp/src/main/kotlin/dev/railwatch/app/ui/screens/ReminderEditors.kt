@@ -70,7 +70,7 @@ fun ScheduleEditor(rows: List<ScheduleRow>, change: (List<ScheduleRow>) -> Unit)
             }
         }
         if (rows.size < 6) Text("+ Add a Reminder", color = Rw.colors.brand, fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.clip(RoundedCornerShape(10.dp)).clickable { change(rows + ScheduleRow(0, "07:00")) }.padding(vertical = 10.dp, horizontal = 4.dp))
+            modifier = Modifier.clip(RoundedCornerShape(10.dp)).clickable { change(rows + ScheduleRow(0, "07:00")) }.padding(vertical = 14.dp, horizontal = 4.dp))
     }
     editing?.let { (i, what) ->
         val r = rows.getOrNull(i) ?: return@let
