@@ -5,7 +5,7 @@ import kotlinx.datetime.toLocalDateTime
 
 /** One reminder to deliver on the phone. */
 data class Reminder(val key: String, val journeyId: String, val at: Instant, val kind: Kind) {
-    enum class Kind { Booking, Cancellation, Pnr, Countdown }
+    enum class Kind { Booking, Cancellation, Pnr, Countdown, TatkalBackup }
 }
 
 private val DEFAULT_TATKAL = listOf(ScheduleRow(1, "20:00"), ScheduleRow(0, "09:30"), ScheduleRow(0, "09:55"))
@@ -78,5 +78,20 @@ fun upcomingReminders(p: Planner, today: String, now: Instant): List<Reminder> =
         val main = reminderTimes(p, j, today).map { outsideQuietHours(it, p.settings.quietHours) }.distinct().map { it to kind }
         val pnr = if (p.settings.pnrNudges) pnrNudgeTimes(j, today).map { outsideQuietHours(it, p.settings.quietHours) }.distinct().map { it to Reminder.Kind.Pnr } else emptyList()
         val countdown = if (p.settings.bookingCountdown) listOfNotNull(countdownTime(j)?.let { it to Reminder.Kind.Countdown }) else emptyList()
-        (main + pnr + countdown).filter { it.first > now }.map { (at, k) -> Reminder("${j.id}@$at#$k", j.id, at, k) }
+        val tatkal = if (p.settings.pnrNudges) listOfNotNull(tatkalBackupTime(j)?.let { it to Reminder.Kind.TatkalBackup }) else emptyList()
+        (main + pnr + countdown + tatkal).filter { it.first > now }.map { (at, k) -> Reminder("${j.id}@$at#$k", j.id, at, k) }
     }.sortedBy { it.at }
+/** Whether a class books Tatkal at 10:00 (AC) rather than 11:00: the ticket's Tatkal class, else the travel class. */
+fun isAcClass(j: Journey): Boolean = j.tatkalClass?.let { it != "non_ac" }
+    ?: (j.travelClass.uppercase().replace(" ", "") !in setOf("SL", "2S", "FC", "UR", "GN"))
+
+/**
+ * A backup chance for a booked trip that's still waitlisted or RAC (no confirmed berth): Tatkal for the same
+ * train opens the day before it starts, at 10:00 for AC or 11:00 otherwise. Reminds 15 minutes before.
+ */
+fun tatkalBackupTime(j: Journey): Instant? {
+    if (j.status != JourneyStatus.Booked || j.bookingType == "tatkal") return null
+    if (effectiveTicketStatus(j) !in setOf("WL", "RAC")) return null
+    val opens = instant(addDays(j.trainOriginDate ?: j.date, -1), if (isAcClass(j)) "10:00" else "11:00")
+    return opens - kotlin.time.Duration.parse("15m")
+}
