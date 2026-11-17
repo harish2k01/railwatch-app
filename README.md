@@ -49,8 +49,8 @@
 ## Private by design
 
 RailWatch has no account, no server, no analytics and no ads. Your plans and tickets stay in the app's private
-storage on your phone. The only network request is a PNR check you start yourself, and you type the
-CAPTCHA. See the [privacy policy](PRIVACY.md).
+storage on your phone. The only network requests are a PNR check you start yourself (you type the
+CAPTCHA) and a daily check for a new RailWatch release. See the [privacy policy](PRIVACY.md).
 
 ## Install
 

@@ -13,6 +13,10 @@ val hasReleaseSigning = releaseSigning.values.all { it != null }
 val appVersion = providers.gradleProperty("appVersion").orNull?.removePrefix("v") ?: "0.0.0-dev"
 val appVersionCode = appVersion.substringBefore("-").split(".").map { it.toIntOrNull() ?: 0 }.plus(listOf(0, 0, 0)).let { (ma, mi, pa) -> ma * 10000 + mi * 100 + pa }.coerceAtLeast(1)
 
+// In-app updates from the GitHub releases. Build with -PinAppUpdates=false for an app store (Google Play updates
+// apps itself and doesn't allow the install permission): the update card stays hidden and the permission is removed.
+val inAppUpdates = providers.gradleProperty("inAppUpdates").orNull?.toBooleanStrictOrNull() ?: true
+
 android {
     namespace = "dev.railwatch.app"
     compileSdk = 37
@@ -23,6 +27,7 @@ android {
         targetSdk = 37
         versionCode = appVersionCode
         versionName = appVersion
+        buildConfigField("boolean", "IN_APP_UPDATES", inAppUpdates.toString())
     }
     if (hasReleaseSigning) {
         signingConfigs.create("release") {
@@ -45,7 +50,8 @@ android {
         signingConfig = signingConfigs.getByName("debug")
         matchingFallbacks += "release"
     }
-    buildFeatures { compose = true }
+    buildFeatures { compose = true; buildConfig = true }
+    if (!inAppUpdates) listOf("debug", "release", "preview").forEach { sourceSets.getByName(it).manifest.srcFile("src/noUpdates/AndroidManifest.xml") }
     // The About screen shows the licence and privacy text from these files (one source with the repo).
     sourceSets.getByName("main").assets.srcDir(layout.buildDirectory.dir("generated/legal").get().asFile)
     compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
