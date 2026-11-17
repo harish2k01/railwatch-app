@@ -64,20 +64,17 @@ fun AboutPage() {
     Grouped {
         Info("Version", version)
         RowDivider(); Info("Developer", "Harish T")
-        RowDivider(); Info("Licence", "GNU GPL v3.0")
+        if (dev.railwatch.app.data.Updater.enabled) { RowDivider(); UpdatesRow() }
     }
     Spacer(Modifier.height(16.dp))
     Grouped {
         ListRow("Privacy Policy", "Everything stays on your phone") { doc = "PRIVACY.md" }
-        RowDivider(); ListRow("Licence", "GNU General Public License, version 3") { doc = "LICENSE" }
-        RowDivider(); ListRow("Open-Source Notices", "Manrope font (SIL Open Font License)") { doc = "MANROPE-OFL.txt" }
-        if (dev.railwatch.app.data.Updater.enabled) { RowDivider(); UpdatesRow() }
-        RowDivider(); ListRow("Source Code", "github.com/harish2k01/railwatch-app") { runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(SOURCE))) } }
+        RowDivider(); ListRow("Licence", "GNU GPL v3.0") { doc = "LICENSE" }
+        RowDivider(); ListRow("Open-Source Notices", "Manrope font") { doc = "MANROPE-OFL.txt" }
+        RowDivider(); ListRow("Source Code", "On GitHub") { runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(SOURCE))) } }
     }
-    Text("RailWatch is an independent app. It is not affiliated with, endorsed by or connected to Indian Railways, IRCTC or CRIS. You book on IRCTC; PNR status comes from Indian Railways' public enquiry service as-is.", color = Rw.colors.muted,
+    Text("Not affiliated with Indian Railways, IRCTC or CRIS.\n© 2026 Harish T · Free software under GPL v3, with no warranty.", color = Rw.colors.muted,
         style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(start = 4.dp, top = 16.dp))
-    Text("Copyright © 2026 Harish T. RailWatch is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License, version 3. It comes with no warranty.", color = Rw.colors.muted,
-        style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(start = 4.dp, top = 8.dp))
 }
 
 @Composable

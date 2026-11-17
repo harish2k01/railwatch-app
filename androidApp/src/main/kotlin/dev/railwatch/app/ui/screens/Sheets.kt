@@ -119,7 +119,7 @@ fun JourneySheet(j: Journey, model: AppModel, close: () -> Unit, confirm: (Strin
             JourneyStatus.Completed -> {}
         }
         if (j.ruleId == null) Text("Delete Trip", style = MaterialTheme.typography.titleMedium, color = Rw.colors.danger,
-            modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable { confirm("Delete this trip? This can’t be undone.") { model.deleteJourney(j); close() } }.padding(vertical = 8.dp))
+            modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable { confirm("Delete this trip? This can’t be undone.") { model.deleteJourney(j); close() } }.padding(vertical = 14.dp))
     }
 }
 
@@ -266,7 +266,7 @@ fun RoutineSheet(model: AppModel, existing: Rule?, close: () -> Unit) {
             close()
         }, enabled = ok)
         if (existing != null) Text("Delete Routine", style = MaterialTheme.typography.titleMedium, color = Rw.colors.danger,
-            modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable { model.deleteRoutine(existing.id); close() }.padding(vertical = 8.dp))
+            modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable { model.deleteRoutine(existing.id); close() }.padding(vertical = 14.dp))
         Text("Booked trips and trips you changed are kept when you edit a routine.", style = MaterialTheme.typography.bodyMedium, color = Rw.colors.muted)
     }
 }

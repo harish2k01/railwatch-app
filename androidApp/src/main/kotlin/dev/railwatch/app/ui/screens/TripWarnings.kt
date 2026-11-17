@@ -40,6 +40,6 @@ fun TripWarnings(j: Journey, model: AppModel) {
         Text("There's no trip from ${j.to} back to ${j.from} in the 30 days after. Add one with +, or mark this trip one-way.",
             color = Rw.colors.text, style = MaterialTheme.typography.bodyMedium)
         Text("It's One-Way", color = Rw.colors.brand, fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable { model.saveJourney(j.copy(oneWay = true)) }.padding(vertical = 10.dp))
+            modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable { model.saveJourney(j.copy(oneWay = true)) }.padding(vertical = 14.dp))
     }
 }

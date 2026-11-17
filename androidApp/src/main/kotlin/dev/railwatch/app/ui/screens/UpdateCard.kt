@@ -77,4 +77,4 @@ fun UpdatesRow() {
 @Composable
 private fun Action(label: String, color: androidx.compose.ui.graphics.Color = Rw.colors.brand, onClick: () -> Unit) =
     Text(label, color = color, fontWeight = FontWeight.SemiBold,
-        modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable(onClick = onClick).padding(vertical = 12.dp, horizontal = 4.dp))
+        modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable(onClick = onClick).padding(vertical = 14.dp, horizontal = 4.dp))
