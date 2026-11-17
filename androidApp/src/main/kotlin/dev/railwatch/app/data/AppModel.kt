@@ -78,6 +78,7 @@ class AppModel(context: Context) {
             rules = p.rules.map { it.copy(windowDays = days) },
             journeys = p.journeys.map { if (it.status == JourneyStatus.NeedsBooking) it.copy(windowDays = days) else it })
     }
+    fun setChecklists(lists: List<dev.railwatch.shared.domain.Checklist>) = update { p -> p.copy(checklists = lists) }
     fun setSettings(change: (dev.railwatch.shared.domain.Settings) -> dev.railwatch.shared.domain.Settings) = update { p -> p.copy(settings = change(p.settings)) }
 
     /** Imports time off from an .ics or date,name,type .csv file; returns a message for the person. */
