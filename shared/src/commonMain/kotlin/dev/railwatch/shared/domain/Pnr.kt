@@ -71,7 +71,9 @@ fun applyPnrStatus(j: Journey, s: PnrSnapshot): Journey {
     require(j.pnr == s.pnr) { "PNR_CHANGED" }
     val summary = pnrSummary(s)
     val previous = if (j.pnrStatus?.pnr == j.pnr) pnrSummary(j.pnrStatus!!) else j.currentStatus ?: j.ticketStatus
-    val log = if (summary != null && summary != previous) ((j.statusLog ?: emptyList()) + StatusEntry(s.checkedAt, summary)).takeLast(40) else j.statusLog
+    val detail = pnrChange(j.pnrStatus?.takeIf { it.pnr == j.pnr }, s)
+    // Logged when the summary changes (WL → RAC) or a position moves within it (WL 12 → WL 5).
+    val log = if (summary != null && (summary != previous || detail != null)) ((j.statusLog ?: emptyList()) + StatusEntry(s.checkedAt, summary, detail)).takeLast(40) else j.statusLog
     // Passengers who are still travelling decide the summary when only some are cancelled.
     val live = s.copy(passengers = s.passengers.filterNot(::isCancelled)).takeIf { partlyCancelled(s) != null }?.let(::pnrSummary)
     val shown = partlyCancelled(s)?.let { p -> listOfNotNull(live, p).joinToString(" · ") } ?: summary ?: "See passengers"
@@ -88,3 +90,33 @@ fun suggestPnrCheck(j: Journey, today: String, now: Instant): Boolean {
     if (summary == "CANCELLED") return false
     return summary == "WL" || summary == "RAC" || snap == null || runCatching { now - Instant.parse(snap.checkedAt) > kotlin.time.Duration.parse("12h") }.getOrDefault(true)
 }
+
+/** "WL/12" or "RLWL 12" → "WL 12": the readable form of one passenger's status. */
+fun readableStatus(s: String): String = s.trim().replace(Regex("""\s*/\s*"""), " ").replace(Regex("""\s+"""), " ")
+
+/**
+ * What moved since the last check, e.g. "WL 12 → RAC 3", or "P1 WL 12 → RAC 3 · P2 WL 13 → RAC 4" for several
+ * passengers. Without an earlier check the booking status is the starting point. Null when nothing moved.
+ */
+fun pnrChange(before: PnrSnapshot?, after: PnrSnapshot): String? {
+    val moved = after.passengers.mapNotNull { p ->
+        val was = readableStatus(before?.passengers?.firstOrNull { it.number == p.number }?.current ?: p.booking)
+        val now = readableStatus(p.current)
+        if (was.isEmpty() || was.equals(now, ignoreCase = true)) null else Triple(p.number, was, now)
+    }
+    if (moved.isEmpty()) return null
+    return if (after.passengers.size == 1) moved.single().let { "${it.second} → ${it.third}" }
+    else moved.joinToString(" · ") { "P${it.first} ${it.second} → ${it.third}" }
+}
+
+/**
+ * When Indian Railways usually prepares the first reservation chart (rule since July 2025): 8 hours before
+ * departure, or at 21:00 the evening before for trains leaving between 05:01 and 14:00. Worked out from the
+ * boarding time, so for a train that started earlier upstream the chart can come a little sooner.
+ */
+fun chartTime(j: Journey): Instant? = runCatching {
+    val (h, m) = j.departure.split(":").map { it.trim().toInt() }
+    val minutes = h * 60 + m
+    if (minutes in 301..840) Instant.parse("${addDays(j.date, -1)}T21:00:00+05:30")
+    else Instant.parse("${j.date}T${j.departure.trim()}:00+05:30") - kotlin.time.Duration.parse("8h")
+}.getOrNull()

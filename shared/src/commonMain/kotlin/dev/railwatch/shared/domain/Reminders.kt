@@ -55,15 +55,15 @@ fun outsideQuietHours(at: Instant, q: QuietHours?): Instant {
 }
 
 /**
- * PNR nudges for a booked trip still waitlisted or RAC: 09:00 each day in the five days before travel, and four hours
- * before departure (around when the chart is prepared). The person runs the check; RailWatch only reminds.
+ * PNR nudges for a booked trip still waitlisted or RAC: 09:00 each day in the five days before travel, and 15 minutes
+ * after the chart is usually prepared, when the status becomes final. The person runs the check; RailWatch only reminds.
  */
 fun pnrNudgeTimes(j: Journey, today: String): List<Instant> {
     if (j.status != JourneyStatus.Booked || j.pnr.isEmpty()) return emptyList()
     val summary = j.pnrStatus?.takeIf { it.pnr == j.pnr }?.let(::pnrSummary) ?: effectiveTicketStatus(j)
     if (summary != "WL" && summary != "RAC") return emptyList()
     val days = (5 downTo 0).map { addDays(j.date, -it) }.filter { it >= today }
-    val depart = runCatching { instant(j.date, j.departure) - kotlin.time.Duration.parse("4h") }.getOrNull()
+    val depart = chartTime(j)?.plus(kotlin.time.Duration.parse("15m"))
     return (days.map { instant(it, "09:00") } + listOfNotNull(depart)).distinct().sorted()
 }
 
