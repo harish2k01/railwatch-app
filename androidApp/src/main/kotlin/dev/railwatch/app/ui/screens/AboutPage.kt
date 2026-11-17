@@ -71,6 +71,7 @@ fun AboutPage() {
         ListRow("Privacy Policy", "Everything stays on your phone") { doc = "PRIVACY.md" }
         RowDivider(); ListRow("Licence", "GNU General Public License, version 3") { doc = "LICENSE" }
         RowDivider(); ListRow("Open-Source Notices", "Manrope font (SIL Open Font License)") { doc = "MANROPE-OFL.txt" }
+        if (dev.railwatch.app.data.Updater.enabled) { RowDivider(); UpdatesRow() }
         RowDivider(); ListRow("Source Code", "github.com/harish2k01/railwatch-app") { runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(SOURCE))) } }
     }
     Text("RailWatch is an independent app. It is not affiliated with, endorsed by or connected to Indian Railways, IRCTC or CRIS. You book on IRCTC; PNR status comes from Indian Railways' public enquiry service as-is.", color = Rw.colors.muted,

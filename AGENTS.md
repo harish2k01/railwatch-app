@@ -31,7 +31,9 @@ Lint errors fail CI. Fix them, don't suppress them.
 - **No personal data, ever.** Never commit or embed real tickets, PDFs, PNRs, names, phone numbers or backups,
   including in tests, screenshots or fixtures. Use obvious dummies (`1234567890`, `TEST USER`, `AAA → BBB`).
 - **No scraping** of IRCTC, ixigo, RailYatri, erail, indiarailinfo or similar. The only network calls are the
-  Indian Railways PNR enquiry, which runs only when the user taps Check PNR, and the user types the CAPTCHA.
+  Indian Railways PNR enquiry, which runs only when the user taps Check PNR (the user types the CAPTCHA),
+  and the daily update check against this repository's GitHub releases (`data/Updater.kt`, off with
+  `-PinAppUpdates=false`, which app-store builds must use).
   Never solve or bypass CAPTCHAs.
 - **No new network calls, trackers, analytics or servers** without the maintainer's agreement. Data stays in
   app-private storage.

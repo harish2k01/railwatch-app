@@ -13,12 +13,15 @@ server, no analytics, no advertising and no tracking.
 
 ## What leaves your phone
 
-RailWatch connects to the internet only when you ask it to:
+RailWatch connects to the internet only for these:
 
 - **PNR check.** When you tap Check PNR, the app sends the PNR and the code you type to Indian
   Railways' public enquiry service (indianrail.gov.in) and shows the reply. Nothing else is sent.
 - **Ticket reading.** Text and QR codes on tickets are read on the phone by Google Play services. The
   ticket is not uploaded.
+- **Update check.** About once a day the app asks GitHub for the latest RailWatch release, the same
+  request any browser makes to open the releases page. No information about you or your plans is sent.
+  Updates download only when you tap Update. App-store builds leave this out.
 
 ## Permissions
 
@@ -27,7 +30,8 @@ RailWatch connects to the internet only when you ask it to:
 | Notifications | Booking, Tatkal, PNR and cancellation reminders |
 | Alarms & reminders | So reminders arrive on the minute a booking window opens |
 | Calendar (optional) | Only if you turn on Phone Calendar, to add your trips to a calendar you pick |
-| Internet | PNR checks only |
+| Internet | PNR checks, and checking for app updates |
+| Install apps | Installing an update you chose to download (not in app-store builds) |
 | Run at startup | To restore reminders after the phone restarts |
 
 ## Backups

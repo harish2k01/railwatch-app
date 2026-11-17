@@ -66,6 +66,7 @@ fun TodayScreen(model: AppModel, open: (Journey) -> Unit, showTicket: (Journey) 
     LazyColumn(contentPadding = contentPadding) {
         item { LargeTitle("Today", eyebrow = longDay(today)) { Bell(unread, inbox) } }
         item { ReminderHealth() }
+        item { UpdateCard() }
         item {
             if (next != null) BoardingPass(next, today, model.stations::name, { showTicket(next) }) { open(next) }
             else EmptyStart(hasRoutines = p.rules.isNotEmpty(), newRoutine = newRoutine)
