@@ -24,7 +24,8 @@ enum class JourneyStatus {
     val insurance: Double? = null, val refund: Double? = null,
 )
 
-@Serializable data class StatusEntry(val at: String, val status: String)
+/** A change in PNR status; [detail] is what moved, e.g. "WL 12 → RAC 3" (older entries have none). */
+@Serializable data class StatusEntry(val at: String, val status: String, val detail: String? = null)
 
 @Serializable data class Journey(
     val id: String,

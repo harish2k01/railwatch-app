@@ -61,6 +61,7 @@ fun PnrSheet(j: Journey, model: AppModel, confirm: (String, () -> Unit) -> Unit,
     var answer by remember { mutableStateOf("") }
     var error by remember { mutableStateOf<String?>(null) }
     var result by remember { mutableStateOf<PnrSnapshot?>(j.pnrStatus?.takeIf { false }) }
+    var change by remember { mutableStateOf<String?>(null) }
     LaunchedEffect(round) {
         loading = true; answer = ""
         picture = client.start()
@@ -73,9 +74,10 @@ fun PnrSheet(j: Journey, model: AppModel, confirm: (String, () -> Unit) -> Unit,
             when (val r = client.finish(j.pnr, answer)) {
                 is PnrClient.Result.Ok -> {
                     val updated = applyPnrStatus(j, r.snapshot); result = r.snapshot
+                    change = dev.railwatch.shared.domain.pnrChange(j.pnrStatus?.takeIf { it.pnr == j.pnr }, r.snapshot)
                     // A changed status goes into the inbox, so there is a record of it.
                     if ((updated.statusLog?.size ?: 0) > (j.statusLog?.size ?: 0))
-                        dev.railwatch.app.data.Inbox.add(context, "PNR now ${updated.currentStatus}", "${j.from} → ${j.to} · ${dev.railwatch.app.ui.shortDay(j.date)}", j.id)
+                        dev.railwatch.app.data.Inbox.add(context, change ?: "PNR now ${updated.currentStatus}", "${j.from} → ${j.to} · ${dev.railwatch.app.ui.shortDay(j.date)}", j.id)
                     // Whole PNR cancelled: the trip moves to Cancelled. Some passengers cancelled: flagged here and on the trip.
                     if (pnrSummary(r.snapshot) == "CANCELLED" && j.status != JourneyStatus.Cancelled) model.setStatus(updated, JourneyStatus.Cancelled)
                     else model.saveJourney(updated)
@@ -98,6 +100,7 @@ fun PnrSheet(j: Journey, model: AppModel, confirm: (String, () -> Unit) -> Unit,
                 val ink = if (summary == "CNF") Rw.colors.bookedInk else Rw.colors.attentionInk
                 Text(when { partly != null -> partly.replaceFirstChar { it.uppercase() }; summary == "CNF" -> "Confirmed"; summary == "RAC" -> "RAC: a shared berth"; summary == "WL" -> "Waitlisted"; summary == "CANCELLED" -> "Cancelled"; else -> "Mixed: see passengers" },
                     style = MaterialTheme.typography.headlineSmall, color = ink)
+                change?.let { Text(if (j.pnrStatus?.pnr == j.pnr) "Since last check: $it" else "Since booking: $it", color = ink, fontWeight = FontWeight.SemiBold) }
                 Text(when {
                     summary == "CANCELLED" -> "Every passenger is cancelled, so the trip moved to Cancelled."
                     partly != null -> "The other passengers are still booked."
