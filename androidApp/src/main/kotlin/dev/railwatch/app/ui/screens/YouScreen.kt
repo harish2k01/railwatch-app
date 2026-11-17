@@ -63,7 +63,7 @@ import dev.railwatch.shared.domain.timeOffConflicts
 
 private enum class Page(val title: String, val icon: ImageVector) {
     Routines("Routines", RwIcons.List), TimeOff("Holidays & Leave", RwIcons.Calendar), Tickets("Tickets", RwIcons.Ticket),
-    Spend("Spend", RwIcons.Ticket), Reminders("Reminders", RwIcons.Bell), Planning("Planning", RwIcons.Clock), Backup("Backup & Restore", RwIcons.Ticket), PhoneCal("Phone Calendar", RwIcons.Calendar), Help("Help & Tour", RwIcons.List), About("About RailWatch", RwIcons.Person), Permissions("Permissions", RwIcons.Check),
+    Stats("Stats", RwIcons.Ticket), Reminders("Reminders", RwIcons.Bell), Planning("Planning", RwIcons.Clock), Backup("Backup & Restore", RwIcons.Ticket), PhoneCal("Phone Calendar", RwIcons.Calendar), Help("Help & Tour", RwIcons.List), About("About RailWatch", RwIcons.Person), Permissions("Permissions", RwIcons.Check),
     Checklists("Checklists", RwIcons.Check), Settings("Settings", RwIcons.Clock);
     /** Pages opened from Settings go back to Settings; the rest go back to More. */
     val parent: Page? get() = if (this in setOf(Reminders, Planning, Backup, PhoneCal, Permissions, Checklists)) Settings else null
@@ -107,7 +107,8 @@ fun YouScreen(model: AppModel, editRoutine: (Rule?) -> Unit, open: (Journey) -> 
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         Tile(Page.Tickets, p.journeys.count { hasTicket(it) }.toString(), "tickets saved", Modifier.weight(1f)) { page = Page.Tickets }
-                        Tile(Page.Spend, rupees(month?.amount ?: 0.0), "this month", Modifier.weight(1f)) { page = Page.Spend }
+                        val tripsThisYear = remember(p, today) { dev.railwatch.shared.domain.yearStats(p, today.take(4).toInt(), today).trips }
+                        Tile(Page.Stats, tripsThisYear.toString(), "trips this year · ${rupees(month?.amount ?: 0.0)} this month", Modifier.weight(1f)) { page = Page.Stats }
                     }
                 }
                 Spacer(Modifier.height(24.dp))
@@ -147,7 +148,7 @@ fun YouScreen(model: AppModel, editRoutine: (Rule?) -> Unit, open: (Journey) -> 
             }
             Page.Routines -> routines(model, editRoutine)
             Page.TimeOff -> item { TimeOffPage(model, open, info, editTimeOff) }
-            Page.Spend -> item { SpendPage(model, open) }
+            Page.Stats -> item { StatsPage(model) { SpendPage(model, open) } }
             Page.Reminders -> item { RemindersPage(model) { choice = it } }
             Page.Planning -> item { PlanningPage(model) { choice = it } }
             Page.Backup -> item { BackupPage(model, info) }
@@ -176,7 +177,7 @@ fun YouScreen(model: AppModel, editRoutine: (Rule?) -> Unit, open: (Journey) -> 
     }
 }
 
-private fun rupees(v: Double) = "₹" + "%,.0f".format(java.util.Locale.forLanguageTag("en-IN"), v)
+internal fun rupees(v: Double) = "₹" + "%,.0f".format(java.util.Locale.forLanguageTag("en-IN"), v)
 
 /** Routines as cards: route, the days it runs, what's next, and how many trips it has planned. */
 private fun LazyListScope.routines(model: AppModel, editRoutine: (Rule?) -> Unit) = item {
