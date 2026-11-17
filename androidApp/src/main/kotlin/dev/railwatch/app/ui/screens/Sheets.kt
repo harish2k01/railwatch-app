@@ -63,7 +63,7 @@ import java.util.UUID
 
 /** Journey sheet (canvas NativeJourneySheet): route, times, facts, progress and the actions for its state. */
 @Composable
-fun JourneySheet(j: Journey, model: AppModel, close: () -> Unit, confirm: (String, () -> Unit) -> Unit, edit: () -> Unit = {}, ticket: () -> Unit = {}, pnr: () -> Unit = {}, addTicket: (List<android.net.Uri>) -> Unit = {}) {
+fun JourneySheet(j: Journey, model: AppModel, close: () -> Unit, confirm: (String, () -> Unit) -> Unit, edit: () -> Unit = {}, ticket: () -> Unit = {}, pnr: () -> Unit = {}, addTicket: (List<android.net.Uri>) -> Unit = {}, bookAgain: () -> Unit = {}) {
     val today = model.today
     val name = model.stations::name
     Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp).padding(bottom = 28.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
@@ -82,6 +82,8 @@ fun JourneySheet(j: Journey, model: AppModel, close: () -> Unit, confirm: (Strin
             Text(listOfNotNull(name(j.from), name(j.to)).joinToString(" to "), style = MaterialTheme.typography.bodyLarge, color = Rw.colors.muted)
         }
         QuickActions(j, model, onTicket = ticket, onPnr = pnr, onEdit = edit, onAddTicket = addTicket)
+        // Past trips: start the same trip again for a new date.
+        if (j.date < today || j.status == JourneyStatus.Completed) PrimaryButton("Book Again", bookAgain, Modifier.fillMaxWidth())
         TripWarnings(j, model)
         WaitlistedAfterChart(j, model)
         StatusTimeline(j, today)
